@@ -6,6 +6,10 @@ import AppLayout from "../layouts/AppLayout";
 import NotFoundPage from "../pages/NotFoundPage";
 
 const HomePage = lazyLoad(() => import("../pages/HomePage"), "HomePage");
+const RouteTestPage = lazyLoad(
+  () => import("../pages/RouteTestPage"),
+  "RouteTestPage",
+);
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +22,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyLoadBoundary>
             <HomePage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "route-test",
+        element: (
+          <LazyLoadBoundary>
+            <RouteTestPage />
           </LazyLoadBoundary>
         ),
       },

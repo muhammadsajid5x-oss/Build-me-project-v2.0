@@ -16,6 +16,9 @@ const meta = {
     layout: "fullscreen",
   },
   args: {
+    open: false,
+    onClose: () => undefined,
+    children: null,
     size: "md",
     state: "default",
   },
@@ -31,14 +34,15 @@ function ModalDemo(args: React.ComponentProps<typeof Modal>) {
         {...args}
         open={open}
         onClose={() => setOpen(false)}
+        aria-label="Example Modal"
       >
         <ModalHeader>
           <h2 style={{ margin: 0 }}>Example Modal</h2>
         </ModalHeader>
         <ModalBody>
           <p>
-            This is the shared modal foundation. Feature-specific content
-            should be composed inside this structure.
+            This is the shared modal foundation. Feature-specific content should
+            be composed inside this structure.
           </p>
         </ModalBody>
         <ModalFooter>
@@ -60,7 +64,7 @@ export const Loading: Story = {
   },
   render: (args) => <ModalDemo {...args} />,
 };
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     state: "error",
   },
@@ -89,6 +93,7 @@ function MultiStepDemo(args: React.ComponentProps<typeof Modal>) {
         {...args}
         open={open}
         onClose={() => setOpen(false)}
+        aria-label="Multi-Step Flow"
       >
         <ModalHeader>
           <h2 style={{ margin: 0 }}>Multi-Step Flow</h2>
@@ -117,9 +122,7 @@ function MultiStepDemo(args: React.ComponentProps<typeof Modal>) {
                 Next
               </Button>
             ) : (
-              <Button onClick={() => setOpen(false)}>
-                Finish
-              </Button>
+              <Button onClick={() => setOpen(false)}>Finish</Button>
             )}
           </ModalActions>
         </ModalFooter>

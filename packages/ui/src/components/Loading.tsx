@@ -3,8 +3,8 @@ export interface LoadingProps {
 }
 export function Loading({ label = "Loading..." }: LoadingProps) {
   return (
-    <div role="status" className="p-8">
+    <output aria-live="polite" className="block p-8">
       {label}
-    </div>
+    </output>
   );
 }

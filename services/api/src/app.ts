@@ -1,6 +1,7 @@
 import express from "express";
 
 import authRoutes from "./routes/auth.js";
+import healthRoutes from "./routes/health.js";
 
 import {
   apiRateLimiter,
@@ -42,13 +43,7 @@ app.get("/", (_req, res) => {
   });
 });
 
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    service: "build-me-api",
-  });
-});
-
+app.use("/health", healthRoutes);
 app.use("/api/v1/auth", authRoutes);
 
 app.use((_request, _response, next) => {

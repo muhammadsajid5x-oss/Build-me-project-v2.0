@@ -252,45 +252,89 @@ Do not bypass required review, testing, branch protection, or CI controls.
 
 ---
 
-## 8. Release Flow
+## 8. End-to-End GitHub Delivery Flow
 
-The Build Me release flow is:
+The target delivery flow separates local development, branch CI, peer review, shared-environment validation, Product Acceptance, and production operation:
 
 ```text
-Feature
-   ↓
-Development
-   ↓
-Testing
-   ↓
-Staging / Pre-production
-   ↓
-Product Acceptance
-   ↓
-Main
-   ↓
-Production
+CODE IN VISUAL STUDIO
+                  ↓
+BUILD AND RUN LOCALLY
+                  ↓
+PUSH feature/<name>
+                  ↓
+CI + FEATURE PREVIEW
+        ┌────┴────┐
+ FAIL      PASS
+        ↓          ↓
+FIX LOCALLY  PR feature/* → development
+        └─ push    ↓
+                                 CI + PEER POLISH (CODE REVIEW)
+                                  ┌────┴────┐
+                          REJECT     ACCEPT
+                                  ↓          ↓
+                 REWORK LOCALLY  MERGE development
+                                  └─ push    ↓
+                                                  DEVELOPMENT CI/CD
+                                                                 ↓
+                                          DEVELOPMENT ENVIRONMENT
+                                                                 ↓
+                                                 STAGING / PRE-PROD
+                                                                 ↓
+                                  OUTCOME VALIDATION (PRODUCT)
+                                                  ┌────┴────┐
+                                          REJECT     ACCEPT
+                                                  ↓          ↓
+                         CORRECTIVE FEATURE  PR development → main
+                         branch from dev     (CI + review)
+                                                  └─ repeat  ↓
+                                                          merge main
+                                                                        ↓
+                                                  PRODUCTION CI/CD
+                                                  ┌────┴────┐
+                                          FAIL       PASS
+                                                 ↓           ↓
+                         RECOVER / FIX     PRODUCTION
+                         via a corrective      ↓
+                         feature branch       OPERATE
+                                                                                 ↓
+                                                  SECURE → RECOVER → ANALYZE
+                                                                                 ↓
+                                                  CONTINUOUS IMPROVEMENT
+                                                                                 ↓
+                                                                          PLAN
+                                                                                 └────→ NEXT FEATURE
 ```
 
-The purpose of this flow is to separate feature development, integration, validation, acceptance, and production release.
+### Failure and Rework Rules
 
-A change should not move directly from a feature branch to production.
+- A failed feature CI or preview check is fixed locally and pushed to the same feature branch; CI runs again.
+- A rejected feature review is reworked on the feature branch and returned through the Pull Request.
+- A Development, Staging, or Product Acceptance rejection is addressed on a corrective feature branch created from the current `development`, then submitted through a new or updated Pull Request as appropriate.
+- A production failure follows the approved recovery/rollback process. Any code correction returns through a feature branch and the normal review and validation gates; do not patch protected branches directly.
+- A change must not move directly from a feature branch to production.
+
+### Current Workflow Alignment
+
+The repository runs CI on feature pushes and Pull Requests to `development` and `main`; feature pushes also trigger Preview deployment. A push to `development` triggers the Development deployment. After that deployment succeeds, the [Staging workflow](../../.github/workflows/cd-staging.yml) runs against the same `development` commit, so Staging validation can happen before the `development` → `main` Pull Request. The [Production workflow](../../.github/workflows/cd-production.yml) remains manually dispatched and checks out `main`.
 
 ---
 
-## 9. Environment Mapping
+## 9. Branch and Environment Mapping
 
-The branch-to-environment relationship is:
+Branches and environments are different things. A branch stores/version-controls code; an environment runs a deployed build.
 
-| Branch / Stage                    | Environment                 | Purpose                                        |
-| --------------------------------- | --------------------------- | ---------------------------------------------- |
-| `feature/*`                       | Local / feature development | Build and test an individual change            |
-| `development`                     | Development                 | Integrate and test completed feature work      |
-| `development` → release candidate | Staging / Pre-production    | Validate the release candidate                 |
-| Product Acceptance                | Acceptance                  | Confirm the product meets the required outcome |
-| `main`                            | Production                  | Release-ready live product                     |
+| Item                         | Type                  | Relationship                                                                   | Purpose                                                        |
+| ---------------------------- | --------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Feature branch (`feature/*`) | Git branch            | CI and Preview run on feature pushes                                           | Build and validate an isolated change                          |
+| Local Development Setup      | Developer environment | Used with a checked-out feature branch in Visual Studio                        | Build and run the project locally before pushing               |
+| `development`                | Git branch            | Feature branches enter through Pull Requests                                   | Shared integration branch                                      |
+| Development Environment      | Shared environment    | Current workflow deploys on pushes to `development`                            | Validate integrated changes                                    |
+| Staging / Pre-Prod           | Shared environment    | Runs after successful Development deployment for the same `development` commit | Validate the candidate and outcomes before production approval |
+| `main`                       | Git branch            | Receives approved `development` release through a Pull Request                 | Approved production code                                       |
+| Production                   | Live environment      | Current production workflow is manually dispatched and checks out `main`       | Run the released product                                       |
 
-### Development
+### Development Environment
 
 ```text
 feature/*
@@ -300,7 +344,7 @@ development
 Development Environment
 ```
 
-### Staging
+### Staging / Pre-Production
 
 ```text
 development
@@ -310,7 +354,7 @@ Staging / Pre-production
 Testing + Validation
 ```
 
-### Production
+### Production Environment
 
 ```text
 Product Acceptance
@@ -328,38 +372,13 @@ Production credentials and secrets must never be committed to the Git repository
 
 ## 10. Branch Lifecycle
 
-The normal feature lifecycle is:
+The feature and release lifecycle is:
 
 ```text
-Create feature branch
-        ↓
-Develop
-        ↓
-Test
-        ↓
-Push
-        ↓
-Pull Request
-        ↓
-Review
-        ↓
-CI
-        ↓
-Merge to development
-        ↓
-Development validation
-        ↓
-Staging
-        ↓
-Product Acceptance
-        ↓
-Pull Request to main
-        ↓
-CI + Review
-        ↓
-Merge to main
-        ↓
-Production deployment
+Local build/run → feature/* push → CI + Preview
+    → feature-to-development PR → CI + peer review → development
+    → Development deployment → Staging / Pre-Prod → Product Acceptance
+    → development-to-main PR → CI + review → main → Production deployment
 ```
 
 ---
@@ -392,4 +411,3 @@ After a feature branch has been successfully merged:
 > **No direct development on protected branches.**
 
 > **CI and review are quality gates, not optional steps.**
-

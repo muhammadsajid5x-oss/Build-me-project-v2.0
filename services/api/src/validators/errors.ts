@@ -29,6 +29,24 @@ export function createValidationError(
     },
   };
 }
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string = API_ERROR_CODES.INTERNAL_SERVER_ERROR,
+    public readonly status: number = 500,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+export class NotFoundError extends ApiError {
+  constructor(message = "The requested resource was not found.") {
+    super(message, API_ERROR_CODES.NOT_FOUND, 404);
+    this.name = "NotFoundError";
+  }
+}
+
 export function createApiError(
   code: string,
   message: string,

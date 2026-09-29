@@ -1,6 +1,8 @@
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
+import tailwindcss from "@tailwindcss/vite";
+import { mergeConfig } from "vite";
 
 const config: StorybookConfig = {
   stories: ["../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
@@ -9,6 +11,10 @@ const config: StorybookConfig = {
     name: getAbsolutePath("@storybook/react-vite"),
     options: {},
   },
+  viteFinal: async (config) =>
+    mergeConfig(config, {
+      plugins: [tailwindcss()],
+    }),
 };
 
 export default config;

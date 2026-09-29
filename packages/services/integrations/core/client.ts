@@ -1,26 +1,72 @@
 import { logger } from "@build-me/utils";
 import { IntegrationError } from "./errors";
-export type IntegrationRequest = {
+export type IntegrationResponseValidator<T> = {
+  safeParse: (data: unknown) => {
+    success: boolean;
+    data?: T;
+    error?: unknown;
+  };
+} | ((data: unknown) => T);
+
+export const DEFAULT_INTEGRATION_TIMEOUT_MS = 10_000;
+
+export type IntegrationRequest<T = unknown> = {
   url: string;
   method?: string;
   headers?: Record<string, string>;
   body?: unknown;
+  schema?: IntegrationResponseValidator<T>;
+  timeoutMs?: number;
 };
 export type IntegrationResponse<T> = {
   data: T;
   status: number;
   headers: Headers;
 };
-export async function requestIntegration<T>(
-  request: IntegrationRequest,
+function validateResponseBody<T>(
+  raw: unknown,
+  schema: IntegrationResponseValidator<T> | undefined,
+  url: string,
+): T {
+  if (!schema) {
+    return raw as T;
+  }
+
+  if (typeof schema === "function") {
+    try {
+      return schema(raw);
+    } catch (error) {
+      throw new IntegrationError(
+        `Integration response validation failed for ${url}.`,
+        "INTEGRATION_RESPONSE_INVALID",
+      );
+    }
+  }
+
+  const result = schema.safeParse(raw);
+
+  if (!result.success || result.data === undefined) {
+    throw new IntegrationError(
+      `Integration response validation failed for ${url}.`,
+      "INTEGRATION_RESPONSE_INVALID",
+    );
+  }
+
+  return result.data;
+}
+
+export async function requestIntegration<T = unknown>(
+  request: IntegrationRequest<T>,
 ): Promise<IntegrationResponse<T>> {
   const method = request.method ?? "GET";
+  const timeoutMs = request.timeoutMs ?? DEFAULT_INTEGRATION_TIMEOUT_MS;
   logger.info("Integration request started.", {
     method,
     url: request.url,
   });
   try {
     const response = await fetch(request.url, {
+      signal: AbortSignal.timeout(timeoutMs),
       method,
       headers: {
         "Content-Type": "application/json",
@@ -52,13 +98,24 @@ export async function requestIntegration<T>(
       status: response.status,
     });
     return {
-      data: data as T,
+      data: validateResponseBody(data, request.schema, request.url),
       status: response.status,
       headers: response.headers,
     };
   } catch (error) {
     if (error instanceof IntegrationError) {
       throw error;
+    }
+    if (error instanceof Error && error.name === "AbortError") {
+      logger.error("Integration request timed out.", {
+        method,
+        url: request.url,
+        timeoutMs,
+      });
+      throw new IntegrationError(
+        `Integration request timed out after ${timeoutMs}ms.`,
+        "INTEGRATION_TIMEOUT",
+      );
     }
     logger.error("Integration request failed.", {
       method,

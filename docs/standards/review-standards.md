@@ -13,27 +13,28 @@ The goal is to ensure that changes meet the requirement, maintain code quality, 
 ## Standard Review Flow
 
 Build
-    |
-    v
+|
+v
 Self-check
-    |
-    v
-AI review
-    |
-    v
-Human review
-    |
-    v
-Automated checks
-    |
-    v
-Merge
+|
+v
+Optional AI review
+|
+v
+Open Pull Request
+|
+v
+Peer Polish (human review) + automated checks
+|
+v
+Merge after approval and required checks pass
 
 ## 1. Requirement Validation
 
 The reviewer must confirm that the implementation satisfies the intended requirement.
 
 Check:
+
 - Requirement is understood.
 - Expected functionality is implemented.
 - Acceptance criteria are addressed.
@@ -43,6 +44,7 @@ Check:
 ## 2. Code Quality
 
 Review the implementation for:
+
 - Clear naming
 - Appropriate file structure
 - Small and focused functions
@@ -61,6 +63,7 @@ Review the implementation for:
 Confirm that appropriate automated tests are present.
 
 Review:
+
 - Unit tests where applicable
 - Component tests where applicable
 - Integration/API tests where applicable
@@ -77,6 +80,7 @@ Tests must be executed and relevant results must be reviewed.
 Review changes for relevant security risks.
 
 Check:
+
 - Authentication
 - Authorization
 - Input validation
@@ -94,6 +98,7 @@ Never approve code that exposes passwords, API keys, tokens, private keys, or ot
 Consider whether the change introduces performance risks.
 
 Check where relevant:
+
 - Unnecessary database queries
 - Expensive operations
 - Unnecessary network requests
@@ -110,6 +115,7 @@ Performance improvements should be measured when performance is a meaningful req
 For user-facing interfaces, review relevant accessibility behavior.
 
 Check where applicable:
+
 - Keyboard accessibility
 - Semantic HTML
 - Labels and accessible names
@@ -124,6 +130,7 @@ Check where applicable:
 Confirm that required analytics behavior is implemented.
 
 Check:
+
 - Required events are tracked.
 - Event names follow project conventions.
 - Important CTA interactions are tracked.
@@ -133,6 +140,7 @@ Check:
 ## 8. Documentation Review
 
 Documentation should be updated when the change affects:
+
 - Setup
 - Configuration
 - APIs
@@ -149,6 +157,7 @@ Documentation must match the actual implementation.
 When AI was used during development, AI review may be used as an additional review aid.
 
 AI should be asked to identify:
+
 - Bugs
 - Security problems
 - Poor naming
@@ -166,11 +175,34 @@ The Technology Owner decides what should actually change.
 
 AI review does not replace human code review.
 
+## Peer Polish (Human Review)
+
+Peer Polish is the required review by another person before a feature Pull Request is merged into `development`. Its purpose is to catch problems and improve clarity, correctness, maintainability, and delivery quality while the change is still easy to revise.
+
+### Participants
+
+- **Author:** Opens and updates the feature Pull Request, explains the change, and responds to review feedback.
+- **Peer reviewer:** A person other than the author who has the repository access required to review and approve the Pull Request.
+- **Technology Owner:** Resolves technical disagreements or risks that the author and reviewer cannot resolve. The Technology Owner does not replace independent review when branch protection requires another reviewer.
+
+### Process
+
+1. The author pushes the feature branch and opens a Pull Request targeting `development` with the requirement/task, summary, and validation evidence.
+2. A peer reviews the requirement fit, implementation, tests, security, and relevant operational impact using this standard.
+3. The reviewer leaves specific, respectful, actionable comments. The author addresses them with changes or discusses why a change is unnecessary.
+4. The reviewer requests changes while blocking concerns remain; otherwise, the reviewer approves the Pull Request.
+5. Merge only after the required human approval and required CI checks pass, and blocking comments are resolved.
+
+If no eligible peer reviewer is available, leave the Pull Request open and request one; do not substitute AI review or self-approval for the required human approval.
+
+Peer approval confirms technical review of the change. It is not Product Acceptance, release approval, or proof that the feature has been deployed.
+
 ## 10. Pull Request Requirements
 
 A Pull Request should provide enough information for reviewers to understand and validate the change.
 
 Include where applicable:
+
 - Requirement or task reference
 - Summary of changes
 - Implementation notes
@@ -183,6 +215,7 @@ Include where applicable:
 ## 11. Review Comments
 
 Review comments should be:
+
 - Clear
 - Specific
 - Respectful
@@ -196,6 +229,7 @@ Do not ignore important review feedback without agreement from the responsible r
 ## 12. Approval Checklist
 
 Before approval, verify:
+
 - Requirement met
 - Code quality good
 - Tests present where required
@@ -209,6 +243,7 @@ Before approval, verify:
 ## 13. Merge Readiness
 
 Code is ready to merge when:
+
 - The requirement has been validated.
 - Self-check is complete.
 - AI review has been completed where AI-assisted review is appropriate.

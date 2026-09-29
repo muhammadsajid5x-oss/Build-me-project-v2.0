@@ -35,23 +35,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     let mounted = true;
 
+    function applySession(next: Session | null, nextError: string | null = null) {
+      if (!mounted) {
+        return;
+      }
+
+      setSession(next);
+      setError(nextError);
+      setLoading(false);
+    }
+
     async function loadSession() {
       try {
         const currentSession = await getSession();
 
-        if (mounted) {
-          setSession(currentSession);
-          setError(null);
-        }
+        applySession(currentSession);
       } catch {
-        if (mounted) {
-          setSession(null);
-          setError("Unable to load your session. Please try again.");
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        applySession(null, "Unable to load your session. Please try again.");
       }
     }
 
@@ -60,11 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const {
       data: { subscription },
     } = onAuthStateChange((nextSession) => {
-      if (!mounted) return;
-
-      setSession(nextSession);
-      setError(null);
-      setLoading(false);
+      applySession(nextSession);
     });
 
     return () => {

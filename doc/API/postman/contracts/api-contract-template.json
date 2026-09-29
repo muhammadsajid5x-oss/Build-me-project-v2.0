@@ -1,0 +1,43 @@
+{
+  "apiName": "TBD",
+  "endpoint": {
+    "path": "TBD",
+    "method": "TBD"
+  },
+  "purpose": "TBD",
+  "authentication": {
+    "status": "TBD",
+    "scheme": null,
+    "details": null
+  },
+  "request": {
+    "headers": [],
+    "pathParameters": [],
+    "queryParameters": [],
+    "body": null
+  },
+  "requestValidation": {
+    "status": "TBD",
+    "rules": []
+  },
+  "response": {
+    "success": {
+      "statusCode": null,
+      "contentType": "TBD",
+      "body": null
+    }
+  },
+  "responseValidation": {
+    "status": "TBD",
+    "rules": []
+  },
+  "statusCodes": [],
+  "errors": [],
+  "permissions": {
+    "status": "TBD",
+    "requiredRoles": [],
+    "rules": []
+  },
+  "exampleRequest": null,
+  "exampleResponse": null
+}
