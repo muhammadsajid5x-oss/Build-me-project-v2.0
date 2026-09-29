@@ -52,7 +52,7 @@ Review the contract with the API owner and consumer owner. Save the agreed versi
 
 ### 4. Create Postman Request
 
-Create a Postman request from the saved contract, including method, URL, headers, body when required, and a saved example response. Save collections under `tools/postman/collections/` and use the appropriate environment from `tools/postman/environments/`. Do not store credentials or other secrets in the repository.
+Create a Postman request from the saved contract, including method, URL, headers, body when required, and a saved example response. Save collections under `docs/api/postman/collections/` and use the appropriate environment from `docs/api/postman/environments/`. Do not store credentials or other secrets in the repository.
 
 ### 5. Create API Test
 
@@ -82,6 +82,7 @@ Integrate the API with its documented consumers using the approved contract. Ver
 
 - API contracts: `docs/api/contracts/`
 - API designs: `docs/api/design/`
+- Postman collections, environments, contracts, and examples: `docs/api/postman/`
 - Reusable contract format: [contract-template.md](contract-template.md)
 - Reusable design format: [design-template.md](design-template.md)
 - Rules: [API standards](standards.md)
