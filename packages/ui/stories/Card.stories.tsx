@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { Card, CardBody, CardFooter, CardHeader } from "../src/components/Card";
 import { Loading } from "../src/components/Loading";
 
@@ -26,6 +27,17 @@ export const Default: Story = {
         <CardFooter>Updated today</CardFooter>
       </>
     ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("article")).toBeVisible();
+    await expect(canvas.getByText("Example card")).toBeVisible();
+    await expect(
+      canvas.getByText(
+        "A shared card built from Header, Body, and Footer sections.",
+      ),
+    ).toBeVisible();
+    await expect(canvas.getByText("Updated today")).toBeVisible();
   },
 };
 

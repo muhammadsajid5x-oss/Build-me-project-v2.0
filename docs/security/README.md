@@ -8,6 +8,9 @@ This document explains how security is managed across the Build Me Technology sy
 
 Security is part of the complete Technology lifecycle and applies to development, testing, deployment, and operations.
 
+See [Authentication](authentication.md) for the current identity-verification flow and the authorization gaps that must be resolved before admin features.
+See [Authorization](authorization.md) for the current access policy and decisions required before granting admin capabilities.
+
 ## Security Principles
 
 Build Me follows these core security principles:

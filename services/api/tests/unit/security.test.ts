@@ -66,6 +66,7 @@ describe("Backend Security Foundation", () => {
       request.user = {
         id: "user-123",
         email: "user@example.com",
+        isAdmin: false,
       };
 
       const response = createResponse();
@@ -83,12 +84,17 @@ describe("Backend Security Foundation", () => {
       request.user = {
         id: "user-123",
         email: "user@example.com",
+        isAdmin: false,
       };
 
       const response = createResponse();
       const next = vi.fn() as unknown as NextFunction;
 
-      authorize("projects.manage" as Parameters<typeof authorize>[0])(request, response, next);
+      authorize("projects.manage" as Parameters<typeof authorize>[0])(
+        request,
+        response,
+        next,
+      );
 
       expect(response.status).toHaveBeenCalledWith(403);
       expect(response.json).toHaveBeenCalledWith({

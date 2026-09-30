@@ -6,6 +6,10 @@ import AppLayout from "../layouts/AppLayout";
 import NotFoundPage from "../pages/NotFoundPage";
 
 const HomePage = lazyLoad(() => import("../pages/HomePage"), "HomePage");
+const FoundationTestPage = lazyLoad(
+  () => import("../pages/FoundationTestPage"),
+  "FoundationTestPage",
+);
 const RouteTestPage = lazyLoad(
   () => import("../pages/RouteTestPage"),
   "RouteTestPage",
@@ -30,6 +34,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyLoadBoundary>
             <RouteTestPage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "foundation-test",
+        element: (
+          <LazyLoadBoundary>
+            <FoundationTestPage />
           </LazyLoadBoundary>
         ),
       },

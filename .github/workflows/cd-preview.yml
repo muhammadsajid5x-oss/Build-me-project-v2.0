@@ -1,7 +1,11 @@
 name: CD - Preview
 
 "on":
-  push:
+  workflow_run:
+    workflows:
+      - CI Quality Gate
+    types:
+      - completed
     branches:
       - "feature/**"
 
@@ -15,6 +19,7 @@ concurrency:
 jobs:
   deploy-preview:
     name: Deploy to Preview
+    if: "${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}"
     runs-on: ubuntu-latest
 
     environment:
@@ -23,6 +28,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -51,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          pnpm exec vercel deploy --yes --token "$VERCEL_TOKEN" 2>&1 | tee /tmp/vercel-api-deploy.log
+          pnpm exec vercel deploy --target=preview --yes --token "$VERCEL_TOKEN" --meta githubDeployment=1 --meta githubCommitRef="$GITHUB_COMMIT_REF" 2>&1 | tee /tmp/vercel-api-deploy.log
           deployment_url=$(grep -Eo 'https://[^[:space:]]+\.vercel\.app' /tmp/vercel-api-deploy.log | tail -n 1)
 
           if [ -z "$deployment_url" ]; then
@@ -65,6 +72,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_API_PROJECT_ID }}
+          GITHUB_COMMIT_REF: ${{ github.event.workflow_run.head_branch }}
 
       - name: Validate API recovery
         env:
@@ -100,8 +108,9 @@ jobs:
           exit 1
 
       - name: Deploy Dashboard to Preview
-        run: pnpm exec vercel deploy --yes --token "$VERCEL_TOKEN"
+        run: pnpm exec vercel deploy --target=preview --yes --token "$VERCEL_TOKEN" --meta githubDeployment=1 --meta githubCommitRef="$GITHUB_COMMIT_REF"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_DASHBOARD_PROJECT_ID }}
+          GITHUB_COMMIT_REF: ${{ github.event.workflow_run.head_branch }}

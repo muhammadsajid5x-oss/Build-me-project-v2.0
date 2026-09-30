@@ -7,6 +7,7 @@ This directory contains architecture, API, database, testing, security, deployme
 - [Architecture](#architecture)
 - [API](#api)
 - [Database](#database)
+- [Analytics](#analytics)
 - [Testing](#testing)
 - [Security](#security)
 - [Deployment](#deployment)
@@ -33,6 +34,10 @@ This directory contains architecture, API, database, testing, security, deployme
 ## Database
 
 - [Database documentation](database/README.md)
+
+## Analytics
+
+- [Analytics event model](analytics/event-model.md)
 
 ## Testing
 

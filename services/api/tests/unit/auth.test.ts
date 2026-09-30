@@ -15,9 +15,7 @@ function createResponse() {
   } as unknown as Response;
   return response;
 }
-function createRequest(
-  authorization?: string,
-): Request {
+function createRequest(authorization?: string): Request {
   return {
     header: vi.fn().mockReturnValue(authorization),
   } as unknown as Request;
@@ -67,6 +65,7 @@ describe("Authentication and authorisation foundation", () => {
       mockedAuthenticateAccessToken.mockResolvedValue({
         id: "user-123",
         email: "user@example.com",
+        isAdmin: false,
       });
       const request = createRequest("Bearer valid-token");
       const response = createResponse();
@@ -75,6 +74,7 @@ describe("Authentication and authorisation foundation", () => {
       expect(request.user).toEqual({
         id: "user-123",
         email: "user@example.com",
+        isAdmin: false,
       });
       expect(next).toHaveBeenCalledOnce();
       expect(response.status).not.toHaveBeenCalled();
@@ -106,11 +106,7 @@ describe("Authentication and authorisation foundation", () => {
       const request = createRequest();
       const response = createResponse();
       const next = vi.fn() as unknown as NextFunction;
-      authorize(PERMISSIONS.AUTHENTICATED)(
-        request,
-        response,
-        next,
-      );
+      authorize(PERMISSIONS.AUTHENTICATED)(request, response, next);
       expect(response.status).toHaveBeenCalledWith(401);
       expect(next).not.toHaveBeenCalled();
     });
@@ -119,16 +115,37 @@ describe("Authentication and authorisation foundation", () => {
       request.user = {
         id: "user-123",
         email: "user@example.com",
+        isAdmin: false,
       };
       const response = createResponse();
       const next = vi.fn() as unknown as NextFunction;
-      authorize(PERMISSIONS.AUTHENTICATED)(
-        request,
-        response,
-        next,
-      );
+      authorize(PERMISSIONS.AUTHENTICATED)(request, response, next);
       expect(next).toHaveBeenCalledOnce();
       expect(response.status).not.toHaveBeenCalled();
+    });
+
+    it("allows an admin with the admin permission", () => {
+      const request = createRequest();
+      request.user = { id: "admin-1", isAdmin: true };
+      const response = createResponse();
+      const next = vi.fn() as unknown as NextFunction;
+
+      authorize(PERMISSIONS.ADMIN)(request, response, next);
+
+      expect(next).toHaveBeenCalledOnce();
+      expect(response.status).not.toHaveBeenCalled();
+    });
+
+    it("rejects a non-admin with the admin permission", () => {
+      const request = createRequest();
+      request.user = { id: "user-123", isAdmin: false };
+      const response = createResponse();
+      const next = vi.fn() as unknown as NextFunction;
+
+      authorize(PERMISSIONS.ADMIN)(request, response, next);
+
+      expect(response.status).toHaveBeenCalledWith(403);
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });

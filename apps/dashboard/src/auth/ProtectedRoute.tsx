@@ -13,5 +13,14 @@ export default function ProtectedRoute() {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  if (user.app_metadata?.role !== "admin") {
+    return (
+      <main>
+        <h1>Access denied</h1>
+        <p>An administrator account is required to access this dashboard.</p>
+      </main>
+    );
+  }
+
   return <Outlet />;
 }

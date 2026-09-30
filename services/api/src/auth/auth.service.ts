@@ -24,5 +24,6 @@ export async function authenticateAccessToken(
   return {
     id: data.user.id,
     ...(data.user.email ? { email: data.user.email } : {}),
+    isAdmin: data.user.app_metadata?.role === "admin",
   };
 }

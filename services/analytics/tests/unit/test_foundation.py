@@ -9,13 +9,27 @@ def test_analytics_foundation_pipeline():
     tracker.track(AnalyticsEvent("page_view"))
     tracker.track(AnalyticsEvent("page_view"))
     tracker.track(AnalyticsEvent("button_click"))
-    metrics = AnalyticsProcessor().process(tracker.get_events())
+    foundation_event = AnalyticsEvent(
+        "foundation.test.clicked",
+        properties={
+            "feature": "foundation",
+            "session_id": "foundation-test-session",
+            "data": {"source": "foundation-pipeline-test"},
+        },
+    )
+    tracked_event = tracker.track(foundation_event)
+    stored_events = tracker.get_events()
+    metrics = AnalyticsProcessor().process(stored_events)
     report = AnalyticsReporter().report(metrics)
-    assert tracker.count() == 3
-    assert metrics["total_events"] == 3
+    assert tracker.count() == 4
+    assert tracked_event is foundation_event
+    assert stored_events[-1] == foundation_event
+    assert metrics["total_events"] == 4
     assert metrics["event_counts"] == {
         "page_view": 2,
         "button_click": 1,
+        "foundation.test.clicked": 1,
     }
-    assert report["summary"]["total_events"] == 3
+    assert report["summary"]["total_events"] == 4
     assert report["summary"]["event_counts"]["page_view"] == 2
+    assert report["summary"]["event_counts"]["foundation.test.clicked"] == 1
