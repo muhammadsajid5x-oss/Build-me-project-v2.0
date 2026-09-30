@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -106,5 +106,59 @@ describe("AuthContext", () => {
     });
 
     expect(screen.queryByText(/super-secret/)).toBeNull();
+  });
+
+  it("does not update state when unmounted before the session resolves", async () => {
+    let resolveSession: (value: unknown) => void = () => undefined;
+    mocks.getSession.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSession = resolve;
+        }),
+    );
+
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const { unmount } = render(
+      <AuthProvider>
+        <AuthConsumer />
+      </AuthProvider>,
+    );
+
+    unmount();
+
+    await act(async () => {
+      resolveSession({
+        access_token: "late-token",
+        user: { id: "user-999" },
+      });
+    });
+
+    const stateUpdateWarnings = consoleError.mock.calls.filter((call) =>
+      String(call[0]).includes(
+        "state update on an unmounted component",
+      ),
+    );
+
+    expect(stateUpdateWarnings).toHaveLength(0);
+
+    consoleError.mockRestore();
+  });
+
+  it("unsubscribes from auth state changes on unmount", () => {
+    const unsubscribe = vi.fn();
+    mocks.onAuthStateChange.mockReturnValue({
+      data: { subscription: { unsubscribe } },
+    });
+
+    const { unmount } = render(
+      <AuthProvider>
+        <AuthConsumer />
+      </AuthProvider>,
+    );
+
+    unmount();
+
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 });

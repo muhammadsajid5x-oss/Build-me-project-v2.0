@@ -34,6 +34,10 @@ export const theme = {
     },
   },
   breakpoints: {
+    mobile: "640px",
+    tablet: "768px",
+    desktop: "1024px",
+    large: "1280px",
     sm: "640px",
     md: "768px",
     lg: "1024px",
@@ -44,6 +48,7 @@ export const theme = {
     mobile: "sm",
     tablet: "md",
     desktop: "lg",
+    large: "xl",
     wide: "xl",
   },
   radius: {

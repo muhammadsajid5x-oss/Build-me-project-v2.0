@@ -5,6 +5,7 @@ export default function AppLayout() {
       <header className="border-b p-4">
         <nav className="flex gap-4">
           <Link to="/">Home</Link>
+          <Link to="/route-test">Another Route</Link>
         </nav>
       </header>
       <main className="p-8">

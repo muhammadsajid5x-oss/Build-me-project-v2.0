@@ -1,7 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Suspense } from "react";
+import { ErrorState } from "@build-me/ui";
 
-import ErrorState from "../components/ErrorState";
 import LoadingState from "../components/LoadingState";
 
 type LazyLoadBoundaryProps = {

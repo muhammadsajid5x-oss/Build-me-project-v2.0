@@ -22,6 +22,7 @@ The goal is to avoid reinventing prompts and to turn effective AI usage into a r
 | 10  | Review Tests                           | `review-tests.md`            |
 | 11  | Validate Implementation                | `validate-implementation.md` |
 | 12  | Prepare Deployment                     | `prepare-deployment.md`      |
+| 13  | Create Technical Design                | `../ai/design.md`            |
 
 ## Standard AI Prompt Lifecycle
 

@@ -1,9 +1,13 @@
 name: CD - Staging
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CD - Development
+    types:
+      - completed
     branches:
-      - main
+      - development
 
 permissions:
   contents: read
@@ -15,6 +19,7 @@ concurrency:
 jobs:
   deploy-staging:
     name: Deploy to Staging
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     environment:
@@ -23,6 +28,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

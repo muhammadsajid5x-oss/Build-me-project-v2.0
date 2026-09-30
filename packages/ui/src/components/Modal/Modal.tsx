@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  type ReactNode,
-  type MouseEvent,
-} from "react";
+import { useEffect, useRef, type ReactNode, type SyntheticEvent } from "react";
 
 import "./Modal.css";
 
@@ -47,27 +41,40 @@ export function Modal(props: Readonly<ModalProps>) {
     "aria-label": ariaLabel,
   } = props;
 
-  const titleId = useId();
   const modalRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (!open) {
+    const dialog = modalRef.current;
+
+    if (!open || !dialog) {
       return;
     }
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (closeOnEscape && event.key === "Escape") {
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleBackdropClick = (event: Event) => {
+      if (closeOnBackdrop && event.target === dialog) {
         onClose();
       }
     };
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", handleKeyDown);
-    modalRef.current?.focus();
+
+    dialog.addEventListener("click", handleBackdropClick);
+
+    if (!dialog.open) {
+      dialog.showModal();
+    }
+
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      dialog.removeEventListener("click", handleBackdropClick);
+
+      if (dialog.open) {
+        dialog.close();
+      }
+
       document.body.style.overflow = originalOverflow;
     };
-  }, [open, closeOnEscape, onClose]);
+  }, [open, closeOnBackdrop, onClose]);
 
   if (!open) {
     return null;
@@ -82,41 +89,36 @@ export function Modal(props: Readonly<ModalProps>) {
     .filter(Boolean)
     .join(" ");
 
-  const handleBackdropClick = (event: MouseEvent<HTMLDivElement>) => {
-    if (closeOnBackdrop && event.target === event.currentTarget) {
+  const handleCancel = (event: SyntheticEvent<HTMLDialogElement>) => {
+    event.preventDefault();
+
+    if (closeOnEscape) {
       onClose();
     }
   };
 
   return (
-    <div
-      className="ui-modal__backdrop"
-      onMouseDown={handleBackdropClick}
-      aria-hidden="true"
+    <dialog
+      ref={modalRef}
+      className={classes}
+      onCancel={handleCancel}
+      aria-modal={true}
+      aria-busy={state === "loading" || undefined}
+      aria-label={ariaLabel ?? "Dialog"}
+      tabIndex={-1}
     >
-      <dialog
-        ref={modalRef}
-        className={classes}
-        open={open}
-        aria-label={ariaLabel}
-        aria-labelledby={ariaLabel ? undefined : titleId}
-        tabIndex={-1}
-      >
-        {showCloseButton && (
-          <button
-            type="button"
-            className="ui-modal__close"
-            onClick={onClose}
-            aria-label="Close modal"
-          >
-            ×
-          </button>
-        )}
-        <div id={titleId} className="ui-modal__content">
-          {children}
-        </div>
-      </dialog>
-    </div>
+      {showCloseButton && (
+        <button
+          type="button"
+          className="ui-modal__close"
+          onClick={onClose}
+          aria-label="Close modal"
+        >
+          ×
+        </button>
+      )}
+      <div className="ui-modal__content">{children}</div>
+    </dialog>
   );
 }
 

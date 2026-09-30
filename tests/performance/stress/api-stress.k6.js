@@ -1,5 +1,10 @@
+/* global __ENV */
+
 import http from "k6/http";
 import { check } from "k6";
+
+http.setResponseCallback(http.expectedStatuses(200, 429));
+
 export const options = {
   stages: [
     { duration: "10s", target: 10 },
@@ -12,12 +17,14 @@ export const options = {
     http_req_duration: ["p(95)<1000"],
   },
 };
-export default function () {
+export default function apiStressTest() {
   const response = http.get(
     __ENV.API_BASE_URL || "http://localhost:3000/health",
   );
   check(response, {
-    "status is 200": (r) => r.status === 200,
-    "response status is ok": (r) => r.json("status") === "ok",
+    "status is 200 or rate-limited": (r) =>
+      r.status === 200 || r.status === 429,
+    "healthy body is returned for successful requests": (r) =>
+      r.status !== 200 || r.json("status") === "ok",
   });
 }

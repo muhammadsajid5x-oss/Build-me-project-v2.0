@@ -1,15 +1,35 @@
 ﻿import type { NextFunction, Request, Response } from "express";
-import { createApiError } from "../validators/index.js";
+import {
+  API_ERROR_CODES,
+  ApiError,
+  createApiError,
+  NotFoundError,
+} from "../validators/index.js";
 
+// Express identifies error middleware by arity, so all four parameters must stay.
 export function errorHandler(
   error: unknown,
   _request: Request,
   response: Response,
   next: NextFunction,
 ): void {
-  void next;
-
   if (response.headersSent) {
+    next(error);
+    return;
+  }
+
+  if (error instanceof NotFoundError) {
+    response
+      .status(404)
+      .json(createApiError(API_ERROR_CODES.NOT_FOUND, error.message));
+    return;
+  }
+
+  if (error instanceof ApiError) {
+    console.error(error);
+    response
+      .status(error.status)
+      .json(createApiError(error.code, error.message));
     return;
   }
 
@@ -17,7 +37,10 @@ export function errorHandler(
     response
       .status(404)
       .json(
-        createApiError("NOT_FOUND", "The requested resource was not found."),
+        createApiError(
+          API_ERROR_CODES.NOT_FOUND,
+          "The requested resource was not found.",
+        ),
       );
     return;
   }
