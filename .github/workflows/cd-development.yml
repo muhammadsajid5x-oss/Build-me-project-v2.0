@@ -1,5 +1,4 @@
 name: CD - Development
-
 on:
   workflow_run:
     workflows:
