@@ -53,6 +53,7 @@ describe("authenticateAccessToken", () => {
 
     await expect(authenticateAccessToken("token")).resolves.toEqual({
       id: "user-1",
+      isAdmin: false,
     });
   });
 
@@ -66,6 +67,26 @@ describe("authenticateAccessToken", () => {
     await expect(authenticateAccessToken("token")).resolves.toEqual({
       id: "user-1",
       email: "user@example.com",
+      isAdmin: false,
+    });
+  });
+
+  it("derives admin access from server-managed app metadata only", async () => {
+    const { authenticateAccessToken } = await importAuthService();
+    getUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "admin-1",
+          app_metadata: { role: "admin" },
+          user_metadata: { role: "admin" },
+        },
+      },
+      error: null,
+    });
+
+    await expect(authenticateAccessToken("token")).resolves.toEqual({
+      id: "admin-1",
+      isAdmin: true,
     });
   });
 

@@ -6,6 +6,7 @@ export type AuthenticatedRequest = Request & {
 export type AuthenticatedUser = {
   id: string;
   email?: string;
+  isAdmin: boolean;
 };
 export type AuthContext = {
   user: AuthenticatedUser;

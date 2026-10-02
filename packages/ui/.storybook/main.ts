@@ -11,7 +11,7 @@ const config: StorybookConfig = {
     name: getAbsolutePath("@storybook/react-vite"),
     options: {},
   },
-  viteFinal: async (config) =>
+  viteFinal: (config) =>
     mergeConfig(config, {
       plugins: [tailwindcss()],
     }),

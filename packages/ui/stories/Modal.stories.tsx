@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, userEvent, within } from "storybook/test";
 import { Button } from "../src/components/Button";
 import {
   Modal,
@@ -57,6 +58,15 @@ function ModalDemo(args: React.ComponentProps<typeof Modal>) {
 }
 export const Default: Story = {
   render: (args) => <ModalDemo {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Open Modal" }));
+    await expect(
+      await canvas.findByRole("dialog", { name: "Example Modal" }),
+    ).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "Close modal" }));
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+  },
 };
 export const Loading: Story = {
   args: {

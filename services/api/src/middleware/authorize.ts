@@ -18,6 +18,10 @@ export function authorize(permission: Permission) {
       next();
       return;
     }
+    if (permission === PERMISSIONS.ADMIN && request.user.isAdmin) {
+      next();
+      return;
+    }
     response
       .status(403)
       .json(
