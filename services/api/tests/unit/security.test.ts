@@ -1,5 +1,6 @@
 ﻿import { describe, expect, it, vi } from "vitest";
 import type { NextFunction, Request, Response } from "express";
+import app from "../../src/app.js";
 import { securityHeaders } from "../../src/middleware/security.js";
 import { authorize } from "../../src/middleware/authorize.js";
 import { errorHandler } from "../../src/middleware/error-handler.js";
@@ -156,5 +157,28 @@ describe("Backend Security Foundation", () => {
         expect(next).toHaveBeenCalledOnce();
       });
     });
+  });
+});
+
+describe("API app behind a proxy", () => {
+  it("serves health checks with a forwarded client address", async () => {
+    const server = app.listen(0);
+
+    try {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        throw new Error("API server did not bind to a TCP port.");
+      }
+
+      const response = await fetch(`http://127.0.0.1:${address.port}/health`, {
+        headers: { "x-forwarded-for": "203.0.113.1" },
+      });
+
+      expect(response.status).toBe(200);
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
+    }
   });
 });
