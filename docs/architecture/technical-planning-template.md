@@ -37,7 +37,7 @@
 - **What must be deployed?** [List code, configuration, migrations, flags, dependencies, and rollout order.]
 - **What must be observed after release?** [Identify logs, metrics, analytics, alerts, dashboards, owners, and observation period.]
 
-Resolve or explicitly track unanswered questions before implementation. This planning pass must cover technical design, testing, delivery, and feature analytics.
+Complete the [Product / Feature Analytics Review](../analytics/feature-analytics-review.md) for every Child Story, even when the outcome is that analytics are not applicable. Resolve or explicitly track unanswered questions before implementation. This planning pass must cover technical design, testing, delivery, and feature analytics.
 
 ### Acceptance criteria
 

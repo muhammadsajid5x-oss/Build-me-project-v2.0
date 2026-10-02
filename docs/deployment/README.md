@@ -6,6 +6,8 @@ This document explains how Build Me Technology is built, validated, and deployed
 
 Deployment should be predictable, repeatable, secure, and traceable.
 
+See the [Rollback Guide](rollback-guide.md) for the recovery sequence and database-safety checks.
+
 ## GitHub Actions and Vercel
 
 The deployment workflows promote the same code through these Vercel environments:

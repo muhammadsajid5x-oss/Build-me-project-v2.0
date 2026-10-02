@@ -1,3 +1,5 @@
+import { logger } from "@build-me/utils";
+
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
 import { inArray } from "drizzle-orm";
@@ -96,6 +98,9 @@ async function seed() {
 try {
   await seed();
 } catch (error) {
-  console.error("Database seed failed:", error);
+  logger.error("Database seed failed.", {
+    service: "database",
+    error,
+  });
   process.exitCode = 1;
 }

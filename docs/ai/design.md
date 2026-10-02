@@ -22,7 +22,14 @@ Use this prompt to help Technology create a technical design from an approved Ch
 > - Existing components that can be reused
 > - New components required
 > - Analytics
-> - Security
+> - Security, explicitly covering:
+>   - Authentication: how identity is established and verified.
+>   - Authorisation: which roles may perform operations and access resources.
+>   - Input validation: schemas, bounds, normalization, and rejection behavior.
+>   - Data protection: sensitive data, minimization, access, retention, and redaction.
+>   - Secrets: required secret names, secure storage, access, and rotation; never include secret values.
+>   - API security: authentication enforcement, safe errors, transport/CORS, security headers, and rate limiting where applicable.
+>   - Abuse risks: enumeration, automation, replay, resource exhaustion, and relevant mitigations.
 > - Performance
 > - Testing
 > - Deployment
@@ -48,6 +55,8 @@ Use this prompt to help Technology create a technical design from an approved Ch
 > Do not guess missing product requirements.
 >
 > Do not make product decisions.
+>
+> For each security area, describe the existing foundation, required changes, and verification. If an area is not applicable, explain why. If a decision or information is missing, write **Needs Confirmation** and identify what must be confirmed.
 >
 > Do not write production code.
 >

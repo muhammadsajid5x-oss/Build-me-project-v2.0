@@ -1,4 +1,4 @@
-import { Logger } from "../packages/utils/src/logging/logger";
+import { Logger } from "../packages/utils/src/logging/logger.js";
 describe("Application Logging Foundation", () => {
   const logger = new Logger();
   test("creates application log", () => {
@@ -32,6 +32,25 @@ describe("Application Logging Foundation", () => {
     });
     expect(entry.level).toBe("ERROR");
     expect(entry.context?.errorCode).toBe("REQUEST_FAILED");
+  });
+  test("writes structured error logs to stderr", () => {
+    const writeError = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const databaseError = Object.assign(
+      new Error("Database credentials rejected"),
+      { code: "28P01" },
+    );
+    const entry = logger.error("Database request failed.", {
+      error: databaseError,
+    });
+
+    expect(entry.context?.error).toEqual({ name: "Error", code: "28P01" });
+    expect(writeError).toHaveBeenCalledWith(JSON.stringify(entry));
+    expect(JSON.stringify(entry)).not.toContain(
+      "Database credentials rejected",
+    );
+    writeError.mockRestore();
   });
   test("supports security logs", () => {
     const entry = logger.security("Authentication attempt failed", {

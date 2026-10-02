@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import FoundationCheckinCard from "../components/FoundationCheckinCard";
+
 export default function FoundationTestPage() {
   const [completed, setCompleted] = useState(false);
 
@@ -13,11 +15,8 @@ export default function FoundationTestPage() {
       >
         Run Foundation Test
       </button>
-      {completed && (
-        <p className="mt-4" role="status">
-          Foundation test passed.
-        </p>
-      )}
+      {completed && <output className="mt-4">Foundation test passed.</output>}
+      <FoundationCheckinCard />
     </section>
   );
 }

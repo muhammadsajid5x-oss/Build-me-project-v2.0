@@ -9,8 +9,8 @@ describe("Web foundation flow", () => {
     cy.contains("h1", "Foundation Test Page").should("be.visible");
 
     cy.contains("button", "Run Foundation Test").click();
-    cy.contains("[role=status]", "Foundation test passed.").should(
-      "be.visible",
-    );
+    cy.get("output")
+      .should("be.visible")
+      .and("contain.text", "Foundation test passed.");
   });
 });

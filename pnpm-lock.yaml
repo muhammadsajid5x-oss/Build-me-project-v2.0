@@ -172,6 +172,9 @@ importers:
       '@build-me/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@build-me/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
       react:
         specifier: ^19.1.1
         version: 19.2.8
@@ -206,6 +209,9 @@ importers:
 
   database:
     dependencies:
+      '@build-me/utils':
+        specifier: workspace:^
+        version: link:../packages/utils
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(postgres@3.4.9)
@@ -338,6 +344,9 @@ importers:
 
   services/api:
     dependencies:
+      '@build-me/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
       '@supabase/supabase-js':
         specifier: ^2.114.0
         version: 2.114.0

@@ -48,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Dependency Audit
+        run: pnpm audit --prod
+
       - name: Install Cypress binary
         run: pnpm exec cypress install
 
@@ -134,6 +137,14 @@ jobs:
 
       - name: Security Tests
         run: pnpm test:security
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: "http://localhost:3000/health"
+          rules_file_name: "tests/security/.zap/rules.tsv"
+          fail_action: true
+          allow_issue_writing: false
 
       - name: Analytics Tests
         run: pnpm test:analytics

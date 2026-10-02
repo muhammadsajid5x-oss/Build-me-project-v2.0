@@ -10,6 +10,8 @@ Database-related code is maintained under:
 
 `database/`
 
+See the [Database Recovery Guide](recovery-guide.md) for backup scope, restoration, migration reconciliation, ownership, and recovery drills.
+
 The database layer is separated from applications and services so that database responsibilities remain centralized and maintainable.
 
 ## Database Responsibilities
