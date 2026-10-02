@@ -21,6 +21,14 @@ function sanitize(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(sanitize);
   }
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      ...("code" in value && typeof value.code === "string"
+        ? { code: value.code }
+        : {}),
+    };
+  }
   if (value !== null && typeof value === "object") {
     const result: Record<string, unknown> = {};
     for (const [key, entry] of Object.entries(value)) {
@@ -40,7 +48,26 @@ export interface LogEntry {
   message: string;
   context?: LogContext;
 }
+
+type LogWriter = (entry: LogEntry) => void;
+
+function writeLogEntry(entry: LogEntry): void {
+  const serializedEntry = JSON.stringify(entry);
+
+  if (entry.level === "ERROR") {
+    console.error(serializedEntry);
+  } else if (entry.level === "WARN" || entry.level === "SECURITY") {
+    console.warn(serializedEntry);
+  } else if (entry.level === "DEBUG") {
+    console.debug(serializedEntry);
+  } else {
+    console.info(serializedEntry);
+  }
+}
+
 export class Logger {
+  constructor(private readonly write: LogWriter = writeLogEntry) {}
+
   log(level: LogLevel, message: string, context?: LogContext): LogEntry {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
@@ -48,6 +75,7 @@ export class Logger {
       message,
       ...(context ? { context: sanitize(context) as LogContext } : {}),
     };
+    this.write(entry);
     return entry;
   }
   debug(message: string, context?: LogContext): LogEntry {

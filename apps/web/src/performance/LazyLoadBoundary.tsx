@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Suspense } from "react";
 import { ErrorState } from "@build-me/ui";
+import { logger } from "@build-me/utils";
 
 import LoadingState from "../components/LoadingState";
 
@@ -27,9 +28,10 @@ export class LazyLoadBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error("[LazyLoad] Component failed to load.", {
+    logger.error("Web component failed to load.", {
+      service: "web",
       error,
-      errorInfo,
+      componentStack: errorInfo.componentStack,
     });
   }
 

@@ -160,31 +160,41 @@ If analytics requirements are not defined:
 
 ## Security
 
-### Input Validation
-
-[Describe validation requirements.]
+For every check, describe the existing foundation, required changes, and verification. Mark an item **Not applicable** with a reason or **Needs Confirmation**; do not leave it blank.
 
 ### Authentication
 
-[Describe authentication requirements.]
+[How is identity established and verified? Which actions require authentication?]
 
 ### Authorisation
 
-[Describe authorisation requirements.]
+[Which roles or permissions may perform each operation or access each resource? Where are checks enforced?]
+
+### Input Validation
+
+[Describe schemas, bounds, normalization, and rejection behavior for all untrusted input.]
 
 ### Data Protection
 
-[Describe how sensitive data should be protected.]
+[Identify sensitive data, minimization, access, encryption, retention, and logging-redaction requirements.]
+
+### Secrets
+
+[List required secret names and their secure source, access scope, and rotation expectations. Never record secret values.]
+
+### API Security
+
+[Describe endpoint authentication/authorization, safe error responses, transport/CORS, security headers, and rate limits where applicable.]
+
+### Abuse Risks
+
+[Assess enumeration, automation, replay, resource exhaustion, and other relevant abuse cases and mitigations.]
 
 ### Error Handling
 
-[Describe how internal technical details are protected.]
+[Describe safe external errors and protected diagnostic logging.]
 
-### Abuse Protection
-
-[Describe rate limiting or other abuse protection where required.]
-
-Unknown security requirements:
+Unknown or unresolved security requirements:
 
 **Needs Confirmation**
 
@@ -323,7 +333,7 @@ If no specific requirement exists:
 - [ ] Existing components considered
 - [ ] New components identified
 - [ ] Analytics considered
-- [ ] Security considered
+- [ ] Authentication, authorisation, input validation, data protection, secrets, API security, and abuse risks addressed or explicitly marked Not applicable/Needs Confirmation
 - [ ] Performance considered
 - [ ] Deployment considered
 - [ ] Monitoring considered

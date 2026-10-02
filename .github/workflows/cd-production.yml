@@ -16,6 +16,12 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
 
+    env:
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_KEY: ci-test-key
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_KEY: ci-test-key
+
     environment:
       name: production
 
@@ -40,8 +46,39 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Dependency Audit
+        run: pnpm audit --prod
+
       - name: Build
         run: pnpm build
+
+      - name: Start API
+        run: |
+          pnpm --dir services/api start > api.log 2>&1 &
+
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000/health > /dev/null; then
+              echo "API is ready"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "API failed to start"
+          cat api.log
+          exit 1
+
+      - name: SuperTest Security Tests
+        run: pnpm exec jest --config tests/jest.config.cjs tests/security/api/api-security.jest.test.ts
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: "http://localhost:3000/health"
+          rules_file_name: "tests/security/.zap/rules.tsv"
+          fail_action: true
+          allow_issue_writing: false
 
       - name: Deploy API to Production
         run: pnpm exec vercel deploy --yes --prod --token "$VERCEL_TOKEN"

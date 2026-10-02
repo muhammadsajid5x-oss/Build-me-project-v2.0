@@ -23,6 +23,7 @@
     "test:e2e": "cypress run --config-file tests/cypress.config.js",
     "test:performance": "playwright test tests/performance/homepage.performance.spec.ts",
     "type-check": "turbo run type-check typecheck",
+    "review:kpis": "node scripts/operations/review-kpis.mjs",
     "test:analytics": "jest --config tests/jest.config.cjs tests/analytics",
     "test:security": "jest --config tests/jest.config.cjs tests/security && playwright test tests/security/api-security.spec.ts",
     "test:api": "jest --config tests/jest.config.cjs tests/api",

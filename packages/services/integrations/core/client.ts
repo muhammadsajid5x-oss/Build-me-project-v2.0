@@ -1,12 +1,14 @@
 import { logger } from "@build-me/utils";
 import { IntegrationError } from "./errors";
-export type IntegrationResponseValidator<T> = {
-  safeParse: (data: unknown) => {
-    success: boolean;
-    data?: T;
-    error?: unknown;
-  };
-} | ((data: unknown) => T);
+export type IntegrationResponseValidator<T> =
+  | {
+      safeParse: (data: unknown) => {
+        success: boolean;
+        data?: T;
+        error?: unknown;
+      };
+    }
+  | ((data: unknown) => T);
 
 export const DEFAULT_INTEGRATION_TIMEOUT_MS = 10_000;
 
@@ -23,6 +25,16 @@ export type IntegrationResponse<T> = {
   status: number;
   headers: Headers;
 };
+
+function getLogUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return "[invalid-url]";
+  }
+}
+
 function validateResponseBody<T>(
   raw: unknown,
   schema: IntegrationResponseValidator<T> | undefined,
@@ -60,9 +72,10 @@ export async function requestIntegration<T = unknown>(
 ): Promise<IntegrationResponse<T>> {
   const method = request.method ?? "GET";
   const timeoutMs = request.timeoutMs ?? DEFAULT_INTEGRATION_TIMEOUT_MS;
+  const logUrl = getLogUrl(request.url);
   logger.info("Integration request started.", {
     method,
-    url: request.url,
+    url: logUrl,
   });
   try {
     const response = await fetch(request.url, {
@@ -83,7 +96,7 @@ export async function requestIntegration<T = unknown>(
     if (!response.ok) {
       logger.error("Integration request returned an error.", {
         method,
-        url: request.url,
+        url: logUrl,
         status: response.status,
       });
       throw new IntegrationError(
@@ -94,7 +107,7 @@ export async function requestIntegration<T = unknown>(
     }
     logger.info("Integration request completed.", {
       method,
-      url: request.url,
+      url: logUrl,
       status: response.status,
     });
     return {
@@ -109,7 +122,7 @@ export async function requestIntegration<T = unknown>(
     if (error instanceof Error && error.name === "AbortError") {
       logger.error("Integration request timed out.", {
         method,
-        url: request.url,
+        url: logUrl,
         timeoutMs,
       });
       throw new IntegrationError(
@@ -119,7 +132,7 @@ export async function requestIntegration<T = unknown>(
     }
     logger.error("Integration request failed.", {
       method,
-      url: request.url,
+      url: logUrl,
     });
     throw new IntegrationError(
       "Integration request failed.",

@@ -34,10 +34,12 @@ This directory contains architecture, API, database, testing, security, deployme
 ## Database
 
 - [Database documentation](database/README.md)
+- [Database recovery guide](database/recovery-guide.md)
 
 ## Analytics
 
 - [Analytics event model](analytics/event-model.md)
+- [Product / Feature Analytics Review](analytics/feature-analytics-review.md)
 
 ## Testing
 
@@ -52,6 +54,7 @@ This directory contains architecture, API, database, testing, security, deployme
 ## Deployment
 
 - [Deployment documentation](deployment/README.md)
+- [Rollback guide](deployment/rollback-guide.md)
 
 ## Operations
 

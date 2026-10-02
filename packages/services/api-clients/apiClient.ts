@@ -1,3 +1,5 @@
+import { logger } from "@build-me/utils";
+
 export interface ApiClientOptions {
   baseUrl: string;
   defaultHeaders?: Record<string, string>;
@@ -28,11 +30,9 @@ function validateBaseUrl(baseUrl: string): string {
   if (!["http:", "https:"].includes(url.protocol)) {
     throw new Error("API base URL must use HTTP or HTTPS.");
   }
-  return trimmed.replace(/\/+$/, "");
+  return trimmed.replace(/\/$/, "");
 }
-async function parseApiError(
-  response: Response,
-): Promise<ApiError> {
+async function parseApiError(response: Response): Promise<ApiError> {
   const fallback: ApiError = {
     code: "API_REQUEST_FAILED",
     message: "The request could not be completed.",
@@ -74,10 +74,7 @@ export class ApiClient {
     };
     this.getAccessToken = options.getAccessToken;
   }
-  async request<T>(
-    path: string,
-    options: RequestOptions = {},
-  ): Promise<T> {
+  async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
     const normalizedPath = path.replace(/^\/+/, "");
     const url = `${this.baseUrl}/${normalizedPath}`;
     const headers: Record<string, string> = {
@@ -90,27 +87,54 @@ export class ApiClient {
         headers.Authorization = `Bearer ${accessToken}`;
       }
     }
-    const response = await fetch(url, {
-      method: options.method ?? "GET",
-      headers,
-      body:
-        options.body === undefined
-          ? undefined
-          : JSON.stringify(options.body),
-      signal: options.signal,
-    });
+    const method = options.method ?? "GET";
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        method,
+        headers,
+        body:
+          options.body === undefined ? undefined : JSON.stringify(options.body),
+        signal: options.signal,
+      });
+    } catch (error) {
+      logger.error("Service API request failed before receiving a response.", {
+        service: "services",
+        method,
+        path: normalizedPath,
+        error,
+      });
+      throw error;
+    }
+
     if (!response.ok) {
-      throw await parseApiError(response);
+      const error = await parseApiError(response);
+      logger.error("Service API request returned an error.", {
+        service: "services",
+        method,
+        path: normalizedPath,
+        status: response.status,
+        code: error.code,
+      });
+      throw error;
     }
     if (response.status === 204) {
       return undefined as T;
     }
-    return response.json() as Promise<T>;
+    try {
+      return (await response.json()) as T;
+    } catch (error) {
+      logger.error("Service API response could not be parsed.", {
+        service: "services",
+        method,
+        path: normalizedPath,
+        error,
+      });
+      throw error;
+    }
   }
-  get<T>(
-    path: string,
-    options?: Omit<RequestOptions, "method" | "body">,
-  ) {
+  get<T>(path: string, options?: Omit<RequestOptions, "method" | "body">) {
     return this.request<T>(path, {
       ...options,
       method: "GET",
@@ -149,10 +173,7 @@ export class ApiClient {
       body,
     });
   }
-  delete<T>(
-    path: string,
-    options?: Omit<RequestOptions, "method" | "body">,
-  ) {
+  delete<T>(path: string, options?: Omit<RequestOptions, "method" | "body">) {
     return this.request<T>(path, {
       ...options,
       method: "DELETE",
