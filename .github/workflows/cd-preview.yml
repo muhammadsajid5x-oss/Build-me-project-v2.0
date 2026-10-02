@@ -78,11 +78,18 @@ jobs:
         env:
           API_HEALTH_URL: ${{ steps.deploy_api.outputs.deployment_url }}/health
           STARTED_AT_MS: ${{ steps.recovery_timer.outputs.started_at_ms }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           set -euo pipefail
 
           for attempt in {1..60}; do
-            status=$(curl --silent --show-error --output /tmp/preview-health.json --write-out '%{http_code}' "$API_HEALTH_URL")
+            curl_args=(--silent --show-error --output /tmp/preview-health.json --write-out '%{http_code}')
+
+            if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+              curl_args+=(--header "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET")
+            fi
+
+            status=$(curl "${curl_args[@]}" "$API_HEALTH_URL")
 
             if [ "$status" = "200" ]; then
               finished_at_ms=$(date +%s%3N)

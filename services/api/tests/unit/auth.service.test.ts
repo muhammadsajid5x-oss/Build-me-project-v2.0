@@ -95,7 +95,10 @@ describe("authenticateAccessToken", () => {
     process.env.SUPABASE_KEY = "test-key";
     vi.resetModules();
 
-    await expect(import("../../src/auth/auth.service.js")).rejects.toThrow(
+    const { authenticateAccessToken } =
+      await import("../../src/auth/auth.service.js");
+
+    await expect(authenticateAccessToken("token")).rejects.toThrow(
       "SUPABASE_URL is not configured.",
     );
   });
@@ -105,7 +108,10 @@ describe("authenticateAccessToken", () => {
     process.env.SUPABASE_KEY = "";
     vi.resetModules();
 
-    await expect(import("../../src/auth/auth.service.js")).rejects.toThrow(
+    const { authenticateAccessToken } =
+      await import("../../src/auth/auth.service.js");
+
+    await expect(authenticateAccessToken("token")).rejects.toThrow(
       "SUPABASE_KEY is not configured.",
     );
   });
