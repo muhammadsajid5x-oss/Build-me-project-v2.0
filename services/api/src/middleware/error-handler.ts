@@ -1,5 +1,5 @@
 ﻿import type { NextFunction, Request, Response } from "express";
-import { logger } from "@build-me/utils";
+import { logger } from "@build-me/utils/logging";
 import {
   API_ERROR_CODES,
   ApiError,

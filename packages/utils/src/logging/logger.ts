@@ -66,7 +66,11 @@ function writeLogEntry(entry: LogEntry): void {
 }
 
 export class Logger {
-  constructor(private readonly write: LogWriter = writeLogEntry) {}
+  private readonly write: LogWriter;
+
+  constructor(write: LogWriter = writeLogEntry) {
+    this.write = write;
+  }
 
   log(level: LogLevel, message: string, context?: LogContext): LogEntry {
     const entry: LogEntry = {
