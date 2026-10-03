@@ -45,7 +45,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build API
-        run: pnpm --filter @build-me/api build
+        run: pnpm exec turbo run build --filter=@build-me/api
 
       - name: Start API
         run: |

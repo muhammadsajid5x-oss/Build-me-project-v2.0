@@ -20,7 +20,7 @@
       ]
     },
     "type-check": {
-      "dependsOn": ["^type-check"]
+      "dependsOn": ["^build", "^type-check"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]

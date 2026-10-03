@@ -12,6 +12,7 @@ import {
 
 const app = express();
 
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
 // Prevent API responses from being stored or cached.
@@ -35,6 +36,8 @@ app.use(
   }),
 );
 
+app.use("/health", healthRoutes);
+
 app.use(apiRateLimiter);
 
 app.get("/", (_req, res) => {
@@ -44,7 +47,6 @@ app.get("/", (_req, res) => {
   });
 });
 
-app.use("/health", healthRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/foundation-checkins", foundationCheckinRoutes);
 
