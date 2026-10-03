@@ -10,6 +10,8 @@ module.exports = {
   setupFiles: ["<rootDir>/tests/jest.setup.ts"],
   resolver: "<rootDir>/tests/jest.resolver.cjs",
   moduleNameMapper: {
+    "^@build-me/utils/logging$":
+      "<rootDir>/packages/utils/src/logging/logger.ts",
     "^.+\\.(css|scss|sass)$": "<rootDir>/tests/integration/mocks/styleMock.js",
   },
   testPathIgnorePatterns: ["/node_modules/", "/dist/", "/storybook-static/"],
