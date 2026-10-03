@@ -1,0 +1,71 @@
+name: Performance Automation
+
+on:
+  push:
+    branches:
+      - development
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - development
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  performance:
+    name: Performance Validation
+    runs-on: ubuntu-latest
+
+    env:
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_KEY: ci-test-key
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_KEY: ci-test-key
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build API
+        run: pnpm exec turbo run build --filter=@build-me/api
+
+      - name: Start API
+        run: |
+          pnpm --dir services/api start > api.log 2>&1 &
+
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000/health > /dev/null; then
+              echo "API is ready"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "API failed to start"
+          cat api.log
+          exit 1
+
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run k6 performance tests
+        run: k6 run tests/performance/validation/api-rate-limit-validation.k6.js

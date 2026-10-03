@@ -1,0 +1,123 @@
+name: CD - Preview
+
+"on":
+  workflow_run:
+    workflows:
+      - CI Quality Gate
+    types:
+      - completed
+    branches:
+      - "feature/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    name: Deploy to Preview
+    if: "${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}"
+    runs-on: ubuntu-latest
+
+    environment:
+      name: preview
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Start recovery timer
+        id: recovery_timer
+        run: echo "started_at_ms=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy API to Preview
+        id: deploy_api
+        run: |
+          set -euo pipefail
+
+          pnpm exec vercel deploy --target=preview --yes --token "$VERCEL_TOKEN" --meta githubDeployment=1 --meta githubCommitRef="$GITHUB_COMMIT_REF" 2>&1 | tee /tmp/vercel-api-deploy.log
+          deployment_url=$(grep -Eo 'https://[^[:space:]]+\.vercel\.app' /tmp/vercel-api-deploy.log | tail -n 1)
+
+          if [ -z "$deployment_url" ]; then
+            echo "Could not determine the API deployment URL"
+            exit 1
+          fi
+
+          echo "deployment_url=$deployment_url" >> "$GITHUB_OUTPUT"
+          echo "API deployment URL: $deployment_url"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_API_PROJECT_ID }}
+          GITHUB_COMMIT_REF: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Validate API recovery
+        env:
+          API_HEALTH_URL: ${{ steps.deploy_api.outputs.deployment_url }}/health
+          STARTED_AT_MS: ${{ steps.recovery_timer.outputs.started_at_ms }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..60}; do
+            curl_args=(--silent --show-error --output /tmp/preview-health.json --write-out '%{http_code}')
+
+            if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+              curl_args+=(--header "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET")
+            fi
+
+            status=$(curl "${curl_args[@]}" "$API_HEALTH_URL")
+
+            if [ "$status" = "200" ]; then
+              finished_at_ms=$(date +%s%3N)
+              recovery_ms=$((finished_at_ms - STARTED_AT_MS))
+              recovery_seconds=$(awk "BEGIN { printf \"%.3f\", $recovery_ms / 1000 }")
+
+              echo "Recovery validated: $API_HEALTH_URL returned 200 in ${recovery_seconds}s"
+              {
+                echo "### Preview Recovery"
+                echo "- Health endpoint: \`$API_HEALTH_URL\`"
+                echo "- Result: \`200\`"
+                echo "- Recovery time: \`${recovery_seconds}s\`"
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+
+            echo "Health check attempt $attempt/60 returned HTTP $status"
+            sleep 5
+          done
+
+          echo "API recovery validation failed: $API_HEALTH_URL did not return 200"
+          cat /tmp/preview-health.json || true
+          exit 1
+
+      - name: Deploy Dashboard to Preview
+        run: pnpm exec vercel deploy --target=preview --yes --token "$VERCEL_TOKEN" --meta githubDeployment=1 --meta githubCommitRef="$GITHUB_COMMIT_REF"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_DASHBOARD_PROJECT_ID }}
+          GITHUB_COMMIT_REF: ${{ github.event.workflow_run.head_branch }}

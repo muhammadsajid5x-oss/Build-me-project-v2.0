@@ -1,0 +1,150 @@
+name: CI Quality Gate
+
+on:
+  push:
+    branches:
+      - development
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - development
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: CI Quality Gate
+    runs-on: ubuntu-latest
+
+    env:
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_KEY: ci-test-key
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_KEY: ci-test-key
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Verify toolchain
+        run: |
+          node --version
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dependency Audit
+        run: pnpm audit --prod
+
+      - name: Install Cypress binary
+        run: pnpm exec cypress install
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type Check
+        run: pnpm type-check
+
+      - name: Build
+        run: pnpm build
+
+      - name: Component Tests
+        run: pnpm build-storybook
+
+      - name: Start API
+        run: |
+          pnpm --dir services/api start > api.log 2>&1 &
+
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000/health > /dev/null; then
+              echo "API is ready"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "API failed to start"
+          cat api.log
+          exit 1
+
+      - name: Start Web
+        run: |
+          pnpm --dir apps/web preview --host 0.0.0.0 --port 5173 > web.log 2>&1 &
+
+          for i in {1..30}; do
+            if curl -fsS http://localhost:5173/ > /dev/null; then
+              echo "Web is ready"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "Web failed to start"
+          cat web.log
+          exit 1
+
+      - name: Start Dashboard
+        run: |
+          pnpm --dir apps/dashboard preview --host 0.0.0.0 --port 5174 > dashboard.log 2>&1 &
+
+          for i in {1..30}; do
+            if curl -fsS http://localhost:5174/ > /dev/null; then
+              echo "Dashboard is ready"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "Dashboard failed to start"
+          cat dashboard.log
+          exit 1
+
+      - name: Unit Tests
+        run: pnpm test:unit
+
+      - name: Integration Tests
+        run: pnpm test:integration
+
+      - name: API Tests
+        run: pnpm test:api
+
+      - name: E2E Tests
+        run: pnpm test:e2e
+
+      - name: Performance Tests
+        run: pnpm test:performance
+
+      - name: Security Tests
+        run: pnpm test:security
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: "http://localhost:3000/health"
+          rules_file_name: "tests/security/.zap/rules.tsv"
+          fail_action: true
+          allow_issue_writing: false
+
+      - name: Analytics Tests
+        run: pnpm test:analytics

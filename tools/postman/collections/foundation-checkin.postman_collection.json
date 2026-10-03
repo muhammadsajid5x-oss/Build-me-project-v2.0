@@ -1,0 +1,142 @@
+{
+  "info": {
+    "name": "Build Me Foundation Check-in",
+    "description": "Dummy Child Story used for the foundation readiness test. Contract: tools/postman/contracts/foundation-checkin.contract.md",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create check-in",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          { "key": "Accept", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ada Lovelace\"\n}"
+        },
+        "url": { "raw": "{{API_BASE_URL}}/api/v1/foundation-checkins" },
+        "description": "Records a foundation check-in. Returns 201 with id, name and createdAt."
+      },
+      "response": [
+        {
+          "name": "Created",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ada Lovelace\"\n}"
+            },
+            "url": { "raw": "{{API_BASE_URL}}/api/v1/foundation-checkins" }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"data\": {\n    \"id\": \"b3f1c2d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d\",\n    \"name\": \"Ada Lovelace\",\n    \"createdAt\": \"2026-10-03T10:00:00.000Z\"\n  }\n}"
+        }
+      ],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 201', function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Returns id, name and createdAt', function () {",
+              "  const data = pm.response.json().data;",
+              "  pm.expect(data.id).to.be.a('string');",
+              "  pm.expect(data.name).to.eql('Ada Lovelace');",
+              "  pm.expect(new Date(data.createdAt).toString()).to.not.eql('Invalid Date');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create check-in with missing name",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          { "key": "Accept", "value": "application/json", "type": "text" }
+        ],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": { "raw": "{{API_BASE_URL}}/api/v1/foundation-checkins" },
+        "description": "A missing name is rejected with 400 VALIDATION_ERROR."
+      },
+      "response": [
+        {
+          "name": "Validation error",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{API_BASE_URL}}/api/v1/foundation-checkins" }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"The request contains invalid fields.\",\n    \"details\": [\n      { \"field\": \"name\", \"message\": \"Name is required.\" }\n    ]\n  }\n}"
+        }
+      ],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Returns 400', function () {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "pm.test('Returns VALIDATION_ERROR for name', function () {",
+              "  const error = pm.response.json().error;",
+              "  pm.expect(error.code).to.eql('VALIDATION_ERROR');",
+              "  pm.expect(error.details[0].field).to.eql('name');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
