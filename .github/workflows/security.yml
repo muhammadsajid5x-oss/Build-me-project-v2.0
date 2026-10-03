@@ -49,7 +49,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Build API
-        run: pnpm --filter @build-me/api build
+        run: pnpm exec turbo run build --filter=@build-me/api
 
       - name: Start API
         run: |
