@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: preview-${{ github.ref }}
+  group: preview-${{ github.event.workflow_run.event }}-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: true
 
 jobs:
