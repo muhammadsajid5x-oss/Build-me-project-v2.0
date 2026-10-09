@@ -1,0 +1,41 @@
+{
+  "exampleOnly": true,
+  "apiName": "Build Me API Health Check",
+  "purpose": "Check whether the API is running.",
+  "endpoint": "/health",
+  "method": "GET",
+  "authentication": "Not required",
+  "request": {
+    "headers": [],
+    "pathParameters": [],
+    "queryParameters": [],
+    "body": null
+  },
+  "requestValidation": "No request parameters or body.",
+  "response": {
+    "success": {
+      "statusCode": 200,
+      "contentType": "application/json",
+      "bodySchema": {
+        "status": "string",
+        "service": "string"
+      }
+    }
+  },
+  "responseValidation": [
+    "status must equal ok",
+    "service must identify the API service"
+  ],
+  "statusCodes": [200],
+  "errors": [],
+  "permissions": "No user permission required; this is a public health check.",
+  "exampleRequest": {
+    "method": "GET",
+    "path": "/health"
+  },
+  "exampleResponse": {
+    "status": "ok",
+    "service": "build-me-api"
+  },
+  "note": "Foundation API example only; not a Child Story feature API. Implementation: services/api/src/routes/health.ts."
+}

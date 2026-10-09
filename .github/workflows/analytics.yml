@@ -1,0 +1,78 @@
+name: Analytics Automation
+
+on:
+  push:
+    branches:
+      - development
+      - main
+      - "feature/**"
+
+  pull_request:
+    branches:
+      - development
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analytics:
+    name: Analytics Validation
+    runs-on: ubuntu-latest
+
+    env:
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_KEY: ci-test-key
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_KEY: ci-test-key
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate analytics test foundation
+        shell: bash
+        run: |
+          set -e
+
+          required_dirs=(
+            "tests/analytics"
+            "tests/analytics/devsecops"
+            "tests/analytics/features"
+            "tests/analytics/features/conversions"
+            "tests/analytics/features/events"
+            "tests/analytics/features/tracking"
+            "tests/analytics/features/validation"
+          )
+
+          for dir in "${required_dirs[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "Missing analytics directory: $dir"
+              exit 1
+            fi
+          done
+
+          echo "Analytics test foundation is present."
+
+      - name: Run analytics validation tests
+        run: |
+          pnpm exec jest \
+            --config tests/jest.config.cjs \
+            tests/analytics \
+            --passWithNoTests

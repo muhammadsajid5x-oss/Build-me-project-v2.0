@@ -1,0 +1,55 @@
+﻿# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+storybook-static/
+
+# Turbo
+.turbo/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel/
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+*storybook.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test results
+test-results/
+
+# Python generated files
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.vercel
+.env*
