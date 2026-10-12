@@ -1,5 +1,5 @@
 import express from "express";
-
+import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import analyticsEventRoutes from "./routes/analytics-events.js";
 import foundationCheckinRoutes from "./routes/foundation-checkins.js";
@@ -15,6 +15,15 @@ const app = express();
 
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
+
+// Allow cross-origin requests from the deployed Web application.
+app.use(
+  cors({
+    origin: true,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // Prevent API responses from being stored or cached.
 app.use((req, res, next) => {

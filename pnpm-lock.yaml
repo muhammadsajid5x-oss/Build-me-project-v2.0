@@ -166,7 +166,7 @@ importers:
         version: 7.3.6(@types/node@26.4.0)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.12)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
+        version: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
 
   apps/web:
     dependencies:
@@ -191,7 +191,7 @@ importers:
         version: 4.3.3(vite@7.3.6(@types/node@26.4.0)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.12))
       '@testing-library/jest-dom':
         specifier: ^7.0.1
-        version: 7.0.1(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))
+        version: 7.0.1(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))
       '@vitejs/plugin-react':
         specifier: ^4.7.0
         version: 4.7.0(vite@7.3.6(@types/node@26.4.0)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.12))
@@ -209,7 +209,7 @@ importers:
         version: 7.3.6(@types/node@26.4.0)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.12)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
+        version: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
 
   database:
     dependencies:
@@ -308,7 +308,7 @@ importers:
         version: 4.3.3(vite@7.3.6(@types/node@26.4.0)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.12))
       '@testing-library/jest-dom':
         specifier: ^7.0.1
-        version: 7.0.1(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))
+        version: 7.0.1(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))
       '@testing-library/react':
         specifier: ^16.3.3
         version: 16.3.3(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -320,7 +320,7 @@ importers:
         version: 19.2.5(@types/react@19.2.18)
       '@types/testing-library__jest-dom':
         specifier: ^6.0.0
-        version: 6.0.0(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))
+        version: 6.0.0(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))
       '@vitejs/plugin-react':
         specifier: ^4.7.0
         version: 4.7.0(vite@7.3.6(@types/node@26.4.0)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.12))
@@ -338,7 +338,7 @@ importers:
         version: 7.3.6(@types/node@26.4.0)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.12)
       vitest:
         specifier: 3.2.7
-        version: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
+        version: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
 
   packages/utils:
     devDependencies:
@@ -357,6 +357,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.114.0
         version: 2.114.0
+      cors:
+        specifier: ^2.8.6
+        version: 2.8.6
       dotenv:
         specifier: ^16.6.1
         version: 16.6.1
@@ -370,6 +373,9 @@ importers:
         specifier: ^8.3.0
         version: 8.3.0
     devDependencies:
+      '@types/cors':
+        specifier: ^2.8.19
+        version: 2.8.19
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.6
@@ -381,7 +387,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
+        version: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
 
 packages:
 
@@ -3245,6 +3251,9 @@ packages:
   '@types/cookiejar@2.1.5':
     resolution: {integrity: sha512-he+DHOWReW0nghN24E1WUqM0efK4kI9oTqDm6XmK8ZPe2djZ90BSNdGnIyCLzCPw7/pogPlGbzI2wHGGmi4O/Q==}
 
+  '@types/cors@2.8.19':
+    resolution: {integrity: sha512-mFNylyeyqN93lfe/9CSxOGREz8cpzAhH+E93xJ4xWQf62V8sQ/24reV2nyzUWM6H6Xji+GGHpkbLe7pVoUEskg==}
+
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
@@ -3998,9 +4007,6 @@ packages:
     resolution: {integrity: sha512-FvWoWYfSCM6kRxCSH+MGLHIKKGRL6A6AW7Zek2O32REPQRdg131428uRTKMBYAeRd3XXAaHDS60Wpri7CdKDrA==}
     engines: {node: '>=4'}
 
-  ast-v8-to-istanbul@1.0.5:
-    resolution: {integrity: sha512-UPAgKJFSEGMWSDr3LX4tqnAb4f7KGT8O40Tyx8wbYmmZ/yn58lNCm8h3svs3eXgiGd5AXxz8NDOvXWvicq+rJA==}
-
   ast-v8-to-istanbul@1.0.7:
     resolution: {integrity: sha512-kFL68AG6ajd8fg248zwM9GQrUWEp79gsmjum34OEXjs4yHuUMZfYKwOLW9GMmB4oNvVrj+EAGxsP7ye2UR9UlA==}
 
@@ -4413,6 +4419,10 @@ packages:
 
   core-util-is@1.0.2:
     resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
+
+  cors@2.8.6:
+    resolution: {integrity: sha512-tJtZBBHA6vjIAaF6EnIaq6laBBP9aq/Y3ouVJjEfoHbRBcHBAHYcMh/w8LDrk2PvIMMq8gmopa5D4V8RmbrxGw==}
+    engines: {node: '>= 0.10'}
 
   cosmiconfig@7.1.0:
     resolution: {integrity: sha512-AdmX6xUzdNASswsFtmwSt7Vj8po9IuqXm0UXz7QKPuEUmPB4XyjGfaAr2PSuELMwkRMVH1EpIkX5bTZGRB3eCA==}
@@ -5985,9 +5995,6 @@ packages:
 
   magic-string@1.4.3:
     resolution: {integrity: sha512-z12OxmaPGE0F4xlpGdjuAUckipLpQlTAuAmyGhNoD7ODpYUzvDfvtxUbjM/jwznyP178oju/KDdyi220wNJ0RQ==}
-
-  magicast@0.5.4:
-    resolution: {integrity: sha512-llBEhWm1SacoRwgHUoQJYtwp4PBLF4faQi5TCpIGyGs9n4y5+juI0tDgyKIfpqxckRHaHzouUEph3THklWh03w==}
 
   magicast@0.5.5:
     resolution: {integrity: sha512-UicdXN8zQ3JHlxVq+28afMXPr1z7WNY6+7EJnzTdQWkTAlMLF5fNCCKxJHBQwGaNGR11581EiQmQzx73+MvszA==}
@@ -10112,7 +10119,7 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
 
-  '@testing-library/jest-dom@7.0.1(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))':
+  '@testing-library/jest-dom@7.0.1(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))':
     dependencies:
       '@adobe/css-tools': 4.5.0
       '@testing-library/dom': 10.4.1
@@ -10122,7 +10129,7 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
     optionalDependencies:
-      vitest: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
+      vitest: 3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12)
 
   '@testing-library/jest-dom@7.0.1(@testing-library/dom@10.4.1)(vitest@5.0.4)':
     dependencies:
@@ -10238,6 +10245,10 @@ snapshots:
 
   '@types/cookiejar@2.1.5': {}
 
+  '@types/cors@2.8.19':
+    dependencies:
+      '@types/node': 26.4.0
+
   '@types/deep-eql@4.0.2': {}
 
   '@types/doctrine@0.0.9': {}
@@ -10345,9 +10356,9 @@ snapshots:
       '@types/methods': 1.1.4
       '@types/superagent': 8.1.11
 
-  '@types/testing-library__jest-dom@6.0.0(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))':
+  '@types/testing-library__jest-dom@6.0.0(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))':
     dependencies:
-      '@testing-library/jest-dom': 7.0.1(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))
+      '@testing-library/jest-dom': 7.0.1(@testing-library/dom@10.4.1)(vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12))
     transitivePeerDependencies:
       - '@testing-library/dom'
       - vitest
@@ -10943,7 +10954,7 @@ snapshots:
       '@vitest/browser': 4.1.11(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12))(vitest@4.1.11)
       '@vitest/mocker': 4.1.11(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12))
       playwright: 1.63.0
-      tinyrainbow: 3.1.1
+      tinyrainbow: 3.2.0
       vitest: 4.1.11(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.4(vitest@5.0.4))(jsdom@30.0.1(@noble/hashes@1.8.0))(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12))
     transitivePeerDependencies:
       - bufferutil
@@ -10973,9 +10984,9 @@ snapshots:
       magic-string: 0.30.21
       pngjs: 7.0.0
       sirv: 3.0.2
-      tinyrainbow: 3.1.1
+      tinyrainbow: 3.2.0
       vitest: 4.1.11(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.4(vitest@5.0.4))(jsdom@30.0.1(@noble/hashes@1.8.0))(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12))
-      ws: 8.21.3
+      ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -11005,14 +11016,14 @@ snapshots:
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.1.11
-      ast-v8-to-istanbul: 1.0.5
+      ast-v8-to-istanbul: 1.0.7
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-report: 3.0.1
       istanbul-reports: 3.2.0
-      magicast: 0.5.4
+      magicast: 0.5.5
       obug: 2.1.4
-      std-env: 4.2.0
-      tinyrainbow: 3.1.1
+      std-env: 4.3.0
+      tinyrainbow: 3.2.0
       vitest: 4.1.11(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.4(vitest@5.0.4))(jsdom@30.0.1(@noble/hashes@1.8.0))(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12))
     optionalDependencies:
       '@vitest/browser': 4.1.11(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12))(vitest@4.1.11)
@@ -11286,13 +11297,6 @@ snapshots:
   ast-types@0.16.3:
     dependencies:
       tslib: 2.8.1
-
-  ast-v8-to-istanbul@1.0.5:
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.31
-      estree-walker: 3.0.3
-      js-tokens: 10.0.0
-    optional: true
 
   ast-v8-to-istanbul@1.0.7:
     dependencies:
@@ -11673,6 +11677,11 @@ snapshots:
   cookiejar@2.1.4: {}
 
   core-util-is@1.0.2: {}
+
+  cors@2.8.6:
+    dependencies:
+      object-assign: 4.1.1
+      vary: 1.1.2
 
   cosmiconfig@7.1.0:
     dependencies:
@@ -13520,13 +13529,6 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  magicast@0.5.4:
-    dependencies:
-      '@babel/parser': 7.29.8
-      '@babel/types': 7.29.8
-      source-map-js: 1.2.1
-    optional: true
-
   magicast@0.5.5:
     dependencies:
       '@babel/parser': 7.29.8
@@ -15124,7 +15126,7 @@ snapshots:
       jiti: 2.7.0
       tsx: 4.23.12
 
-  vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4(vitest@5.0.4))(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12):
+  vitest@3.2.7(@edge-runtime/vm@3.2.0)(@types/node@26.4.0)(@vitest/ui@5.0.4)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(tsx@4.23.12):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.7
