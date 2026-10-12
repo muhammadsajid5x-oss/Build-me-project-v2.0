@@ -63,3 +63,11 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_DASHBOARD_PROJECT_ID }}
           GITHUB_COMMIT_REF: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Deploy Web to Development
+        run: pnpm exec vercel deploy --target=preview --yes --token "$VERCEL_TOKEN" --meta githubDeployment=1 --meta githubCommitRef="$GITHUB_COMMIT_REF"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
+          GITHUB_COMMIT_REF: ${{ github.event.workflow_run.head_branch }}

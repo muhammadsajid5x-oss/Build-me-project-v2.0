@@ -7,7 +7,9 @@
   "types": "./index.ts",
   "exports": {
     ".": "./index.ts",
-    "./drizzle": "./drizzle/index.ts"
+    "./drizzle": "./drizzle/index.ts",
+    "./drizzle/client": "./drizzle/client.ts",
+    "./schema/analytics-events": "./schema/analytics-events.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

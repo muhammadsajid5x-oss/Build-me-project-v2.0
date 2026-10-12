@@ -64,4 +64,17 @@ The example is illustrative only; it does not define a requirement to track proj
 
 ## Current Pipeline Status
 
-The Python analytics foundation test sends `foundation.test.clicked` through `AnalyticsTracker`, `AnalyticsProcessor`, and `AnalyticsReporter`. The tracker's storage is in-memory for the lifetime of the process. There is not yet an ingestion or persistence path from this service to the `analytics_events` database table, so this test does not establish durable storage.
+The Python analytics foundation test sends `foundation.test.clicked` through `AnalyticsTracker`, `AnalyticsProcessor`, and `AnalyticsReporter`. The tracker's storage is in-memory for the lifetime of the process.
+
+The web Navbar also emits the allowlisted `navbar.home.clicked` event through `POST /api/v1/analytics/events`. The API writes a fixed, anonymous event payload to the `analytics_events` table, ignores caller-supplied properties, limits this endpoint to 30 requests per 15 minutes, and sends persistence failures through the API's safe error handler. Durable storage requires `DATABASE_URL` to be configured and the existing analytics table migration to be applied. Local tests verify the API write contract with a mocked database; they do not verify a deployed database, production ingestion, dashboards, or retention.
+
+To observe collection after deployment, compare the event count over a fixed window with Navbar usage and inspect API error logs for persistence failures:
+
+```sql
+SELECT count(*) AS home_navigation_events
+FROM analytics_events
+WHERE name = 'navbar.home.clicked'
+  AND timestamp >= now() - interval '24 hours';
+```
+
+If collection fails, Home navigation remains available. Check the API deployment, `DATABASE_URL`, and migration state, then restore the last healthy API deployment or apply a reviewed forward fix. Do not replay events or restore analytics data without an approved recovery procedure.

@@ -1,6 +1,7 @@
 import express from "express";
 
 import authRoutes from "./routes/auth.js";
+import analyticsEventRoutes from "./routes/analytics-events.js";
 import foundationCheckinRoutes from "./routes/foundation-checkins.js";
 import healthRoutes from "./routes/health.js";
 
@@ -48,6 +49,7 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/analytics/events", analyticsEventRoutes);
 app.use("/api/v1/foundation-checkins", foundationCheckinRoutes);
 
 app.use((_request, _response, next) => {
