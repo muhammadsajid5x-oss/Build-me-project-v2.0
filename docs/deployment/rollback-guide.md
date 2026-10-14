@@ -42,6 +42,7 @@ Monitor
 - Confirm the API health endpoint returns HTTP 200.
 - Confirm the Web and Dashboard load in the affected environment.
 - Check authentication and the critical user journeys affected by the incident.
+- If Navbar analytics is affected, verify a Home-logo click still navigates and check whether `navbar.home.clicked` events continue to persist. Analytics delivery is best-effort and must not block navigation.
 - Review application and deployment logs for recurring errors.
 
 ## 5. Check the Data

@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.1",
     "@vitejs/plugin-react": "^4.7.0",
     "jsdom": "^30.0.1",
     "tailwindcss": "^4.3.3",

@@ -13,6 +13,7 @@ export default defineConfig(
       "**/dist/**",
       "**/build/**",
       "**/.turbo/**",
+      "**/.vercel/**",
       "**/coverage/**",
       "**/storybook-static/**",
     ],

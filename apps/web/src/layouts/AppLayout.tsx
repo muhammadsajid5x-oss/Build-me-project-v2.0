@@ -1,13 +1,12 @@
-import { Link, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
+
+import Navbar from "../components/Navbar/Navbar";
+
 export default function AppLayout() {
   return (
     <div className="min-h-screen">
-      <header className="border-b p-4">
-        <nav className="flex gap-4">
-          <Link to="/">Home</Link>
-          <Link to="/route-test">Another Route</Link>
-        </nav>
-      </header>
+      <Navbar />
+
       <main className="p-8">
         <Outlet />
       </main>
