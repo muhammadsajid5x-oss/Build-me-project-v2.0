@@ -1,5 +1,7 @@
 import { rateLimit } from "express-rate-limit";
 import { Router } from "express";
+import { db } from "@build-me/database/drizzle/client";
+import { analyticsEvents } from "@build-me/database/schema/analytics-events";
 
 const router = Router();
 
@@ -28,11 +30,6 @@ router.post("/", async (request, response, next) => {
   }
 
   try {
-    const [{ db }, { analyticsEvents }] = await Promise.all([
-      import("@build-me/database/drizzle/client"),
-      import("@build-me/database/schema/analytics-events"),
-    ]);
-
     await db.insert(analyticsEvents).values({
       name: "navbar.home.clicked",
       properties: {

@@ -9,9 +9,11 @@ describe("Web App", () => {
     render(<App />);
 
     expect(
-      await screen.findByRole("heading", { name: "Build Me" }),
+      await screen.findByRole("heading", { name: /Build Better/i }),
     ).toBeInTheDocument();
 
-    expect(screen.getByText("Public website foundation.")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Simple, fast, and beautiful platforms/i),
+    ).toBeInTheDocument();
   });
 });
