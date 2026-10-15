@@ -29,8 +29,8 @@ router.post("/", async (request, response, next) => {
 
   try {
     const [{ db }, { analyticsEvents }] = await Promise.all([
-      import("@build-me/database/drizzle/client"),
-      import("@build-me/database/schema/analytics-events"),
+      import("../../../../database/dist/drizzle/client.js"),
+      import("../../../../database/dist/schema/analytics-events.js"),
     ]);
 
     await db.insert(analyticsEvents).values({

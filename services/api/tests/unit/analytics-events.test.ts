@@ -5,11 +5,11 @@ const { insertMock, valuesMock } = vi.hoisted(() => ({
   valuesMock: vi.fn(),
 }));
 
-vi.mock("@build-me/database/drizzle/client", () => ({
+vi.mock("../../../../database/dist/drizzle/client.js", () => ({
   db: { insert: insertMock },
 }));
 
-vi.mock("@build-me/database/schema/analytics-events", () => ({
+vi.mock("../../../../database/dist/schema/analytics-events.js", () => ({
   analyticsEvents: { name: "analytics_events" },
 }));
 
