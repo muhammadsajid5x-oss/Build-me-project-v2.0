@@ -7,6 +7,11 @@ from reporting import AnalyticsReporter
 def test_invalid_event_name_raises_error():
     with pytest.raises(InvalidEventError):
         AnalyticsEvent("")
+
+def test_invalid_event_type_raises_error():
+    with pytest.raises(InvalidEventError):
+        AnalyticsEvent("page_view", event_type="hover")
+
 def test_invalid_event_properties_raises_error():
     with pytest.raises(InvalidEventError):
         AnalyticsEvent("page_view", properties=[])
@@ -22,3 +27,9 @@ def test_invalid_calculation_metrics_raises_error():
 def test_invalid_event_counts_raises_error():
     with pytest.raises(CalculationError):
         AnalyticsReporter().report({"total_events": 1, "event_counts": []})
+
+def test_invalid_event_type_counts_raises_error():
+    with pytest.raises(CalculationError):
+        AnalyticsReporter().report(
+            {"total_events": 1, "event_type_counts": []}
+        )

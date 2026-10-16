@@ -2,6 +2,10 @@ import { rateLimit } from "express-rate-limit";
 import { Router } from "express";
 
 const router = Router();
+const eventTypes: Record<string, "view" | "click"> = {
+  "navbar.home.clicked": "click",
+  "page.viewed": "view",
+};
 
 router.use(
   rateLimit({
@@ -13,11 +17,29 @@ router.use(
 );
 
 router.post("/", async (request, response, next) => {
-  if (
-    typeof request.body !== "object" ||
-    request.body === null ||
-    request.body.name !== "navbar.home.clicked"
-  ) {
+  if (typeof request.body !== "object" || request.body === null) {
+    response.status(400).json({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "The analytics event is invalid.",
+      },
+    });
+    return;
+  }
+
+  const { name, eventType, path } = request.body;
+  const expectedEventType =
+    typeof name === "string" && Object.hasOwn(eventTypes, name)
+      ? eventTypes[name]
+      : undefined;
+  const validViewPath =
+    eventType !== "view" ||
+    (typeof path === "string" &&
+      path.startsWith("/") &&
+      !path.startsWith("//") &&
+      path.length <= 2048);
+
+  if (!expectedEventType || eventType !== expectedEventType || !validViewPath) {
     response.status(400).json({
       error: {
         code: "VALIDATION_ERROR",
@@ -34,11 +56,12 @@ router.post("/", async (request, response, next) => {
     ]);
 
     await db.insert(analyticsEvents).values({
-      name: "navbar.home.clicked",
-      properties: {
-        feature: "navbar",
-        data: { destination: "/" },
-      },
+      name,
+      eventType,
+      properties:
+        eventType === "click"
+          ? { feature: "navbar", data: { destination: "/" } }
+          : { feature: "page", data: { path } },
     });
 
     response.status(202).json({ data: { accepted: true } });

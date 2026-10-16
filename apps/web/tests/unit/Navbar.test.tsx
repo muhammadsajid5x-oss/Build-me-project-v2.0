@@ -53,7 +53,10 @@ describe("Navbar", () => {
         "http://localhost:3000/api/v1/analytics/events",
         {
           method: "POST",
-          body: new URLSearchParams({ name: "navbar.home.clicked" }),
+          body: new URLSearchParams({
+            name: "navbar.home.clicked",
+            eventType: "click",
+          }),
           keepalive: true,
         },
       );

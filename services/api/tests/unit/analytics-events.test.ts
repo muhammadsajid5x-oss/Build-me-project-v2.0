@@ -40,7 +40,10 @@ describe("Navbar analytics event endpoint", () => {
   it("stores only the allowlisted anonymous Home event", async () => {
     const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
       method: "POST",
-      body: new URLSearchParams({ name: "navbar.home.clicked" }),
+      body: new URLSearchParams({
+        name: "navbar.home.clicked",
+        eventType: "click",
+      }),
     });
 
     expect(response.status).toBe(202);
@@ -48,6 +51,7 @@ describe("Navbar analytics event endpoint", () => {
     expect(insertMock).toHaveBeenCalledOnce();
     expect(valuesMock).toHaveBeenCalledWith({
       name: "navbar.home.clicked",
+      eventType: "click",
       properties: {
         feature: "navbar",
         data: { destination: "/" },
@@ -60,6 +64,7 @@ describe("Navbar analytics event endpoint", () => {
       method: "POST",
       body: new URLSearchParams({
         name: "navbar.home.clicked",
+        eventType: "click",
         userId: "untrusted-user-id",
       }),
     });
@@ -67,9 +72,31 @@ describe("Navbar analytics event endpoint", () => {
     expect(response.status).toBe(202);
     expect(valuesMock).toHaveBeenCalledWith({
       name: "navbar.home.clicked",
+      eventType: "click",
       properties: {
         feature: "navbar",
         data: { destination: "/" },
+      },
+    });
+  });
+
+  it("stores anonymous page views with their route", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body: new URLSearchParams({
+        name: "page.viewed",
+        eventType: "view",
+        path: "/route-test",
+      }),
+    });
+
+    expect(response.status).toBe(202);
+    expect(valuesMock).toHaveBeenCalledWith({
+      name: "page.viewed",
+      eventType: "view",
+      properties: {
+        feature: "page",
+        data: { path: "/route-test" },
       },
     });
   });
@@ -78,7 +105,7 @@ describe("Navbar analytics event endpoint", () => {
     const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "arbitrary.event" }),
+      body: JSON.stringify({ name: "arbitrary.event", eventType: "view" }),
     });
 
     expect(response.status).toBe(400);
@@ -91,7 +118,10 @@ describe("Navbar analytics event endpoint", () => {
     const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "navbar.home.clicked" }),
+      body: JSON.stringify({
+        name: "navbar.home.clicked",
+        eventType: "click",
+      }),
     });
 
     expect(response.status).toBe(500);
