@@ -68,7 +68,7 @@ The example is illustrative only; it does not define a requirement to track proj
 
 The Python analytics pipeline validates `view` and `click` types, then reports counts by event name and event type. Its tracker stores events in memory for the lifetime of the process.
 
-The Web app emits an allowlisted `page.viewed` event for each router location and `navbar.home.clicked` when the Home logo is clicked. Both are anonymous and sent through `POST /api/v1/analytics/events`; the API verifies the event name/type pair, constructs the stored properties, and limits the endpoint to 30 requests per 15 minutes.
+The Web app emits an allowlisted `page.viewed` event for each router location and `navbar.home.clicked` when the Home logo is clicked. Both are anonymous and sent through `POST /api/v1/analytics/events`; the API derives the event type from the allowlisted name when older clients omit it, rejects conflicting types, constructs the stored properties, and limits the endpoint to 30 requests per 15 minutes.
 
 Durable storage requires `DATABASE_URL` and migration `0002_fast_morg` to be applied. Local tests verify ingestion with a mocked database; they do not verify a deployed database, production ingestion, dashboards, or retention.
 

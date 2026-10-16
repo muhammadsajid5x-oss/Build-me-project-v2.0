@@ -80,6 +80,23 @@ describe("Navbar analytics event endpoint", () => {
     });
   });
 
+  it("infers the allowlisted click type for older clients", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body: new URLSearchParams({ name: "navbar.home.clicked" }),
+    });
+
+    expect(response.status).toBe(202);
+    expect(valuesMock).toHaveBeenCalledWith({
+      name: "navbar.home.clicked",
+      eventType: "click",
+      properties: {
+        feature: "navbar",
+        data: { destination: "/" },
+      },
+    });
+  });
+
   it("stores anonymous page views with their route", async () => {
     const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
       method: "POST",

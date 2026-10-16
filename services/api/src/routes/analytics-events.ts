@@ -27,19 +27,25 @@ router.post("/", async (request, response, next) => {
     return;
   }
 
-  const { name, eventType, path } = request.body;
+  const { name, path } = request.body;
   const expectedEventType =
     typeof name === "string" && Object.hasOwn(eventTypes, name)
       ? eventTypes[name]
       : undefined;
+  const eventType = expectedEventType;
   const validViewPath =
-    eventType !== "view" ||
+    expectedEventType !== "view" ||
     (typeof path === "string" &&
       path.startsWith("/") &&
       !path.startsWith("//") &&
       path.length <= 2048);
 
-  if (!expectedEventType || eventType !== expectedEventType || !validViewPath) {
+  if (
+    !expectedEventType ||
+    (request.body.eventType !== undefined &&
+      request.body.eventType !== expectedEventType) ||
+    !validViewPath
+  ) {
     response.status(400).json({
       error: {
         code: "VALIDATION_ERROR",
