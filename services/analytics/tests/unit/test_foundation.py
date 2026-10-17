@@ -6,9 +6,9 @@ from processing import AnalyticsProcessor
 from reporting import AnalyticsReporter
 def test_analytics_foundation_pipeline():
     tracker = AnalyticsTracker()
-    tracker.track(AnalyticsEvent("page_view"))
-    tracker.track(AnalyticsEvent("page_view"))
-    tracker.track(AnalyticsEvent("button_click"))
+    tracker.track(AnalyticsEvent("page_view", event_type="view"))
+    tracker.track(AnalyticsEvent("page_view", event_type="view"))
+    tracker.track(AnalyticsEvent("button_click", event_type="click"))
     foundation_event = AnalyticsEvent(
         "foundation.test.clicked",
         properties={
@@ -30,6 +30,8 @@ def test_analytics_foundation_pipeline():
         "button_click": 1,
         "foundation.test.clicked": 1,
     }
+    assert metrics["event_type_counts"] == {"view": 2, "click": 2}
     assert report["summary"]["total_events"] == 4
     assert report["summary"]["event_counts"]["page_view"] == 2
+    assert report["summary"]["event_type_counts"] == {"view": 2, "click": 2}
     assert report["summary"]["event_counts"]["foundation.test.clicked"] == 1

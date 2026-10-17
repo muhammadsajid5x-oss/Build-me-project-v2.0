@@ -24,6 +24,8 @@ function sanitize(value: unknown): unknown {
   if (value instanceof Error) {
     return {
       name: value.name,
+      message: value.message,
+      ...(value.stack ? { stack: value.stack } : {}),
       ...("code" in value && typeof value.code === "string"
         ? { code: value.code }
         : {}),

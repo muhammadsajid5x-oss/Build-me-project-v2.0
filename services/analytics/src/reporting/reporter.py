@@ -6,14 +6,18 @@ class AnalyticsReporter:
         try:
             total_events = metrics.get("total_events", 0)
             event_counts = metrics.get("event_counts", {})
+            event_type_counts = metrics.get("event_type_counts", {})
             if not isinstance(total_events, int) or total_events < 0:
                 raise CalculationError("Total events must be a non-negative integer.")
             if not isinstance(event_counts, dict):
                 raise CalculationError("Event counts must be an object.")
+            if not isinstance(event_type_counts, dict):
+                raise CalculationError("Event type counts must be an object.")
             return {
                 "summary": {
                     "total_events": total_events,
                     "event_counts": event_counts,
+                    "event_type_counts": event_type_counts,
                 }
             }
         except CalculationError:
