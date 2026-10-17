@@ -5,6 +5,7 @@ const router = Router();
 const eventTypes: Record<string, "view" | "click"> = {
   "navbar.home.clicked": "click",
   "page.viewed": "view",
+  "hero.viewed": "view",
 };
 
 router.use(
