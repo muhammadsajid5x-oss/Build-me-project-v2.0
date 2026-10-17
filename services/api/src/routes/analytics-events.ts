@@ -39,6 +39,18 @@ router.post("/", async (request, response, next) => {
       path.startsWith("/") &&
       !path.startsWith("//") &&
       path.length <= 2048);
+  const validationDiagnostic = {
+    name: typeof name === "string" ? name.slice(0, 128) : null,
+    bodyType: typeof request.body,
+    eventType:
+      typeof request.body.eventType === "string"
+        ? request.body.eventType.slice(0, 32)
+        : null,
+    expectedEventType: expectedEventType ?? null,
+    path: typeof path === "string" ? path.slice(0, 2048) : null,
+    validViewPath,
+    eventTypeIsUndefined: request.body.eventType === undefined,
+  };
 
   if (
     !expectedEventType ||
@@ -46,11 +58,13 @@ router.post("/", async (request, response, next) => {
       request.body.eventType !== expectedEventType) ||
     !validViewPath
   ) {
+    console.warn(validationDiagnostic);
     response.status(400).json({
       error: {
         code: "VALIDATION_ERROR",
         message: "The analytics event is invalid.",
       },
+      diagnostic: validationDiagnostic,
     });
     return;
   }
