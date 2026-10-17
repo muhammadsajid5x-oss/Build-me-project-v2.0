@@ -2,9 +2,16 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
+import { getApiBaseUrl } from "../../src/api-url";
 import Navbar from "../../src/components/Navbar/Navbar";
 
 describe("Navbar", () => {
+  it("removes trailing slashes from the configured API URL", () => {
+    expect(getApiBaseUrl("https://api.example.com///")).toBe(
+      "https://api.example.com",
+    );
+  });
+
   it("renders the Cup&Commit logo", () => {
     render(
       <MemoryRouter>
@@ -46,7 +53,10 @@ describe("Navbar", () => {
         "http://localhost:3000/api/v1/analytics/events",
         {
           method: "POST",
-          body: new URLSearchParams({ name: "navbar.home.clicked" }),
+          body: new URLSearchParams({
+            name: "navbar.home.clicked",
+            eventType: "click",
+          }),
           keepalive: true,
         },
       );

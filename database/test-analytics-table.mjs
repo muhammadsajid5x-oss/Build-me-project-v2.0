@@ -1,4 +1,4 @@
-import { db } from "./drizzle/client.js";
+import { db } from "./dist/drizzle/client.js";
 const result = await db.execute(
   "select to_regclass('public.analytics_events') as table_name"
 );

@@ -1,14 +1,12 @@
 import { Link } from "react-router-dom";
-
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+import { trackAnalyticsEvent } from "../../analytics";
 
 export default function Navbar() {
   const trackHomeNavigation = () => {
-    void fetch(`${apiBaseUrl}/api/v1/analytics/events`, {
-      method: "POST",
-      body: new URLSearchParams({ name: "navbar.home.clicked" }),
-      keepalive: true,
-    }).catch(() => undefined);
+    trackAnalyticsEvent({
+      name: "navbar.home.clicked",
+      eventType: "click",
+    });
   };
 
   return (

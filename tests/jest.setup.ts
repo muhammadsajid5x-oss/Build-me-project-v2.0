@@ -18,7 +18,7 @@ if (fs.existsSync(envPath)) {
       continue;
     }
 
-    const match = trimmed.match(/^([A-Za-z_]\w*)=(.+)$/);
+    const match = /^([A-Za-z_]\w*)=(.+)$/.exec(trimmed);
 
     if (!match) {
       continue;
@@ -34,10 +34,14 @@ if (fs.existsSync(envPath)) {
       value = value.slice(1, -1);
     }
 
-    if (process.env[key] === undefined) {
-      process.env[key] = value;
-    }
+    process.env[key] ??= value;
   }
+}
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl || !/^postgres(ql)?:\/\//.exec(databaseUrl)) {
+  process.env.DATABASE_URL = "postgresql://test:test@localhost:5432/test";
 }
 
 Object.assign(globalThis, {

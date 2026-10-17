@@ -9,6 +9,7 @@ Define a consistent, privacy-conscious shape for analytics events. A feature sho
 | Field         | Meaning                                                                           | Rules                                                                                                                                                                                                                                                                          |
 | ------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Event Name    | Stable identifier for what happened.                                              | Use lowercase dot-separated names, such as `dashboard.project.opened`. Do not rename an event without considering existing reports and consumers.                                                                                                                              |
+| Event Type    | Broad interaction category.                                                       | Use the database enum values `view` or `click`; the API validates the type against the allowlisted event name.                                                                                                                                                                 |
 | User          | The application user associated with the event.                                   | Use the application user's UUID when known; use `null` for anonymous activity. Never store an email, access token, or other credential here. The current `users` table is not linked to Supabase Auth, so do not put a Supabase Auth UUID here until that mapping is designed. |
 | Feature       | The product area that emitted the event.                                          | Use a stable, controlled identifier, such as `dashboard` or `lead_capture`; do not use arbitrary user input.                                                                                                                                                                   |
 | Timestamp     | When the event occurred.                                                          | Use a timezone-aware timestamp in UTC. The database default is the persistence time; client-provided timestamps must not be treated as authoritative without a specific requirement.                                                                                           |
@@ -27,8 +28,8 @@ Define a consistent, privacy-conscious shape for analytics events. A feature sho
 Examples (illustrative; not a tracking requirement by themselves):
 
 ```text
-navbar.viewed
-navbar.clicked
+page.viewed       (type: view)
+navbar.home.clicked (type: click)
 journey.started
 journey.completed
 journey.abandoned
@@ -36,9 +37,10 @@ journey.abandoned
 
 ## Current Database Mapping
 
-The existing `analytics_events` table has `name`, nullable `user_id`, `timestamp`, and JSONB `properties` columns. Until a schema change is approved:
+The `analytics_events` table has `name`, `event_type`, nullable `user_id`, `timestamp`, and JSONB `properties` columns. `event_type` is a PostgreSQL enum with `view` and `click` values; existing rows default to `click` in migration `0002_fast_morg`.
 
 - Event Name maps to `name`.
+- Event Type maps to `event_type`.
 - User maps to `user_id`.
 - Timestamp maps to `timestamp`.
 - Feature, Session, and Relevant Data map to keys in `properties` (`feature`, `session_id`, and `data`).
@@ -47,14 +49,14 @@ Example logical event:
 
 ```json
 {
-  "name": "dashboard.project.opened",
+  "name": "page.viewed",
+  "event_type": "view",
   "user_id": null,
   "timestamp": "2026-10-01T12:00:00Z",
   "properties": {
-    "feature": "dashboard",
-    "session_id": "opaque-session-id",
+    "feature": "page",
     "data": {
-      "project_id": "example-project-id"
+      "path": "/"
     }
   }
 }
@@ -64,17 +66,19 @@ The example is illustrative only; it does not define a requirement to track proj
 
 ## Current Pipeline Status
 
-The Python analytics foundation test sends `foundation.test.clicked` through `AnalyticsTracker`, `AnalyticsProcessor`, and `AnalyticsReporter`. The tracker's storage is in-memory for the lifetime of the process.
+The Python analytics pipeline validates `view` and `click` types, then reports counts by event name and event type. Its tracker stores events in memory for the lifetime of the process.
 
-The web Navbar also emits the allowlisted `navbar.home.clicked` event through `POST /api/v1/analytics/events`. The API writes a fixed, anonymous event payload to the `analytics_events` table, ignores caller-supplied properties, limits this endpoint to 30 requests per 15 minutes, and sends persistence failures through the API's safe error handler. Durable storage requires `DATABASE_URL` to be configured and the existing analytics table migration to be applied. Local tests verify the API write contract with a mocked database; they do not verify a deployed database, production ingestion, dashboards, or retention.
+The Web app emits an allowlisted `page.viewed` event for each router location and `navbar.home.clicked` when the Home logo is clicked. Both are anonymous and sent through `POST /api/v1/analytics/events`; the API derives the event type from the allowlisted name when older clients omit it, rejects conflicting types, constructs the stored properties, and limits the endpoint to 30 requests per 15 minutes.
+
+Durable storage requires `DATABASE_URL` and migration `0002_fast_morg` to be applied. Local tests verify ingestion with a mocked database; they do not verify a deployed database, production ingestion, dashboards, or retention.
 
 To observe collection after deployment, compare the event count over a fixed window with Navbar usage and inspect API error logs for persistence failures:
 
 ```sql
-SELECT count(*) AS home_navigation_events
+SELECT event_type, count(*) AS events
 FROM analytics_events
-WHERE name = 'navbar.home.clicked'
-  AND timestamp >= now() - interval '24 hours';
+WHERE timestamp >= now() - interval '24 hours'
+GROUP BY event_type;
 ```
 
 If collection fails, Home navigation remains available. Check the API deployment, `DATABASE_URL`, and migration state, then restore the last healthy API deployment or apply a reviewed forward fix. Do not replay events or restore analytics data without an approved recovery procedure.

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports, no-undef */
 const path = require("node:path");
 
 module.exports = {
@@ -10,6 +11,8 @@ module.exports = {
   setupFiles: ["<rootDir>/tests/jest.setup.ts"],
   resolver: "<rootDir>/tests/jest.resolver.cjs",
   moduleNameMapper: {
+    "^@build-me/database/(.*)$": "<rootDir>/database/$1",
+    "^@build-me/utils$": "<rootDir>/packages/utils/src/index.ts",
     "^@build-me/utils/logging$":
       "<rootDir>/packages/utils/src/logging/logger.ts",
     "^.+\\.(css|scss|sass)$": "<rootDir>/tests/integration/mocks/styleMock.js",
