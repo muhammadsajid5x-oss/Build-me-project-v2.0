@@ -13,7 +13,7 @@ describe("HeroLeft", () => {
       observe = vi.fn();
       disconnect = vi.fn();
 
-      constructor(_callback: IntersectionObserverCallback) {}
+      constructor() {}
     }
 
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);

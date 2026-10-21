@@ -10,7 +10,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white">
+    <header className="relative z-0 bg-transparent">
       <nav
         aria-label="Primary navigation"
         className="mx-auto flex min-h-16 w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8"

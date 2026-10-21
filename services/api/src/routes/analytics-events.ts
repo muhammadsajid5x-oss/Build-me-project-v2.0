@@ -3,11 +3,11 @@ import { Router } from "express";
 
 const router = Router();
 const eventTypes: Record<string, "view" | "click"> = {
-  "navbar.home.clicked": "click",
-  "page.viewed": "view",
   "hero.viewed": "view",
+  "hero.right.viewed": "view",
+  "page.viewed": "view",
+  "navbar.home.clicked": "click",
 };
-
 router.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,

@@ -22,10 +22,10 @@ export default function AppLayout() {
   }, [location.key, location.pathname]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <Navbar />
 
-      <main className="p-8">
+      <main className="p-0">
         <Outlet />
       </main>
     </div>
