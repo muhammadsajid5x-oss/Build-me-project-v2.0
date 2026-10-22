@@ -65,7 +65,7 @@ describe("Navbar", () => {
     }
   });
 
-  it("uses sticky positioning", () => {
+  it("uses relative and transparent positioning", () => {
     render(
       <MemoryRouter>
         <Navbar />
@@ -74,8 +74,9 @@ describe("Navbar", () => {
 
     const navbar = screen.getByRole("banner");
 
-    expect(navbar).toHaveClass("sticky");
-    expect(navbar).toHaveClass("top-0");
+    expect(navbar).toHaveClass("relative");
+    expect(navbar).toHaveClass("z-0");
+    expect(navbar).toHaveClass("bg-transparent");
   });
 
   it("keeps the logo within the responsive navigation layout", () => {

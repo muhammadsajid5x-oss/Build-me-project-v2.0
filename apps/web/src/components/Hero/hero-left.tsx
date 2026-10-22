@@ -1,3 +1,7 @@
+import { useEffect, useRef } from "react";
+
+import { trackAnalyticsEvent } from "../../analytics";
+
 export interface HeroLeftProps {
   badge?: string;
   titlePrimary?: string;
@@ -11,8 +15,47 @@ export default function HeroLeft({
   titlePrimary = "Build Better",
   titleSecondary = "Digital Experiences",
 }: Readonly<HeroLeftProps>) {
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const hasTrackedView = useRef(false);
+
+  useEffect(() => {
+    const heroElement = heroRef.current;
+
+    if (!heroElement || hasTrackedView.current) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTrackedView.current) {
+          hasTrackedView.current = true;
+
+          trackAnalyticsEvent({
+            name: "hero.viewed",
+            eventType: "view",
+            path: window.location.pathname,
+          });
+
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.5,
+      },
+    );
+
+    observer.observe(heroElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <div className="flex w-full flex-col justify-center text-left px-4 sm:px-6 lg:px-0">
+    <div
+      ref={heroRef}
+      className="flex w-full flex-col justify-center text-left px-4 sm:px-6 lg:px-0"
+    >
       {/* Badge: fixed text color and responsive padding */}
       <div className="inline-flex w-fit items-center rounded-full bg-blue-100 px-3.5 py-1 sm:px-4 sm:py-1.5">
         <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.15em] text-blue-700">
@@ -40,7 +83,7 @@ export default function HeroLeft({
         Websites and apps that are easy to use, look great,
         <br className="hidden sm:inline" /> and work fast. Get more customers
         with ease.
-        <br className="hidden sm:inline" /> No stress, no confusion — just
+        <br className="hidden sm:inline" /> No stress, no confusion —— just
         simple, reliable
         <br className="hidden sm:inline" /> solutions that help you grow.
       </p>
