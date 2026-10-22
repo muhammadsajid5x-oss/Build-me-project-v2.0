@@ -2,11 +2,55 @@ import { rateLimit } from "express-rate-limit";
 import { Router } from "express";
 
 const router = Router();
-const eventTypes: Record<string, "view" | "click"> = {
-  "hero.viewed": "view",
-  "hero.right.viewed": "view",
-  "page.viewed": "view",
-  "navbar.home.clicked": "click",
+type AnalyticsEventType = "view" | "click";
+type AnalyticsEventDefinition = {
+  readonly eventType: AnalyticsEventType;
+  readonly buildProperties: (path?: string) => Record<string, unknown>;
+};
+const pageViewProperties = (path?: string): Record<string, unknown> => ({
+  feature: "page",
+  data: { path },
+});
+const deliveryProjectProperties = (): Record<string, unknown> => ({
+  feature: "deliver-my-project",
+  data: { destination: "/deliver-my-project" },
+});
+const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
+  "hero.viewed": {
+    eventType: "view",
+    buildProperties: pageViewProperties,
+  },
+  "hero.right.viewed": {
+    eventType: "view",
+    buildProperties: pageViewProperties,
+  },
+  "page.viewed": {
+    eventType: "view",
+    buildProperties: pageViewProperties,
+  },
+  "navbar.home.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "navbar",
+      data: { destination: "/" },
+    }),
+  },
+  "work.with.me.clicked": {
+    eventType: "click",
+    buildProperties: deliveryProjectProperties,
+  },
+  "deliver.my.project.clicked": {
+    eventType: "click",
+    buildProperties: deliveryProjectProperties,
+  },
+  "deliver.my.project.viewed": {
+    eventType: "view",
+    buildProperties: pageViewProperties,
+  },
+  "deliver.my.project.completed": {
+    eventType: "click",
+    buildProperties: deliveryProjectProperties,
+  },
 };
 router.use(
   rateLimit({
@@ -29,10 +73,11 @@ router.post("/", async (request, response, next) => {
   }
 
   const { name, path } = request.body;
-  const expectedEventType =
-    typeof name === "string" && Object.hasOwn(eventTypes, name)
-      ? eventTypes[name]
+  const eventDefinition =
+    typeof name === "string" && Object.hasOwn(eventDefinitions, name)
+      ? eventDefinitions[name]
       : undefined;
+  const expectedEventType = eventDefinition?.eventType;
   const eventType = expectedEventType;
   const validViewPath =
     expectedEventType !== "view" ||
@@ -79,10 +124,7 @@ router.post("/", async (request, response, next) => {
     await db.insert(analyticsEvents).values({
       name,
       eventType,
-      properties:
-        eventType === "click"
-          ? { feature: "navbar", data: { destination: "/" } }
-          : { feature: "page", data: { path } },
+      properties: eventDefinition?.buildProperties(path) ?? {},
     });
 
     response.status(202).json({ data: { accepted: true } });

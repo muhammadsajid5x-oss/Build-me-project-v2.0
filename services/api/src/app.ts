@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import analyticsEventRoutes from "./routes/analytics-events.js";
+import deliveryProjectRequestRoutes from "./routes/delivery-project-requests.js";
 import foundationCheckinRoutes from "./routes/foundation-checkins.js";
 import healthRoutes from "./routes/health.js";
 
@@ -60,6 +61,7 @@ app.get("/", (_req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/analytics/events", analyticsEventRoutes);
 app.use("/api/v1/foundation-checkins", foundationCheckinRoutes);
+app.use("/api/v1/delivery-project-requests", deliveryProjectRequestRoutes);
 
 app.use((_request, _response, next) => {
   next(new Error("NOT_FOUND"));

@@ -2,16 +2,11 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import {
-  getSession,
-  onAuthStateChange,
-  signOut as signOutUser,
-} from "@build-me/services/integrations";
+import { supabase } from "@build-me/services/integrations";
 
 type AuthContextValue = {
   session: Session | null;
@@ -35,32 +30,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     let mounted = true;
 
-    function applySession(next: Session | null, nextError: string | null = null) {
+    const loadSession = async () => {
+      const { data, error: sessionError } = await supabase.auth.getSession();
+
       if (!mounted) {
         return;
       }
 
-      setSession(next);
-      setError(nextError);
+      setSession(data.session ?? null);
+      setError(sessionError?.message ?? null);
       setLoading(false);
-    }
-
-    async function loadSession() {
-      try {
-        const currentSession = await getSession();
-
-        applySession(currentSession);
-      } catch {
-        applySession(null, "Unable to load your session. Please try again.");
-      }
-    }
+    };
 
     void loadSession();
 
     const {
       data: { subscription },
-    } = onAuthStateChange((nextSession) => {
-      applySession(nextSession);
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!mounted) {
+        return;
+      }
+
+      setSession(nextSession);
+      setLoading(false);
+      setError(null);
     });
 
     return () => {
@@ -69,16 +62,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, []);
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      session,
-      user: session?.user ?? null,
-      loading,
-      error,
-      signOut: signOutUser,
-    }),
-    [session, loading, error],
-  );
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+  };
+
+  const value: AuthContextValue = {
+    session,
+    user: session?.user ?? null,
+    loading,
+    error,
+    signOut,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

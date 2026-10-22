@@ -14,7 +14,10 @@ const RouteTestPage = lazyLoad(
   () => import("../pages/RouteTestPage"),
   "RouteTestPage",
 );
-
+const DeliverMyProjectPage = lazyLoad(
+  () => import("../pages/DeliverMyProjectPage"),
+  "DeliverMyProjectPage",
+);
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -42,6 +45,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyLoadBoundary>
             <FoundationTestPage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "deliver-my-project",
+        element: (
+          <LazyLoadBoundary>
+            <DeliverMyProjectPage />
           </LazyLoadBoundary>
         ),
       },

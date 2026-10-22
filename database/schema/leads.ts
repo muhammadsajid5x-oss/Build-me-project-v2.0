@@ -32,4 +32,12 @@ export const leads = pgTable("leads", {
   })
     .defaultNow()
     .notNull(),
+
+  projectDescription: text("project_description"),
+
+  expectedOutcome: text("expected_outcome"),
+
+  timeline: text("timeline"),
+
+  budget: text("budget"),
 });
