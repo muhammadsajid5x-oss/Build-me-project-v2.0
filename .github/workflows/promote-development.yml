@@ -16,7 +16,7 @@ concurrency:
 jobs:
   promote:
     name: Promote after all development gates pass
-    if: ${{ !contains(github.event.head_commit.message, '[skip promotion]') }}
+    if: ${{ github.event.head_commit.message != 'ci: automate development promotion after all gates pass' && !contains(github.event.head_commit.message, '[skip promotion]') }}
     runs-on: ubuntu-latest
 
     steps:
