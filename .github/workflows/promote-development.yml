@@ -20,6 +20,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Safety block for automation setup commit
+        if: ${{ contains(github.event.head_commit.message, '[promotion setup]') }}
+        run: |
+          echo "Promotion workflow setup commit; promotion intentionally blocked."
+          exit 1
+
       - name: Wait for required development workflows
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
