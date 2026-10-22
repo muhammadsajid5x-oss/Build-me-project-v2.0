@@ -84,10 +84,27 @@ jobs:
             sleep 30
           done
 
-      - name: Checkout development
+      - name: Verify development has not advanced
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          current_sha=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/$GITHUB_REPOSITORY/git/ref/heads/development" \
+            --jq '.object.sha')
+
+          if [ "$current_sha" != "$GITHUB_SHA" ]; then
+            echo "Development advanced from $GITHUB_SHA to $current_sha while gates were running."
+            echo "Promotion skipped. The newer commit must pass all gates first."
+            exit 0
+          fi
+
+      - name: Checkout validated development commit
         uses: actions/checkout@v5
         with:
-          ref: development
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Create promotion merge commit
@@ -98,19 +115,29 @@ jobs:
 
           git fetch origin main development
 
-          git checkout -B promotion-main origin/main
+          validated_sha="$GITHUB_SHA"
+          current_sha=$(git rev-parse origin/development)
 
-          if git merge-base --is-ancestor origin/development origin/main; then
-            echo "Main already contains development. Nothing to promote."
+          if [ "$current_sha" != "$validated_sha" ]; then
+            echo "Development advanced while promotion was starting."
+            echo "Expected: $validated_sha"
+            echo "Current:  $current_sha"
             exit 0
           fi
 
-          if git merge-base --is-ancestor origin/main origin/development; then
-            echo "Development can be fast-forwarded into main."
-            git merge --ff-only origin/development
+          git checkout -B promotion-main origin/main
+
+          if git merge-base --is-ancestor "$validated_sha" origin/main; then
+            echo "Main already contains the validated development commit. Nothing to promote."
+            exit 0
+          fi
+
+          if git merge-base --is-ancestor origin/main "$validated_sha"; then
+            echo "Validated development commit can be fast-forwarded into main."
+            git merge --ff-only "$validated_sha"
           else
-            echo "Development and main have diverged. Creating a normal merge commit."
-            git merge --no-ff --no-edit origin/development
+            echo "Main and the validated development commit have diverged. Creating a normal merge commit."
+            git merge --no-ff --no-edit "$validated_sha"
           fi
 
           git push origin HEAD:main
