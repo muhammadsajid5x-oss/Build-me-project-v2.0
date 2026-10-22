@@ -5381,7 +5381,7 @@ packages:
     engines: {node: '>=10'}
 
   ip-address@10.7.4:
-    resolution: {integrity: sha512-4OUAqU9Z1i3vCnS05hzGiFnEMDpQ+62pAD/MVQOp83fYyNC8GleCqaS0QikQBmcWCrKFiUs/B8ztRRiYOAXuCA==}
+    resolution: {}
     engines: {node: '>= 12'}
 
   ipaddr.js@1.9.1:
