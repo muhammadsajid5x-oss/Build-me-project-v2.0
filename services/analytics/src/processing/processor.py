@@ -6,13 +6,16 @@ class AnalyticsProcessor:
             raise ProcessingError("Analytics events must be provided as a list.")
         try:
             event_counts = Counter()
+            event_type_counts = Counter()
             for event in events:
                 if not isinstance(event, AnalyticsEvent):
                     raise ProcessingError("Analytics event contains an invalid item.")
                 event_counts[event.name] += 1
+                event_type_counts[event.event_type] += 1
             return {
                 "total_events": len(events),
                 "event_counts": dict(event_counts),
+                "event_type_counts": dict(event_type_counts),
             }
         except ProcessingError:
             raise

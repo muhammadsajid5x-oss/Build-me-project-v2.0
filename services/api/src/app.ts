@@ -1,6 +1,7 @@
 import express from "express";
-
+import cors from "cors";
 import authRoutes from "./routes/auth.js";
+import analyticsEventRoutes from "./routes/analytics-events.js";
 import foundationCheckinRoutes from "./routes/foundation-checkins.js";
 import healthRoutes from "./routes/health.js";
 
@@ -14,6 +15,15 @@ const app = express();
 
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
+
+// Allow cross-origin requests from the deployed Web application.
+app.use(
+  cors({
+    origin: true,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // Prevent API responses from being stored or cached.
 app.use((req, res, next) => {
@@ -48,6 +58,7 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/analytics/events", analyticsEventRoutes);
 app.use("/api/v1/foundation-checkins", foundationCheckinRoutes);
 
 app.use((_request, _response, next) => {

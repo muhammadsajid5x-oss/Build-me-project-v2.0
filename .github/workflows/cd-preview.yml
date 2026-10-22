@@ -133,3 +133,57 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_DASHBOARD_PROJECT_ID }}
           GITHUB_COMMIT_REF: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Deploy Web to Preview
+        id: deploy_web
+        run: |
+          set -euo pipefail
+
+          pnpm exec vercel deploy --target=preview --yes --token "$VERCEL_TOKEN" --meta githubDeployment=1 --meta githubCommitRef="$GITHUB_COMMIT_REF" 2>&1 | tee /tmp/vercel-web-deploy.log
+          deployment_url=$(grep -Eo 'https://[^[:space:]]+\.vercel\.app' /tmp/vercel-web-deploy.log | tail -n 1)
+
+          if [ -z "$deployment_url" ]; then
+            echo "Could not determine the Web deployment URL"
+            exit 1
+          fi
+
+          echo "deployment_url=$deployment_url" >> "$GITHUB_OUTPUT"
+          echo "Web deployment URL: $deployment_url"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
+          GITHUB_COMMIT_REF: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Validate Web recovery
+        env:
+          WEB_URL: ${{ steps.deploy_web.outputs.deployment_url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..12}; do
+            curl_args=(--silent --show-error --output /dev/null --write-out '%{http_code}')
+
+            if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+              curl_args+=(--header "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET")
+            fi
+
+            status=$(curl "${curl_args[@]}" "$WEB_URL")
+
+            if [ "$status" = "200" ]; then
+              echo "Web recovery validated: $WEB_URL returned HTTP 200"
+              {
+                echo "### Preview Web Recovery"
+                echo "- Web URL: \`$WEB_URL\`"
+                echo "- Result: \`200\`"
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+
+            echo "Web recovery attempt $attempt/12 returned HTTP $status"
+            sleep 5
+          done
+
+          echo "Web recovery validation failed: $WEB_URL did not return HTTP 200"
+          exit 1

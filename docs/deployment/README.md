@@ -19,9 +19,11 @@ The deployment workflows promote the same code through these Vercel environments
 | Successful Development deployment                 | Staging            | Build must pass                        |
 | Manual dispatch from `main`                       | Production         | GitHub production-environment approval |
 
-Preview deployments are associated with their source feature branch. Development and Staging use Vercel custom environments named `development` and `staging`; create both environments in each Vercel project (API and Dashboard) and configure their environment variables and domains. Vercel custom environments require a supported plan. Preview and Production use Vercel's built-in environments.
+Preview deployments are associated with their source feature branch. Development and Staging use Vercel custom environments named `development` and `staging`; create both environments in each Vercel project (API, Web, and Dashboard) and configure their environment variables and domains. Vercel custom environments require a supported plan. Preview and Production use Vercel's built-in environments.
 
-Create matching GitHub Actions environments named `preview`, `development`, `staging`, and `production`. Add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_API_PROJECT_ID`, and `VERCEL_DASHBOARD_PROJECT_ID` as environment-scoped secrets for each deployment environment. The token should have only the Vercel team/project access needed for these deployments.
+Create matching GitHub Actions environments named `preview`, `development`, `staging`, and `production`. Add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_API_PROJECT_ID`, `VERCEL_WEB_PROJECT_ID`, and `VERCEL_DASHBOARD_PROJECT_ID` as environment-scoped secrets for each deployment environment. The token should have only the Vercel team/project access needed for these deployments.
+
+Configure `DATABASE_URL`, `SUPABASE_URL`, and `SUPABASE_KEY` in the API project's Vercel environments. `DATABASE_URL` must contain only a PostgreSQL connection URL, without a `DATABASE_URL=` prefix in its value. Configure `VITE_API_URL` in the Web project's matching environments; it must point to that environment's API deployment. Apply the existing analytics table migration before enabling event collection. Preview validation also needs `VERCEL_AUTOMATION_BYPASS_SECRET` when deployment protection is enabled.
 
 In GitHub repository settings, protect the `production` environment with required reviewers and restrict its deployment branches to `main`. Protect `main` with the repository's required review and CI status checks. The production workflow can only be dispatched from `main`, but the reviewer rule is configured in GitHub settings and cannot be enforced by this repository's workflow YAML alone.
 

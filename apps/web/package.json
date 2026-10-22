@@ -19,7 +19,10 @@
     "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
+    "@jest/globals": "^30.5.2",
     "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@types/jest": "^30.0.0",
     "@vitejs/plugin-react": "^4.7.0",
     "jsdom": "^30.0.1",
     "tailwindcss": "^4.3.3",

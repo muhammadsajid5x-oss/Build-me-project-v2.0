@@ -1,13 +1,31 @@
-import { Link } from "react-router-dom";
+import TechnologyOwnershipHero from "../components/Hero/hero-left";
+import HeroRight from "../components/Hero/hero-right";
 
 export default function HomePage() {
   return (
-    <section>
-      <h1 className="text-3xl font-bold">Build Me</h1>
-      <p className="mt-2">Public website foundation.</p>
-      <Link className="mt-4 inline-block underline" to="/foundation-test">
-        Foundation Test Page
-      </Link>
-    </section>
+    <div className="relative w-full overflow-visible">
+      <section
+        aria-labelledby="technology-ownership-heading"
+        className="
+          relative
+          mx-auto
+          grid
+          w-full
+          max-w-7xl
+          grid-cols-1
+          items-start
+          gap-0
+          px-4
+          pt-8
+          sm:px-6
+          lg:grid-cols-2
+          lg:px-4
+        "
+      >
+        <TechnologyOwnershipHero />
+
+        <HeroRight />
+      </section>
+    </div>
   );
 }

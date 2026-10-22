@@ -9,8 +9,9 @@ import {
   ModalHeader,
   type ModalState,
 } from "@build-me/ui";
+import { getApiBaseUrl } from "../api-url";
 
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const apiBaseUrl = getApiBaseUrl(import.meta.env.VITE_API_URL);
 
 type Checkin = { id: string; name: string; createdAt: string };
 
