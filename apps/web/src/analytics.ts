@@ -4,8 +4,29 @@ const apiBaseUrl = getApiBaseUrl(import.meta.env.VITE_API_URL);
 
 type AnalyticsEventType = "view" | "click";
 
+/**
+ * The analytics events the API accepts. Keeping the names typed makes it
+ * impossible to emit an event that the server would reject.
+ */
+export type AnalyticsEventName =
+  | "hero.viewed"
+  | "hero.right.viewed"
+  | "page.viewed"
+  | "navbar.home.clicked"
+  | "work.with.me.clicked"
+  | "deliver.my.project.clicked"
+  | "deliver.my.project.viewed"
+  | "deliver.my.project.completed";
+
+export const ANALYTICS_EVENTS = {
+  WORK_WITH_ME_CLICKED: "work.with.me.clicked",
+  DELIVER_MY_PROJECT_CLICKED: "deliver.my.project.clicked",
+  DELIVER_MY_PROJECT_VIEWED: "deliver.my.project.viewed",
+  DELIVER_MY_PROJECT_COMPLETED: "deliver.my.project.completed",
+} as const satisfies Record<string, AnalyticsEventName>;
+
 export function trackAnalyticsEvent(event: {
-  name: string;
+  name: AnalyticsEventName;
   eventType: AnalyticsEventType;
   path?: string;
 }): void {
@@ -18,9 +39,17 @@ export function trackAnalyticsEvent(event: {
     body.set("path", event.path);
   }
 
-  void fetch(`${apiBaseUrl}/api/v1/analytics/events`, {
-    method: "POST",
-    body,
-    keepalive: true,
-  }).catch(() => undefined);
+  // Analytics is best effort. A synchronous failure or a rejected request
+  // must never interrupt the visitor journey it is reporting on.
+  try {
+    const request = fetch(`${apiBaseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body,
+      keepalive: true,
+    }) as Promise<Response> | undefined;
+
+    void request?.catch(() => undefined);
+  } catch {
+    // The analytics endpoint is optional and never fails the visitor journey.
+  }
 }
