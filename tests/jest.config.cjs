@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-require-imports, no-undef */
+/* eslint-disable @typescript-eslint/no-require-imports */
 const path = require("node:path");
 
 module.exports = {

@@ -143,6 +143,43 @@ export default function HomePage() {
 
           <div className="mt-6 space-y-3">
             <Link
+              to="/mentor-me"
+              onClick={() => {
+                trackAnalyticsEvent({
+                  name: ANALYTICS_EVENTS.MENTOR_ME_CLICKED,
+                  eventType: "click",
+                });
+              }}
+              className="
+                flex
+                items-center
+                justify-between
+                rounded-xl
+                border
+                border-gray-200
+                px-4
+                py-4
+                text-left
+                transition
+                hover:border-gray-300
+                hover:bg-gray-50
+              "
+            >
+              <span>
+                <span className="block text-base font-semibold text-gray-900">
+                  Mentor Me
+                </span>
+
+                <span className="mt-1 block text-sm text-gray-500">
+                  Request mentoring support and guidance.
+                </span>
+              </span>
+
+              <span className="ml-4 text-gray-400" aria-hidden="true">
+                →
+              </span>
+            </Link>
+            <Link
               to="/deliver-my-project"
               onClick={() => {
                 trackAnalyticsEvent({

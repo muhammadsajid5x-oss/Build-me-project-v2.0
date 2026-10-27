@@ -25,13 +25,30 @@ const deliveryProjectRequest = {
   createdAt: "2026-10-01T10:00:00.000Z",
 };
 
+const mentorMeRequest = {
+  id: "22222222-2222-2222-2222-222222222222",
+  name: "Grace Hopper",
+  email: "grace@example.com",
+  mentoringArea: "Architecture",
+  helpWith: "System design",
+  experienceContext: "10 years",
+  status: "pending",
+  createdAt: "2026-10-01T10:00:00.000Z",
+};
+
 describe("DashboardPage delivery project requests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.get.mockImplementation((url: string) => {
+      if (url.includes("mentor-me-requests")) {
+        return Promise.resolve({ data: [mentorMeRequest] });
+      }
+      return Promise.resolve({ data: [deliveryProjectRequest] });
+    });
   });
 
   it("shows a loading state while the requests are being loaded", () => {
-    mocks.get.mockReturnValue(new Promise(() => undefined));
+    mocks.get.mockImplementation(() => new Promise(() => undefined));
 
     render(<DashboardPage />);
 
@@ -39,8 +56,6 @@ describe("DashboardPage delivery project requests", () => {
   });
 
   it("lists the delivery project requests returned by the API", async () => {
-    mocks.get.mockResolvedValue({ data: [deliveryProjectRequest] });
-
     render(<DashboardPage />);
 
     expect(await screen.findByText("Ada Lovelace")).toBeTruthy();
@@ -54,7 +69,12 @@ describe("DashboardPage delivery project requests", () => {
   });
 
   it("shows an empty state when there are no delivery project requests", async () => {
-    mocks.get.mockResolvedValue({ data: [] });
+    mocks.get.mockImplementation((url: string) => {
+      if (url.includes("mentor-me-requests")) {
+        return Promise.resolve({ data: [mentorMeRequest] });
+      }
+      return Promise.resolve({ data: [] });
+    });
 
     render(<DashboardPage />);
 
@@ -64,14 +84,19 @@ describe("DashboardPage delivery project requests", () => {
   });
 
   it("shows a placeholder for requests without a timeline or budget", async () => {
-    mocks.get.mockResolvedValue({
-      data: [
-        {
-          ...deliveryProjectRequest,
-          timeline: undefined,
-          budget: undefined,
-        },
-      ],
+    mocks.get.mockImplementation((url: string) => {
+      if (url.includes("mentor-me-requests")) {
+        return Promise.resolve({ data: [] });
+      }
+      return Promise.resolve({
+        data: [
+          {
+            ...deliveryProjectRequest,
+            timeline: undefined,
+            budget: undefined,
+          },
+        ],
+      });
     });
 
     render(<DashboardPage />);
@@ -87,7 +112,7 @@ describe("DashboardPage delivery project requests", () => {
 
     expect(
       await screen.findByText(
-        "Delivery project requests could not be loaded. Please try again.",
+        "Requests could not be loaded. Please try again.",
       ),
     ).toBeTruthy();
   });
@@ -98,15 +123,18 @@ describe("DashboardPage delivery project requests", () => {
     render(<DashboardPage />);
 
     expect(
-      await screen.findByText(
-        "You are not authorised to view delivery project requests.",
-      ),
+      await screen.findByText("You are not authorised to view requests."),
     ).toBeTruthy();
   });
 
   it("reloads the requests when the error is retried", async () => {
     mocks.get.mockRejectedValueOnce(new Error("network down"));
-    mocks.get.mockResolvedValueOnce({ data: [deliveryProjectRequest] });
+    mocks.get.mockImplementation((url: string) => {
+      if (url.includes("mentor-me-requests")) {
+        return Promise.resolve({ data: [mentorMeRequest] });
+      }
+      return Promise.resolve({ data: [deliveryProjectRequest] });
+    });
 
     render(<DashboardPage />);
 
@@ -116,6 +144,6 @@ describe("DashboardPage delivery project requests", () => {
     await waitFor(() => {
       expect(screen.getByText("Ada Lovelace")).toBeTruthy();
     });
-    expect(mocks.get).toHaveBeenCalledTimes(2);
+    expect(mocks.get).toHaveBeenCalledTimes(4);
   });
 });

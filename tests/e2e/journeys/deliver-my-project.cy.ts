@@ -1,5 +1,6 @@
 /// <reference types="cypress" />
 
+export {};
 const API_URL = "http://localhost:3000";
 const DELIVERY_REQUEST_URL = `${API_URL}/api/v1/delivery-project-requests`;
 const ANALYTICS_URL = `${API_URL}/api/v1/analytics/events`;
@@ -48,9 +49,18 @@ function fillValidProject(): void {
 }
 
 describe("Deliver My Project visitor journey", () => {
-  it("reaches the delivery project route", () => {
+  it("reaches the delivery project route from the homepage CTA", () => {
     trackAnalyticsEvents();
-    cy.visit("/deliver-my-project");
+
+    cy.visit("/");
+
+    cy.contains("Work With Me").click();
+
+    cy.get("dialog")
+      .should("be.visible")
+      .within(() => {
+        cy.contains("Deliver My Project").click();
+      });
 
     cy.location("pathname").should("eq", "/deliver-my-project");
     cy.contains("h1", "Deliver My Project").should("be.visible");

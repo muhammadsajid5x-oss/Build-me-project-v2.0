@@ -20,6 +20,31 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
     eventType: "view",
     buildProperties: pageViewProperties,
   },
+  "mentor.me.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "mentor-me",
+      data: { action: "clicked" },
+    }),
+  },
+  "mentor.me.viewed": {
+    eventType: "view",
+    buildProperties: pageViewProperties,
+  },
+  "mentor.me.submitted": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "mentor-me",
+      data: { action: "submitted" },
+    }),
+  },
+  "mentor.me.completed": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "mentor-me",
+      data: { action: "completed" },
+    }),
+  },
   "hero.right.viewed": {
     eventType: "view",
     buildProperties: pageViewProperties,

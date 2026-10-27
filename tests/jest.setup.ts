@@ -6,6 +6,18 @@ import {
   clearImmediate as nodeClearImmediate,
 } from "node:timers";
 
+Object.assign(globalThis, {
+  TextEncoder,
+  TextDecoder,
+});
+
+if (globalThis.setImmediate === undefined) {
+  Object.assign(globalThis, {
+    setImmediate: nodeSetImmediate,
+    clearImmediate: nodeClearImmediate,
+  });
+}
+
 const envPath = path.resolve(process.cwd(), ".env");
 
 if (fs.existsSync(envPath)) {
@@ -42,16 +54,4 @@ const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl || !/^postgres(ql)?:\/\//.exec(databaseUrl)) {
   process.env.DATABASE_URL = "postgresql://test:test@localhost:5432/test";
-}
-
-Object.assign(globalThis, {
-  TextEncoder,
-  TextDecoder,
-});
-
-if (globalThis.setImmediate === undefined) {
-  Object.assign(globalThis, {
-    setImmediate: nodeSetImmediate,
-    clearImmediate: nodeClearImmediate,
-  });
 }
