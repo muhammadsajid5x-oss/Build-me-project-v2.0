@@ -46,8 +46,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build database package
-        run: pnpm --filter @build-me/database build
+      - name: Build database dependencies
+        run: pnpm --filter @build-me/database... build
 
       - name: Validate analytics test foundation
         shell: bash
