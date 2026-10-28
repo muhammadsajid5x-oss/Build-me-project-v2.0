@@ -47,7 +47,7 @@ function validateResponseBody<T>(
   if (typeof schema === "function") {
     try {
       return schema(raw);
-    } catch (error) {
+    } catch {
       throw new IntegrationError(
         `Integration response validation failed for ${url}.`,
         "INTEGRATION_RESPONSE_INVALID",

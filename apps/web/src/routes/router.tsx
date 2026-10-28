@@ -18,6 +18,11 @@ const DeliverMyProjectPage = lazyLoad(
   () => import("../pages/DeliverMyProjectPage"),
   "DeliverMyProjectPage",
 );
+
+const MentorMePage = lazyLoad(
+  () => import("../pages/MentorMePage"),
+  "MentorMePage",
+);
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -53,6 +58,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyLoadBoundary>
             <DeliverMyProjectPage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "mentor-me",
+        element: (
+          <LazyLoadBoundary>
+            <MentorMePage />
           </LazyLoadBoundary>
         ),
       },

@@ -40,3 +40,23 @@ export async function authenticateAccessToken(
     isAdmin: data.user.app_metadata?.role === "admin",
   };
 }
+
+/**
+ * Updates the password for the user identified by their access token.
+ *
+ * Supabase's `updateUser` endpoint requires the user's access token to be
+ * present in the Authorization header. The service accepts the new password
+ * and returns the updated user metadata on success.
+ */
+export async function updatePassword(
+  accessToken: string,
+  newPassword: string,
+): Promise<{ success: boolean }> {
+  const { error } = await getSupabaseClient().auth.updateUser({ password: newPassword });
+
+  if (error) {
+    throw new Error("Unable to update password.");
+  }
+
+  return { success: true };
+}

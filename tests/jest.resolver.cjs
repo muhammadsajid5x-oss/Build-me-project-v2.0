@@ -1,4 +1,4 @@
-/* eslint-disable no-undef, @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 const path = require("node:path");
 const fs = require("node:fs");

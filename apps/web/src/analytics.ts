@@ -16,13 +16,29 @@ export type AnalyticsEventName =
   | "work.with.me.clicked"
   | "deliver.my.project.clicked"
   | "deliver.my.project.viewed"
-  | "deliver.my.project.completed";
+  | "deliver.my.project.completed"
+  | "mentor.me.clicked"
+  | "mentor.me.viewed"
+  | "mentor.me.submitted"
+  | "mentor.me.completed"
+  | "coffee.with.me.clicked"
+  | "coffee.with.me.viewed"
+  | "coffee.with.me.submitted"
+  | "coffee.with.me.completed";
 
 export const ANALYTICS_EVENTS = {
   WORK_WITH_ME_CLICKED: "work.with.me.clicked",
   DELIVER_MY_PROJECT_CLICKED: "deliver.my.project.clicked",
   DELIVER_MY_PROJECT_VIEWED: "deliver.my.project.viewed",
   DELIVER_MY_PROJECT_COMPLETED: "deliver.my.project.completed",
+  MENTOR_ME_CLICKED: "mentor.me.clicked",
+  MENTOR_ME_VIEWED: "mentor.me.viewed",
+  MENTOR_ME_SUBMITTED: "mentor.me.submitted",
+  MENTOR_ME_COMPLETED: "mentor.me.completed",
+  COFFEE_WITH_ME_CLICKED: "coffee.with.me.clicked",
+  COFFEE_WITH_ME_VIEWED: "coffee.with.me.viewed",
+  COFFEE_WITH_ME_SUBMITTED: "coffee.with.me.submitted",
+  COFFEE_WITH_ME_COMPLETED: "coffee.with.me.completed",
 } as const satisfies Record<string, AnalyticsEventName>;
 
 export function trackAnalyticsEvent(event: {
