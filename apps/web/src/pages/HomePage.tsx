@@ -47,9 +47,19 @@ export default function HomePage() {
           sm:px-6
           lg:grid-cols-2
           lg:px-4
+          lg:overflow-visible
         "
       >
-        <div>
+        {/* Hero Left — desktop only: extends into Hero Right area */}
+        <div
+          className="
+            relative
+            z-20
+            min-w-0
+            lg:w-[calc(100%+120px)]
+            lg:max-w-none
+          "
+        >
           <TechnologyOwnershipHero />
 
           <div className="mt-4">
@@ -80,7 +90,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        <HeroRight />
+        {/* Hero Right — remains in its existing grid position */}
+        <div className="relative z-10 min-w-0">
+          <HeroRight />
+        </div>
       </section>
 
       {isImpactCardOpen && (
@@ -179,6 +192,7 @@ export default function HomePage() {
                 →
               </span>
             </Link>
+
             <Link
               to="/deliver-my-project"
               onClick={() => {
@@ -209,6 +223,44 @@ export default function HomePage() {
 
                 <span className="mt-1 block text-sm text-gray-500">
                   Tell me about your project and I will review it.
+                </span>
+              </span>
+
+              <span className="ml-4 text-gray-400" aria-hidden="true">
+                →
+              </span>
+            </Link>
+
+            <Link
+              to="/coffee-with-me"
+              onClick={() => {
+                trackAnalyticsEvent({
+                  name: ANALYTICS_EVENTS.COFFEE_WITH_ME_CLICKED,
+                  eventType: "click",
+                });
+              }}
+              className="
+                flex
+                items-center
+                justify-between
+                rounded-xl
+                border
+                border-gray-200
+                px-4
+                py-4
+                text-left
+                transition
+                hover:border-gray-300
+                hover:bg-gray-50
+              "
+            >
+              <span>
+                <span className="block text-base font-semibold text-gray-900">
+                  Coffee With Me
+                </span>
+
+                <span className="mt-1 block text-sm text-gray-500">
+                  Grab a virtual coffee and chat about what is next for you.
                 </span>
               </span>
 
