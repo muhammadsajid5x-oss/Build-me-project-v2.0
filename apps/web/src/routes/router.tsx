@@ -23,6 +23,11 @@ const MentorMePage = lazyLoad(
   () => import("../pages/MentorMePage"),
   "MentorMePage",
 );
+
+const CoffeeWithMePage = lazyLoad(
+  () => import("../pages/CoffeeWithMePage"),
+  "CoffeeWithMePage",
+);
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -66,6 +71,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyLoadBoundary>
             <MentorMePage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "coffee-with-me",
+        element: (
+          <LazyLoadBoundary>
+            <CoffeeWithMePage />
           </LazyLoadBoundary>
         ),
       },

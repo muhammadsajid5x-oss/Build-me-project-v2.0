@@ -3,11 +3,12 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import analyticsEventRoutes from "./routes/analytics-events.js";
 import analyticsSummaryRoutes from "./routes/analytics-summary.js";
+import coffeeWithMeRoutes from "./routes/coffee-with-me.js";
 import deliveryProjectRequestRoutes from "./routes/delivery-project-requests.js";
 import foundationCheckinRoutes from "./routes/foundation-checkins.js";
 import healthRoutes from "./routes/health.js";
 import mentorMeRoutes from "./routes/mentor-me.js";
-
+import notificationRoutes from "./routes/notifications.js";
 import {
   apiRateLimiter,
   errorHandler,
@@ -66,7 +67,8 @@ app.use("/api/v1/analytics/summary", analyticsSummaryRoutes);
 app.use("/api/v1/foundation-checkins", foundationCheckinRoutes);
 app.use("/api/v1/delivery-project-requests", deliveryProjectRequestRoutes);
 app.use("/api/v1/mentor-me-requests", mentorMeRoutes);
-
+app.use("/api/v1/coffee-with-me-requests", coffeeWithMeRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 app.use((_request, _response, next) => {
   next(new Error("NOT_FOUND"));
 });

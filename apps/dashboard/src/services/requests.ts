@@ -26,6 +26,17 @@ export type MentorMeRequest = {
   createdAt: string;
 };
 
+export type CoffeeWithMeRequest = {
+  id: string;
+  name: string;
+  email: string;
+  topic: string;
+  preferredFormat?: string;
+  availability?: string;
+  status: string;
+  createdAt: string;
+};
+
 type DeliveryProjectRequestsResponse = {
   data: DeliveryProjectRequest[];
 };
@@ -34,11 +45,18 @@ type MentorMeRequestsResponse = {
   data: MentorMeRequest[];
 };
 
+type CoffeeWithMeRequestsResponse = {
+  data: CoffeeWithMeRequest[];
+};
+
 const deliveryLoadErrorMessage =
   "Delivery project requests could not be loaded. Please try again.";
 
 const mentorLoadErrorMessage =
   "Mentor Me requests could not be loaded. Please try again.";
+
+const coffeeLoadErrorMessage =
+  "Coffee With Me requests could not be loaded. Please try again.";
 
 const unauthorizedMessage = "You are not authorised to view requests.";
 
@@ -100,17 +118,43 @@ export async function fetchMentorMeRequests(): Promise<{
   }
 }
 
-export async function fetchAllRequests(): Promise<{
-  deliveryRequests: DeliveryProjectRequest[];
-  mentorRequests: MentorMeRequest[];
+export async function fetchCoffeeWithMeRequests(): Promise<{
+  data: CoffeeWithMeRequest[];
   error: string | null;
 }> {
   try {
-    const [deliveryResponse, mentorResponse] = await Promise.all([
+    const response = await apiClient.get<CoffeeWithMeRequestsResponse>(
+      "api/v1/coffee-with-me-requests",
+    );
+    return {
+      data: Array.isArray(response?.data) ? response.data : [],
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      error: isUnauthorizedError(error)
+        ? unauthorizedMessage
+        : coffeeLoadErrorMessage,
+    };
+  }
+}
+
+export async function fetchAllRequests(): Promise<{
+  deliveryRequests: DeliveryProjectRequest[];
+  mentorRequests: MentorMeRequest[];
+  coffeeRequests: CoffeeWithMeRequest[];
+  error: string | null;
+}> {
+  try {
+    const [deliveryResponse, mentorResponse, coffeeResponse] = await Promise.all([
       apiClient.get<DeliveryProjectRequestsResponse>(
         "api/v1/delivery-project-requests",
       ),
       apiClient.get<MentorMeRequestsResponse>("api/v1/mentor-me-requests"),
+      apiClient.get<CoffeeWithMeRequestsResponse>(
+        "api/v1/coffee-with-me-requests",
+      ),
     ]);
 
     return {
@@ -120,12 +164,16 @@ export async function fetchAllRequests(): Promise<{
       mentorRequests: Array.isArray(mentorResponse?.data)
         ? mentorResponse.data
         : [],
+      coffeeRequests: Array.isArray(coffeeResponse?.data)
+        ? coffeeResponse.data
+        : [],
       error: null,
     };
   } catch (error) {
     return {
       deliveryRequests: [],
       mentorRequests: [],
+      coffeeRequests: [],
       error: isUnauthorizedError(error)
         ? unauthorizedMessage
         : "Requests could not be loaded. Please try again.",
