@@ -20,7 +20,11 @@ export type AnalyticsEventName =
   | "mentor.me.clicked"
   | "mentor.me.viewed"
   | "mentor.me.submitted"
-  | "mentor.me.completed";
+  | "mentor.me.completed"
+  | "coffee.with.me.clicked"
+  | "coffee.with.me.viewed"
+  | "coffee.with.me.submitted"
+  | "coffee.with.me.completed";
 
 export const ANALYTICS_EVENTS = {
   WORK_WITH_ME_CLICKED: "work.with.me.clicked",
@@ -31,6 +35,10 @@ export const ANALYTICS_EVENTS = {
   MENTOR_ME_VIEWED: "mentor.me.viewed",
   MENTOR_ME_SUBMITTED: "mentor.me.submitted",
   MENTOR_ME_COMPLETED: "mentor.me.completed",
+  COFFEE_WITH_ME_CLICKED: "coffee.with.me.clicked",
+  COFFEE_WITH_ME_VIEWED: "coffee.with.me.viewed",
+  COFFEE_WITH_ME_SUBMITTED: "coffee.with.me.submitted",
+  COFFEE_WITH_ME_COMPLETED: "coffee.with.me.completed",
 } as const satisfies Record<string, AnalyticsEventName>;
 
 export function trackAnalyticsEvent(event: {
