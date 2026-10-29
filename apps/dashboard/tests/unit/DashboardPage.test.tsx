@@ -36,12 +36,26 @@ const mentorMeRequest = {
   createdAt: "2026-10-01T10:00:00.000Z",
 };
 
+const coffeeWithMeRequest = {
+  id: "33333333-3333-3333-3333-333333333333",
+  name: "Alan Turing",
+  email: "alan@example.com",
+  topic: "Computer Science",
+  preferredFormat: "Virtual",
+  availability: "Weekends",
+  status: "new",
+  createdAt: "2026-10-01T10:00:00.000Z",
+};
+
 describe("DashboardPage delivery project requests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.get.mockImplementation((url: string) => {
       if (url.includes("mentor-me-requests")) {
         return Promise.resolve({ data: [mentorMeRequest] });
+      }
+      if (url.includes("coffee-with-me-requests")) {
+        return Promise.resolve({ data: [coffeeWithMeRequest] });
       }
       return Promise.resolve({ data: [deliveryProjectRequest] });
     });
@@ -64,7 +78,8 @@ describe("DashboardPage delivery project requests", () => {
     expect(screen.getByText("A working platform.")).toBeTruthy();
     expect(screen.getByText("6 weeks")).toBeTruthy();
     expect(screen.getByText("$1,000")).toBeTruthy();
-    expect(screen.getByText("new")).toBeTruthy();
+    // Both delivery and coffee requests have "new" status
+    expect(screen.getAllByText("new")).toHaveLength(2);
     expect(mocks.get).toHaveBeenCalledWith("api/v1/delivery-project-requests");
   });
 
@@ -86,6 +101,9 @@ describe("DashboardPage delivery project requests", () => {
   it("shows a placeholder for requests without a timeline or budget", async () => {
     mocks.get.mockImplementation((url: string) => {
       if (url.includes("mentor-me-requests")) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes("coffee-with-me-requests")) {
         return Promise.resolve({ data: [] });
       }
       return Promise.resolve({
@@ -133,6 +151,9 @@ describe("DashboardPage delivery project requests", () => {
       if (url.includes("mentor-me-requests")) {
         return Promise.resolve({ data: [mentorMeRequest] });
       }
+      if (url.includes("coffee-with-me-requests")) {
+        return Promise.resolve({ data: [coffeeWithMeRequest] });
+      }
       return Promise.resolve({ data: [deliveryProjectRequest] });
     });
 
@@ -144,6 +165,7 @@ describe("DashboardPage delivery project requests", () => {
     await waitFor(() => {
       expect(screen.getByText("Ada Lovelace")).toBeTruthy();
     });
-    expect(mocks.get).toHaveBeenCalledTimes(4);
+    // 3 initial calls (one fails) + 3 retry calls = 6 total
+    expect(mocks.get).toHaveBeenCalledTimes(6);
   });
 });

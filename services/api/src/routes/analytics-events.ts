@@ -15,6 +15,10 @@ const deliveryProjectProperties = (): Record<string, unknown> => ({
   feature: "deliver-my-project",
   data: { destination: "/deliver-my-project" },
 });
+const coffeeWithMeProperties = (): Record<string, unknown> => ({
+  feature: "coffee-with-me",
+  data: { destination: "/coffee-with-me" },
+});
 const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
   "hero.viewed": {
     eventType: "view",
@@ -53,6 +57,10 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
     eventType: "view",
     buildProperties: pageViewProperties,
   },
+  "coffee.with.me.viewed": {
+    eventType: "view",
+    buildProperties: pageViewProperties,
+  },
   "navbar.home.clicked": {
     eventType: "click",
     buildProperties: () => ({
@@ -63,6 +71,24 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
   "work.with.me.clicked": {
     eventType: "click",
     buildProperties: deliveryProjectProperties,
+  },
+  "coffee.with.me.clicked": {
+    eventType: "click",
+    buildProperties: coffeeWithMeProperties,
+  },
+  "coffee.with.me.submitted": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "coffee-with-me",
+      data: { action: "submitted" },
+    }),
+  },
+  "coffee.with.me.completed": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "coffee-with-me",
+      data: { action: "completed" },
+    }),
   },
   "deliver.my.project.clicked": {
     eventType: "click",

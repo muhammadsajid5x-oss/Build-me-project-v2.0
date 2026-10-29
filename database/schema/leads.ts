@@ -49,4 +49,6 @@ export const leads = pgTable("leads", {
   preferredFormat: text("preferred_format"),
 
   availability: text("availability"),
+
+  topic: text("topic"),
 });

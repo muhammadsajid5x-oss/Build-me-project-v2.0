@@ -6,23 +6,28 @@ import LoadingState from "../components/LoadingState";
 import {
   type DeliveryProjectRequest,
   type MentorMeRequest,
+  type CoffeeWithMeRequest,
   fetchDeliveryProjectRequests,
   fetchMentorMeRequests,
+  fetchCoffeeWithMeRequests,
   formatCreatedAt,
 } from "../services/requests";
 
-type Tab = "deliver" | "mentor";
+type Tab = "deliver" | "mentor" | "coffee";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "deliver", label: "Deliver My Project" },
   { id: "mentor", label: "Mentor Me" },
+  { id: "coffee", label: "Coffee With Me" },
 ];
 
 export default function RequestsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("deliver");
 
   // Deliver My Project state
-  const [deliveryRequests, setDeliveryRequests] = useState<DeliveryProjectRequest[]>([]);
+  const [deliveryRequests, setDeliveryRequests] = useState<
+    DeliveryProjectRequest[]
+  >([]);
   const [deliveryLoading, setDeliveryLoading] = useState(true);
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
@@ -30,6 +35,13 @@ export default function RequestsPage() {
   const [mentorRequests, setMentorRequests] = useState<MentorMeRequest[]>([]);
   const [mentorLoading, setMentorLoading] = useState(true);
   const [mentorError, setMentorError] = useState<string | null>(null);
+
+  // Coffee With Me state
+  const [coffeeRequests, setCoffeeRequests] = useState<CoffeeWithMeRequest[]>(
+    [],
+  );
+  const [coffeeLoading, setCoffeeLoading] = useState(true);
+  const [coffeeError, setCoffeeError] = useState<string | null>(null);
 
   const loadDeliveryRequests = useCallback(async () => {
     setDeliveryLoading(true);
@@ -55,6 +67,18 @@ export default function RequestsPage() {
     setMentorLoading(false);
   }, []);
 
+  const loadCoffeeRequests = useCallback(async () => {
+    setCoffeeLoading(true);
+    setCoffeeError(null);
+
+    const result = await fetchCoffeeWithMeRequests();
+    setCoffeeRequests(result.data);
+    if (result.error) {
+      setCoffeeError(result.error);
+    }
+    setCoffeeLoading(false);
+  }, []);
+
   // Load delivery requests on mount
   useEffect(() => {
     void loadDeliveryRequests();
@@ -66,6 +90,13 @@ export default function RequestsPage() {
       void loadMentorRequests();
     }
   }, [activeTab, loadMentorRequests]);
+
+  // Load coffee requests when tab is activated
+  useEffect(() => {
+    if (activeTab === "coffee") {
+      void loadCoffeeRequests();
+    }
+  }, [activeTab, loadCoffeeRequests]);
 
   return (
     <section aria-labelledby="requests-heading">
@@ -101,7 +132,12 @@ export default function RequestsPage() {
         </ul>
       </nav>
 
-      <div id="panel-deliver" role="tabpanel" aria-labelledby="tab-deliver" hidden={activeTab !== "deliver"}>
+      <div
+        id="panel-deliver"
+        role="tabpanel"
+        aria-labelledby="tab-deliver"
+        hidden={activeTab !== "deliver"}
+      >
         <DeliverMyProjectContent
           requests={deliveryRequests}
           loading={deliveryLoading}
@@ -110,12 +146,31 @@ export default function RequestsPage() {
         />
       </div>
 
-      <div id="panel-mentor" role="tabpanel" aria-labelledby="tab-mentor" hidden={activeTab !== "mentor"}>
+      <div
+        id="panel-mentor"
+        role="tabpanel"
+        aria-labelledby="tab-mentor"
+        hidden={activeTab !== "mentor"}
+      >
         <MentorMeContent
           requests={mentorRequests}
           loading={mentorLoading}
           error={mentorError}
           onRetry={loadMentorRequests}
+        />
+      </div>
+
+      <div
+        id="panel-coffee"
+        role="tabpanel"
+        aria-labelledby="tab-coffee"
+        hidden={activeTab !== "coffee"}
+      >
+        <CoffeeWithMeContent
+          requests={coffeeRequests}
+          loading={coffeeLoading}
+          error={coffeeError}
+          onRetry={loadCoffeeRequests}
         />
       </div>
     </section>
@@ -138,15 +193,11 @@ function DeliverMyProjectContent({
   }
 
   if (error) {
-    return (
-      <ErrorState message={error} onRetry={onRetry} />
-    );
+    return <ErrorState message={error} onRetry={onRetry} />;
   }
 
   if (requests.length === 0) {
-    return (
-      <EmptyState message="No Deliver My Project requests yet." />
-    );
+    return <EmptyState message="No Deliver My Project requests yet." />;
   }
 
   return (
@@ -154,28 +205,52 @@ function DeliverMyProjectContent({
       <table className="w-full" role="table">
         <thead>
           <tr className="border-b border-gray-700">
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Name
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Email
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Project Description
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Expected Outcome
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Timeline
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Budget
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Status
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Created
             </th>
           </tr>
@@ -185,12 +260,16 @@ function DeliverMyProjectContent({
             <tr key={request.id} className="align-top hover:bg-gray-800/50">
               <td className="border-b px-3 py-2">{request.name}</td>
               <td className="border-b px-3 py-2">{request.email}</td>
-              <td className="border-b px-3 py-2">{request.projectDescription}</td>
+              <td className="border-b px-3 py-2">
+                {request.projectDescription}
+              </td>
               <td className="border-b px-3 py-2">{request.expectedOutcome}</td>
               <td className="border-b px-3 py-2">{request.timeline ?? "—"}</td>
               <td className="border-b px-3 py-2">{request.budget ?? "—"}</td>
               <td className="border-b px-3 py-2">{request.status}</td>
-              <td className="border-b px-3 py-2">{formatCreatedAt(request.createdAt)}</td>
+              <td className="border-b px-3 py-2">
+                {formatCreatedAt(request.createdAt)}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -215,15 +294,11 @@ function MentorMeContent({
   }
 
   if (error) {
-    return (
-      <ErrorState message={error} onRetry={onRetry} />
-    );
+    return <ErrorState message={error} onRetry={onRetry} />;
   }
 
   if (requests.length === 0) {
-    return (
-      <EmptyState message="No Mentor Me requests yet." />
-    );
+    return <EmptyState message="No Mentor Me requests yet." />;
   }
 
   return (
@@ -231,31 +306,58 @@ function MentorMeContent({
       <table className="w-full" role="table">
         <thead>
           <tr className="border-b border-gray-700">
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Name
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Email
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Mentoring Area
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Help With
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Experience / Context
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Preferred Format
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Availability
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Status
             </th>
-            <th scope="col" className="border-b px-3 py-2 font-semibold text-left">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
               Created
             </th>
           </tr>
@@ -267,11 +369,114 @@ function MentorMeContent({
               <td className="border-b px-3 py-2">{request.email}</td>
               <td className="border-b px-3 py-2">{request.mentoringArea}</td>
               <td className="border-b px-3 py-2">{request.helpWith}</td>
-              <td className="border-b px-3 py-2">{request.experienceContext}</td>
-              <td className="border-b px-3 py-2">{request.preferredFormat ?? "—"}</td>
-              <td className="border-b px-3 py-2">{request.availability ?? "—"}</td>
+              <td className="border-b px-3 py-2">
+                {request.experienceContext}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.preferredFormat ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.availability ?? "—"}
+              </td>
               <td className="border-b px-3 py-2">{request.status}</td>
-              <td className="border-b px-3 py-2">{formatCreatedAt(request.createdAt)}</td>
+              <td className="border-b px-3 py-2">
+                {formatCreatedAt(request.createdAt)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+function CoffeeWithMeContent({
+  requests,
+  loading,
+  error,
+  onRetry,
+}: {
+  requests: CoffeeWithMeRequest[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+}) {
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={onRetry} />;
+  }
+
+  if (requests.length === 0) {
+    return <EmptyState message="No Coffee With Me requests yet." />;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-900/50">
+      <table className="w-full" role="table">
+        <thead>
+          <tr className="border-b border-gray-700">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Name
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Email
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Topic
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Preferred Format
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Availability
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Status
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Created
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map((request) => (
+            <tr key={request.id} className="align-top hover:bg-gray-800/50">
+              <td className="border-b px-3 py-2">{request.name}</td>
+              <td className="border-b px-3 py-2">{request.email}</td>
+              <td className="border-b px-3 py-2">{request.topic}</td>
+              <td className="border-b px-3 py-2">
+                {request.preferredFormat ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.availability ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">{request.status}</td>
+              <td className="border-b px-3 py-2">
+                {formatCreatedAt(request.createdAt)}
+              </td>
             </tr>
           ))}
         </tbody>

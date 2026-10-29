@@ -6,3 +6,4 @@ export * from "./foundation-checkin.js";
 export * from "./delivery-project-request.js";
 export * from "./sanitize.js";
 export * from "./mentor-me.js";
+export * from "./coffee-with-me.js";

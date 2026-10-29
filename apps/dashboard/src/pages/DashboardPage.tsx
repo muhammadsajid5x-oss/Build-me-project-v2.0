@@ -6,6 +6,7 @@ import LoadingState from "../components/LoadingState";
 import {
   type DeliveryProjectRequest,
   type MentorMeRequest,
+  type CoffeeWithMeRequest,
   fetchAllRequests,
   formatCreatedAt,
 } from "../services/requests";
@@ -13,6 +14,7 @@ import {
 export function DashboardContent() {
   const [requests, setRequests] = useState<DeliveryProjectRequest[]>([]);
   const [mentorRequests, setMentorRequests] = useState<MentorMeRequest[]>([]);
+  const [coffeeRequests, setCoffeeRequests] = useState<CoffeeWithMeRequest[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +28,7 @@ export function DashboardContent() {
 
       setRequests(result.deliveryRequests);
       setMentorRequests(result.mentorRequests);
+      setCoffeeRequests(result.coffeeRequests);
 
       if (result.error) {
         setError(result.error);
@@ -257,6 +260,99 @@ export function DashboardContent() {
                       <td className="border-b px-3 py-2">
                         {request.experienceContext}
                       </td>
+
+                      <td className="border-b px-3 py-2">
+                        {request.preferredFormat ?? "—"}
+                      </td>
+
+                      <td className="border-b px-3 py-2">
+                        {request.availability ?? "—"}
+                      </td>
+
+                      <td className="border-b px-3 py-2">{request.status}</td>
+
+                      <td className="border-b px-3 py-2">
+                        {formatCreatedAt(request.createdAt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <h2 className="mt-10 text-xl font-semibold">Coffee With Me requests</h2>
+
+          {coffeeRequests.length === 0 ? (
+            <EmptyState message="No Coffee With Me requests yet." />
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full border-collapse text-left text-sm">
+                <caption className="sr-only">
+                  Coffee With Me requests, newest first
+                </caption>
+
+                <thead>
+                  <tr>
+                    <th
+                      scope="col"
+                      className="border-b px-3 py-2 font-semibold"
+                    >
+                      Name
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="border-b px-3 py-2 font-semibold"
+                    >
+                      Email
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="border-b px-3 py-2 font-semibold"
+                    >
+                      Topic
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="border-b px-3 py-2 font-semibold"
+                    >
+                      Preferred Format
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="border-b px-3 py-2 font-semibold"
+                    >
+                      Availability
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="border-b px-3 py-2 font-semibold"
+                    >
+                      Status
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="border-b px-3 py-2 font-semibold"
+                    >
+                      Created
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {coffeeRequests.map((request) => (
+                    <tr key={request.id} className="align-top">
+                      <td className="border-b px-3 py-2">{request.name}</td>
+
+                      <td className="border-b px-3 py-2">{request.email}</td>
+
+                      <td className="border-b px-3 py-2">{request.topic}</td>
 
                       <td className="border-b px-3 py-2">
                         {request.preferredFormat ?? "—"}
