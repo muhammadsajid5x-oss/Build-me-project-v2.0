@@ -218,10 +218,10 @@ export default function HeroRight({
           from-blue-100
           via-blue-50
           to-white
-          sm:-top-25
+          sm:-top-0.5
           sm:-right-55
-          sm:h-145
-          sm:w-200
+          sm:h-130
+          sm:w-400
           lg:-top-30
           lg:-right-65
           lg:h-175
@@ -288,10 +288,10 @@ export default function HeroRight({
               bg-center
               opacity-70
               mix-blend-multiply
-              sm:left-[45%]
-              sm:top-[38%]
-              sm:h-162.5
-              sm:w-137.5
+              sm:left-[55%]
+              sm:top-[45%]
+              sm:h-100
+              sm:w-127.5
               lg:left-[25%]
               lg:top-[35%]
               lg:h-120

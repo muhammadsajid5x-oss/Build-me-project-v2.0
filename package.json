@@ -5,9 +5,10 @@
   "type": "module",
   "pnpm": {
     "overrides": {
-      "qs": "6.16.0",
-      "ip-address": "10.7.1",
-      "proxy-addr": "2.0.8"
+      "qs": "6.16.1",
+      "ip-address": "10.7.4",
+      "proxy-addr": "2.0.8",
+      "body-parser": "2.4.0"
     }
   },
   "scripts": {
@@ -22,11 +23,11 @@
     "cypress:open": "cypress open --config-file tests/cypress.config.js",
     "lint": "turbo run lint",
     "test:e2e": "cypress run --config-file tests/cypress.config.js",
-    "test:performance": "playwright test tests/performance/homepage.performance.spec.ts",
+    "test:performance": "playwright test tests/performance",
     "type-check": "turbo run type-check typecheck",
     "review:kpis": "node scripts/operations/review-kpis.mjs",
     "test:analytics": "jest --config tests/jest.config.cjs tests/analytics",
-    "test:security": "jest --config tests/jest.config.cjs tests/security && playwright test tests/security/api-security.spec.ts",
+    "test:security": "jest --config tests/jest.config.cjs tests/security && playwright test tests/security --config tests/playwright.security.config.ts",
     "test:api": "jest --config tests/jest.config.cjs tests/api",
     "test:integration": "playwright test tests/integration/api-health.integration.spec.ts"
   },
@@ -68,3 +69,5 @@
     "vitest": "latest"
   }
 }
+
+

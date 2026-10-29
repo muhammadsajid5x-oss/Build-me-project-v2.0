@@ -1,1 +1,444 @@
 @import "@build-me/ui/styles";
+
+@layer base {
+  :root {
+    /* Light theme (default) */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-tertiary: #f3f4f6;
+    --bg-card: #ffffff;
+    --bg-input: #ffffff;
+    --text-primary: #111827;
+    --text-secondary: #374151;
+    --text-tertiary: #6b7280;
+    --text-muted: #9ca3af;
+    --border-primary: #e5e7eb;
+    --border-secondary: #d1d5db;
+    --border-focus: #2563eb;
+    --accent-primary: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-light: #eff6ff;
+    --sidebar-bg: #f9fafb;
+    --sidebar-text: #374151;
+    --sidebar-hover: #e5e7eb;
+    --sidebar-active-bg: #e5e7eb;
+    --sidebar-active-text: #111827;
+    --navbar-bg: #ffffff;
+    --navbar-border: #e5e7eb;
+    --dropdown-bg: #ffffff;
+    --dropdown-border: #e5e7eb;
+    --dropdown-hover: #f3f4f6;
+    --table-header-bg: #f9fafb;
+    --table-row-hover: #f3f4f6;
+    --card-border: #e5e7eb;
+    --error-bg: #fef2f2;
+    --error-text: #b91c1c;
+    --error-border: #fecaca;
+    --success-bg: #f0fdf4;
+    --success-text: #166534;
+    --success-border: #bbf7d0;
+  }
+
+  .dark {
+    --bg-primary: #030712;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1f2937;
+    --bg-card: #1f2937;
+    --bg-input: #1f2937;
+    --text-primary: #f9fafb;
+    --text-secondary: #e5e7eb;
+    --text-tertiary: #9ca3af;
+    --text-muted: #6b7280;
+    --border-primary: #374151;
+    --border-secondary: #4b5563;
+    --border-focus: #3b82f6;
+    --accent-primary: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-light: #1e3a5f;
+    --sidebar-bg: #030712;
+    --sidebar-text: #d1d5db;
+    --sidebar-hover: #1f2937;
+    --sidebar-active-bg: #1f2937;
+    --sidebar-active-text: #ffffff;
+    --navbar-bg: #111827;
+    --navbar-border: #1f2937;
+    --dropdown-bg: #1f2937;
+    --dropdown-border: #374151;
+    --dropdown-hover: #374151;
+    --table-header-bg: #111827;
+    --table-row-hover: #1f2937;
+    --card-border: #374151;
+    --error-bg: #450a0a;
+    --error-text: #fca5a5;
+    --error-border: #7f1d1d;
+    --success-bg: #052e16;
+    --success-text: #86efac;
+    --success-border: #14532d;
+  }
+
+  html,
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+}
+
+/* =========================================================
+   Dashboard theme overrides
+   These rules intentionally remain outside @layer base so
+   they can override Tailwind utility classes without
+   requiring !important.
+   ========================================================= */
+
+/* Page */
+html,
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Main content */
+main,
+section[aria-labelledby] {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[class*="bg-gray-950"] {
+  background-color: var(--bg-primary);
+}
+
+/* =========================================================
+   Navbar
+   ========================================================= */
+
+header[class*="bg-gray-900"] {
+  background-color: var(--navbar-bg);
+  border-color: var(--navbar-border);
+}
+
+/* =========================================================
+   Sidebar
+   ========================================================= */
+
+aside[class*="bg-gray-900"] {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+}
+
+aside [class*="bg-gray-800"],
+aside [class*="bg-gray-800\/50"] {
+  background-color: var(--sidebar-active-bg);
+}
+
+aside [class*="bg-gray-800"].text-white,
+aside [class*="bg-gray-800\/50"].text-white {
+  color: var(--sidebar-active-text);
+}
+
+aside [class*="hover:bg-gray-800"]:hover,
+aside [class*="hover:bg-gray-800\/50"]:hover {
+  background-color: var(--sidebar-hover);
+}
+
+/* =========================================================
+   Cards and containers
+   ========================================================= */
+
+.bg-gray-900\/50,
+.bg-gray-900,
+.bg-gray-800 {
+  background-color: var(--bg-card);
+}
+
+.border-gray-700,
+.border-gray-800 {
+  border-color: var(--card-border);
+}
+
+/* =========================================================
+   Text colors
+   ========================================================= */
+
+.text-white {
+  color: var(--text-primary);
+}
+
+.text-gray-200 {
+  color: var(--text-secondary);
+}
+
+.text-gray-300 {
+  color: var(--text-secondary);
+}
+
+.text-gray-400 {
+  color: var(--text-tertiary);
+}
+
+.text-gray-500 {
+  color: var(--text-muted);
+}
+
+.text-gray-600 {
+  color: var(--text-muted);
+}
+
+/* Hover text */
+[class*="hover:text-white"]:hover {
+  color: var(--text-primary);
+}
+
+[class*="hover:text-gray-200"]:hover {
+  color: var(--text-secondary);
+}
+
+/* =========================================================
+   Inputs
+   ========================================================= */
+
+input[class*="bg-gray-900"],
+input[class*="bg-gray-800"],
+textarea[class*="bg-gray-900"],
+textarea[class*="bg-gray-800"],
+select[class*="bg-gray-900"],
+select[class*="bg-gray-800"] {
+  background-color: var(--bg-input);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+input[class*="placeholder-gray-500"]::placeholder,
+textarea[class*="placeholder-gray-500"]::placeholder {
+  color: var(--text-muted);
+}
+
+input[class*="focus:border-blue-500"]:focus,
+textarea[class*="focus:border-blue-500"]:focus,
+select[class*="focus:border-blue-500"]:focus {
+  border-color: var(--border-focus);
+  --tw-ring-color: var(--border-focus);
+}
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+
+button[class*="bg-gray-800"],
+button[class*="bg-gray-700"] {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+button[class*="hover:bg-gray-700"]:hover,
+button[class*="hover:bg-gray-800"]:hover {
+  background-color: var(--sidebar-hover);
+}
+
+button[class*="bg-blue-600"] {
+  background-color: var(--accent-primary);
+}
+
+button[class*="hover:bg-blue-500"]:hover,
+button[class*="hover:bg-blue-600"]:hover {
+  background-color: var(--accent-hover);
+}
+
+/* =========================================================
+   Dropdowns / profile menu
+   ========================================================= */
+
+.absolute[class*="bg-gray-800"],
+.absolute[class*="bg-gray-900"] {
+  background-color: var(--dropdown-bg);
+  border-color: var(--dropdown-border);
+}
+
+.absolute .text-gray-300,
+.absolute .text-gray-400 {
+  color: var(--text-secondary);
+}
+
+.absolute .hover\:bg-gray-700:hover {
+  background-color: var(--dropdown-hover);
+}
+
+/* Profile menu */
+.bg-gray-800.text-white {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   Notification bell
+   ========================================================= */
+
+.text-gray-400.transition-colors.hover\:bg-gray-800 {
+  color: var(--text-tertiary);
+}
+
+.text-gray-400.transition-colors.hover\:bg-gray-800:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+}
+
+/* =========================================================
+   Tables
+   ========================================================= */
+
+table[class*="border-b"] th,
+table thead tr,
+table th {
+  background-color: var(--table-header-bg);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+table[class*="border-b"] td,
+table td {
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+tr[class*="hover:bg-gray-800"]:hover,
+tr[class*="hover:bg-gray-900"]:hover {
+  background-color: var(--table-row-hover);
+}
+
+/* Dividers */
+.divide-y.divide-gray-800 > :not([hidden]) ~ :not([hidden]),
+.divide-y.divide-gray-700 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-primary);
+}
+
+/* =========================================================
+   Search bar
+   ========================================================= */
+
+.text-gray-500 svg {
+  color: var(--text-muted);
+}
+
+/* =========================================================
+   Loading states
+   ========================================================= */
+
+.animate-pulse {
+  background-color: var(--bg-tertiary);
+}
+
+output[aria-live="polite"] {
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   Focus rings
+   ========================================================= */
+
+.focus\:ring-2:focus,
+.focus\:ring-1:focus {
+  --tw-ring-color: var(--border-focus);
+}
+
+/* =========================================================
+   Tabs
+   ========================================================= */
+
+button[role="tab"] {
+  color: var(--text-tertiary);
+}
+
+button[role="tab"][aria-selected="true"],
+button[role="tab"].border-blue-500 {
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+}
+
+/* =========================================================
+   Hover borders
+   ========================================================= */
+
+[class*="hover:border-gray-600"]:hover {
+  border-color: var(--border-secondary);
+}
+
+/* =========================================================
+   Analytics stat cards
+   ========================================================= */
+
+.rounded-lg.border.border-gray-800.bg-gray-900 {
+  background-color: var(--bg-card);
+  border-color: var(--card-border);
+}
+
+.rounded-lg.border.border-gray-800.bg-gray-900 .text-gray-400,
+.rounded-lg.border.border-gray-800.bg-gray-900 .text-xs {
+  color: var(--text-muted);
+}
+
+.rounded-lg.border.border-gray-800.bg-gray-900 .text-white,
+.rounded-lg.border.border-gray-800.bg-gray-900 .font-bold.text-white,
+.rounded-lg.border.border-gray-800.bg-gray-900 .font-semibold.text-white {
+  color: var(--text-primary);
+}
+
+/* Analytics chart */
+.rounded-lg.border.border-gray-800.bg-gray-900.p-4 .text-gray-300 {
+  color: var(--text-secondary);
+}
+
+/* =========================================================
+   Error / alert states
+   ========================================================= */
+
+div[role="alert"],
+.p-8[role="alert"] {
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+  border-radius: 0.5rem;
+}
+
+div[role="alert"] button,
+.p-8[role="alert"] button {
+  background-color: var(--accent-primary);
+  color: #ffffff;
+}
+
+div[role="alert"] button:hover {
+  background-color: var(--accent-hover);
+}
+
+/* =========================================================
+   Empty / status states
+   ========================================================= */
+
+div[role="status"],
+.p-8[role="status"] {
+  color: var(--text-tertiary);
+}
+
+/* =========================================================
+   Blue accents
+   ========================================================= */
+
+.bg-blue-600 {
+  background-color: var(--accent-primary);
+}
+
+.hover\:bg-blue-500:hover,
+.group-hover\:bg-blue-500:hover {
+  background-color: var(--accent-hover);
+}
+
+.border-blue-500 {
+  border-color: var(--accent-primary);
+}
+
+/* =========================================================
+   General interactive hover state
+   ========================================================= */
+
+.hover\:bg-gray-700:hover {
+  background-color: var(--sidebar-hover);
+}

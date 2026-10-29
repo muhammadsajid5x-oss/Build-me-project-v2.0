@@ -6,6 +6,18 @@ import tseslint from "typescript-eslint";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 
+const nodeGlobals = {
+  process: "readonly",
+  console: "readonly",
+  URL: "readonly",
+  fetch: "readonly",
+  AbortSignal: "readonly",
+  __dirname: "readonly",
+  module: "readonly",
+  require: "readonly",
+  exports: "readonly",
+};
+
 export default defineConfig(
   {
     ignores: [
@@ -22,6 +34,7 @@ export default defineConfig(
   ...tseslint.configs.recommended,
   {
     languageOptions: {
+      globals: nodeGlobals,
       parserOptions: {
         tsconfigRootDir: path.resolve(configDir, ".."),
       },

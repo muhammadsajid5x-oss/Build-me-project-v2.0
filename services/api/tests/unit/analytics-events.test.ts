@@ -150,3 +150,129 @@ describe("Navbar analytics event endpoint", () => {
     });
   });
 });
+
+describe("Deliver My Project analytics events", () => {
+  it("stores the Work With Me click event with the delivery project properties", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body: new URLSearchParams({
+        name: "work.with.me.clicked",
+        eventType: "click",
+      }),
+    });
+
+    expect(response.status).toBe(202);
+    expect(insertMock).toHaveBeenCalledOnce();
+    expect(valuesMock).toHaveBeenCalledWith({
+      name: "work.with.me.clicked",
+      eventType: "click",
+      properties: {
+        feature: "deliver-my-project",
+        data: { destination: "/deliver-my-project" },
+      },
+    });
+  });
+
+  it("stores the Deliver My Project click event with the delivery project properties", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body: new URLSearchParams({
+        name: "deliver.my.project.clicked",
+        eventType: "click",
+      }),
+    });
+
+    expect(response.status).toBe(202);
+    expect(insertMock).toHaveBeenCalledOnce();
+    expect(valuesMock).toHaveBeenCalledWith({
+      name: "deliver.my.project.clicked",
+      eventType: "click",
+      properties: {
+        feature: "deliver-my-project",
+        data: { destination: "/deliver-my-project" },
+      },
+    });
+  });
+
+  it("stores the Deliver My Project view event with its route", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body: new URLSearchParams({
+        name: "deliver.my.project.viewed",
+        eventType: "view",
+        path: "/deliver-my-project",
+      }),
+    });
+
+    expect(response.status).toBe(202);
+    expect(insertMock).toHaveBeenCalledOnce();
+    expect(valuesMock).toHaveBeenCalledWith({
+      name: "deliver.my.project.viewed",
+      eventType: "view",
+      properties: {
+        feature: "page",
+        data: { path: "/deliver-my-project" },
+      },
+    });
+  });
+
+  it("stores the completed click event with the delivery project properties", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body: new URLSearchParams({
+        name: "deliver.my.project.completed",
+        eventType: "click",
+      }),
+    });
+
+    expect(response.status).toBe(202);
+    expect(insertMock).toHaveBeenCalledOnce();
+    expect(valuesMock).toHaveBeenCalledWith({
+      name: "deliver.my.project.completed",
+      eventType: "click",
+      properties: {
+        feature: "deliver-my-project",
+        data: { destination: "/deliver-my-project" },
+      },
+    });
+  });
+
+  it("rejects the Work With Me event when the event type does not match", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body: new URLSearchParams({
+        name: "work.with.me.clicked",
+        eventType: "view",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(valuesMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects the Deliver My Project view event when the route is missing", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body: new URLSearchParams({
+        name: "deliver.my.project.viewed",
+        eventType: "view",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(valuesMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects the removed delivery journey started event", async () => {
+    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
+      method: "POST",
+      body: new URLSearchParams({
+        name: "deliver-my-project.started",
+        eventType: "click",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(valuesMock).not.toHaveBeenCalled();
+  });
+});
