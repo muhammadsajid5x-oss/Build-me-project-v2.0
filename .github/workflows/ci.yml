@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
       SUPABASE_URL: https://example.supabase.co
       SUPABASE_KEY: ci-test-key
       VITE_SUPABASE_URL: https://example.supabase.co
