@@ -93,6 +93,20 @@ jobs:
           cat api.log
           exit 1
 
+      - name: Start Web
+        run: |
+          pnpm --dir apps/web dev --host 0.0.0.0 > web.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://localhost:5173/ > /dev/null; then
+              echo "Web app is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Web app failed to start"
+          cat web.log
+          exit 1
+
       - name: Unit Tests
         run: pnpm test:unit
 
