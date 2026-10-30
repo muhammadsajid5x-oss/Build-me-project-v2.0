@@ -7,18 +7,21 @@ import {
   type DeliveryProjectRequest,
   type MentorMeRequest,
   type CoffeeWithMeRequest,
+  type OwnershipAuditRequest,
   fetchDeliveryProjectRequests,
   fetchMentorMeRequests,
   fetchCoffeeWithMeRequests,
+  fetchOwnershipAuditRequests,
   formatCreatedAt,
 } from "../services/requests";
 
-type Tab = "deliver" | "mentor" | "coffee";
+type Tab = "deliver" | "mentor" | "coffee" | "ownership-audit";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "deliver", label: "Deliver My Project" },
   { id: "mentor", label: "Mentor Me" },
   { id: "coffee", label: "Coffee With Me" },
+  { id: "ownership-audit", label: "Ownership Audit" },
 ];
 
 export default function RequestsPage() {
@@ -43,15 +46,26 @@ export default function RequestsPage() {
   const [coffeeLoading, setCoffeeLoading] = useState(true);
   const [coffeeError, setCoffeeError] = useState<string | null>(null);
 
+  // Ownership Audit state
+  const [ownershipAuditRequests, setOwnershipAuditRequests] = useState<
+    OwnershipAuditRequest[]
+  >([]);
+  const [ownershipAuditLoading, setOwnershipAuditLoading] = useState(true);
+  const [ownershipAuditError, setOwnershipAuditError] = useState<string | null>(
+    null,
+  );
+
   const loadDeliveryRequests = useCallback(async () => {
     setDeliveryLoading(true);
     setDeliveryError(null);
 
     const result = await fetchDeliveryProjectRequests();
     setDeliveryRequests(result.data);
+
     if (result.error) {
       setDeliveryError(result.error);
     }
+
     setDeliveryLoading(false);
   }, []);
 
@@ -61,9 +75,11 @@ export default function RequestsPage() {
 
     const result = await fetchMentorMeRequests();
     setMentorRequests(result.data);
+
     if (result.error) {
       setMentorError(result.error);
     }
+
     setMentorLoading(false);
   }, []);
 
@@ -73,10 +89,26 @@ export default function RequestsPage() {
 
     const result = await fetchCoffeeWithMeRequests();
     setCoffeeRequests(result.data);
+
     if (result.error) {
       setCoffeeError(result.error);
     }
+
     setCoffeeLoading(false);
+  }, []);
+
+  const loadOwnershipAuditRequests = useCallback(async () => {
+    setOwnershipAuditLoading(true);
+    setOwnershipAuditError(null);
+
+    const result = await fetchOwnershipAuditRequests();
+    setOwnershipAuditRequests(result.data);
+
+    if (result.error) {
+      setOwnershipAuditError(result.error);
+    }
+
+    setOwnershipAuditLoading(false);
   }, []);
 
   // Load delivery requests on mount
@@ -98,6 +130,13 @@ export default function RequestsPage() {
     }
   }, [activeTab, loadCoffeeRequests]);
 
+  // Load Ownership Audit requests when tab is activated
+  useEffect(() => {
+    if (activeTab === "ownership-audit") {
+      void loadOwnershipAuditRequests();
+    }
+  }, [activeTab, loadOwnershipAuditRequests]);
+
   return (
     <section aria-labelledby="requests-heading">
       <header className="mb-6">
@@ -105,16 +144,18 @@ export default function RequestsPage() {
           Requests
         </h1>
         <p className="mt-1 text-sm text-gray-400">
-          Manage your project delivery and mentorship requests.
+          Manage your project delivery, mentorship, coffee, and ownership audit
+          requests.
         </p>
       </header>
 
       <nav aria-label="Request tabs" className="mb-6 border-b border-gray-800">
-        <ul className="flex gap-8" role="tablist">
+        <ul className="flex flex-wrap gap-8" role="tablist">
           {tabs.map((tab) => (
             <li key={tab.id} role="presentation">
               <button
                 role="tab"
+                type="button"
                 aria-selected={activeTab === tab.id}
                 aria-controls={`panel-${tab.id}`}
                 id={`tab-${tab.id}`}
@@ -171,6 +212,20 @@ export default function RequestsPage() {
           loading={coffeeLoading}
           error={coffeeError}
           onRetry={loadCoffeeRequests}
+        />
+      </div>
+
+      <div
+        id="panel-ownership-audit"
+        role="tabpanel"
+        aria-labelledby="tab-ownership-audit"
+        hidden={activeTab !== "ownership-audit"}
+      >
+        <OwnershipAuditContent
+          requests={ownershipAuditRequests}
+          loading={ownershipAuditLoading}
+          error={ownershipAuditError}
+          onRetry={loadOwnershipAuditRequests}
         />
       </div>
     </section>
@@ -389,6 +444,7 @@ function MentorMeContent({
     </div>
   );
 }
+
 function CoffeeWithMeContent({
   requests,
   loading,
@@ -474,6 +530,102 @@ function CoffeeWithMeContent({
                 {request.availability ?? "—"}
               </td>
               <td className="border-b px-3 py-2">{request.status}</td>
+              <td className="border-b px-3 py-2">
+                {formatCreatedAt(request.createdAt)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function OwnershipAuditContent({
+  requests,
+  loading,
+  error,
+  onRetry,
+}: {
+  requests: OwnershipAuditRequest[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+}) {
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={onRetry} />;
+  }
+
+  if (requests.length === 0) {
+    return <EmptyState message="No Ownership Audit requests yet." />;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-900/50">
+      <table className="w-full" role="table">
+        <thead>
+          <tr className="border-b border-gray-700">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Visitor
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Q1
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Q2
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Q3
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Score
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Category
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 font-semibold text-left"
+            >
+              Created
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map((request) => (
+            <tr key={request.id} className="align-top hover:bg-gray-800/50">
+              <td className="border-b px-3 py-2">
+                {request.visitorEmail ?? "Anonymous"}
+              </td>
+              <td className="border-b px-3 py-2">{request.step1}</td>
+              <td className="border-b px-3 py-2">{request.step2}</td>
+              <td className="border-b px-3 py-2">{request.step3}</td>
+              <td className="border-b px-3 py-2 font-semibold">
+                {request.score}
+              </td>
+              <td className="border-b px-3 py-2">{request.category}</td>
               <td className="border-b px-3 py-2">
                 {formatCreatedAt(request.createdAt)}
               </td>

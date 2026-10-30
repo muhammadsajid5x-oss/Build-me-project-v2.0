@@ -29,7 +29,7 @@
     "test:analytics": "jest --config tests/jest.config.cjs tests/analytics",
     "test:security": "jest --config tests/jest.config.cjs tests/security && playwright test tests/security --config tests/playwright.security.config.ts",
     "test:api": "jest --config tests/jest.config.cjs tests/api",
-    "test:integration": "playwright test tests/integration/api-health.integration.spec.ts"
+    "test:integration": "playwright test --config=tests/playwright.integration.config.ts"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "5.3.0",
@@ -69,5 +69,3 @@
     "vitest": "latest"
   }
 }
-
-

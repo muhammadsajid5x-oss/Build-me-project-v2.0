@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import TechnologyOwnershipHero from "../components/Hero/hero-left";
 import HeroRight from "../components/Hero/hero-right";
+import { Modal, ModalHeader, ModalBody } from "@build-me/ui";
+import TechnologyOwnershipAudit from "../components/TechnologyOwnershipAudit";
 
 /**
  * Home page with a single primary "Work With Me" call to action.
@@ -11,10 +13,11 @@ import HeroRight from "../components/Hero/hero-right";
  * Clicking the button:
  * 1. Tracks the Work With Me click.
  * 2. Opens the existing Work With Me path selection.
- * 3. Lets the visitor choose Deliver My Project.
+ * 3. Lets the visitor choose an existing journey or open the Ownership Audit.
  */
 export default function HomePage() {
   const [isImpactCardOpen, setIsImpactCardOpen] = useState(false);
+  const [isOwnershipAuditOpen, setIsOwnershipAuditOpen] = useState(false);
 
   const handleWorkWithMeClick = () => {
     trackAnalyticsEvent({
@@ -27,6 +30,21 @@ export default function HomePage() {
 
   const closeImpactCard = () => {
     setIsImpactCardOpen(false);
+  };
+
+  const handleOwnershipAuditClick = () => {
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.OWNERSHIP_AUDIT_CLICKED,
+      eventType: "click",
+      path: "/",
+    });
+
+    setIsImpactCardOpen(false);
+    setIsOwnershipAuditOpen(true);
+  };
+
+  const closeOwnershipAudit = () => {
+    setIsOwnershipAuditOpen(false);
   };
 
   return (
@@ -231,6 +249,44 @@ export default function HomePage() {
               </span>
             </Link>
 
+            <button
+              type="button"
+              onClick={handleOwnershipAuditClick}
+              className="
+                flex
+                w-full
+                items-center
+                justify-between
+                rounded-xl
+                border
+                border-gray-200
+                px-4
+                py-4
+                text-left
+                transition
+                hover:border-gray-300
+                hover:bg-gray-50
+                focus:outline-none
+                focus:ring-2
+                focus:ring-blue-500
+                focus:ring-offset-2
+              "
+            >
+              <span>
+                <span className="block text-base font-semibold text-gray-900">
+                  Ownership Audit
+                </span>
+
+                <span className="mt-1 block text-sm text-gray-500">
+                  Audit your technology ownership and maturity.
+                </span>
+              </span>
+
+              <span className="ml-4 text-gray-400" aria-hidden="true">
+                →
+              </span>
+            </button>
+
             <Link
               to="/coffee-with-me"
               onClick={() => {
@@ -270,6 +326,20 @@ export default function HomePage() {
             </Link>
           </div>
         </dialog>
+      )}
+
+      {isOwnershipAuditOpen && (
+        <Modal open={isOwnershipAuditOpen} onClose={closeOwnershipAudit}>
+          <ModalHeader>
+            <h2 className="text-xl font-bold tracking-tight text-gray-900">
+              Ownership Audit
+            </h2>
+          </ModalHeader>
+
+          <ModalBody>
+            <TechnologyOwnershipAudit />
+          </ModalBody>
+        </Modal>
       )}
     </div>
   );

@@ -4,3 +4,4 @@ export * from "./projects.js";
 export * from "./leads.js";
 export * from "./analytics-events.js";
 export * from "./system-health.js";
+export * from "./ownership-audits.js";
