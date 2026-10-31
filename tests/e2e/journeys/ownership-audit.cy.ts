@@ -6,154 +6,116 @@ const OWNERSHIP_AUDIT_URL = `${API_URL}/api/v1/ownership-audits`;
 const ANALYTICS_URL = `${API_URL}/api/v1/analytics/events`;
 
 function readEventName(body: unknown): string | null {
-  if (typeof body === "string") {
-    return new URLSearchParams(body).get("name");
-  }
-
+  if (typeof body === "string") return new URLSearchParams(body).get("name");
   if (body && typeof body === "object") {
     const name = (body as { name?: unknown }).name;
     return typeof name === "string" ? name : null;
   }
-
   return null;
 }
 
 function trackAnalyticsEvents(): void {
   cy.intercept("POST", ANALYTICS_URL, (request) => {
-    readEventName(request.body);
-
-    request.reply({
-      statusCode: 202,
-      body: { data: { accepted: true } },
-    });
+    request.reply({ statusCode: 202, body: { data: { accepted: true } } });
   }).as("analyticsEvents");
 }
 
 function openOwnershipAudit(): void {
   cy.visit("/");
-
   cy.contains("button", "Work With Me").should("be.visible").click();
-
-  cy.contains("h2", "How would you like to work together?").should(
-    "be.visible",
-  );
-
   cy.contains("button", "Ownership Audit").should("be.visible").click();
-
-  cy.contains("h2", "Ownership Audit").should("be.visible");
-}
-function selectAnswer(value: "A" | "B" | "C") {
-  cy.get(`input[value="${value}"]`).first().check({ force: true });
+  cy.contains("h3", "Technology Ownership Audit").should("be.visible");
 }
 
-function clickNext() {
-  cy.contains("button", "Next").should("be.visible").click();
+function startQuestions(): void {
+  cy.contains("button", "Start Ownership Audit").click();
+  cy.get('input[autocomplete="name"]').type("Cypress Visitor");
+  cy.get('input[autocomplete="email"]').type("cypress@example.com");
+  cy.contains("button", "Begin Questions").click();
 }
 
-function completeAudit() {
-  cy.contains("button", "Complete Audit").should("be.visible").click();
+function answerBothC(): void {
+  cy.get('input[type="radio"][value="C"]').each(($radio) => {
+    cy.wrap($radio).check({ force: true });
+  });
+}
+
+function answerAllC(): void {
+  for (let page = 0; page < 5; page += 1) {
+    answerBothC();
+    if (page < 4) cy.contains("button", "Next").click();
+  }
 }
 
 describe("Ownership Audit visitor journey", () => {
-  it("renders the Ownership Audit from Home page", () => {
+  it("opens the audit from Work With Me and shows the About screen", () => {
     trackAnalyticsEvents();
-
     openOwnershipAudit();
-
-    cy.contains(
-      "What stage is your current technology initiative or software project in right now?",
-    ).should("be.visible");
+    cy.contains("About the Audit").should("be.visible");
+    cy.contains("10 questions").should("be.visible");
   });
 
-  it("answers Q1 and navigates to Q2", () => {
-    trackAnalyticsEvents();
-
+  it("requires full name and email before starting", () => {
     openOwnershipAudit();
-
-    selectAnswer("C");
-    clickNext();
-
-    cy.contains("h3", "Tech Stack & Architecture").should("be.visible");
+    cy.contains("button", "Start Ownership Audit").click();
+    cy.contains("button", "Begin Questions").click();
+    cy.contains("Please enter your full name.").should("be.visible");
   });
 
-  it("answers Q2 and navigates to Q3", () => {
-    trackAnalyticsEvents();
-
+  it("starts the five two-question screens after valid visitor details", () => {
     openOwnershipAudit();
+    startQuestions();
 
-    selectAnswer("C");
-    clickNext();
-
-    selectAnswer("C");
-    clickNext();
-
-    cy.contains("h3", "Primary Bottleneck / Pain Point").should("be.visible");
+    cy.contains("Audit Questions (1 of 5)").should("be.visible");
+    answerBothC();
+    cy.contains("button", "Next").click();
+    cy.contains("Audit Questions (2 of 5)").should("be.visible");
   });
 
-  it("completes the audit with C/C/C and shows result", () => {
+  it("completes all ten questions and renders score, results and analytics", () => {
     trackAnalyticsEvents();
 
     cy.intercept("POST", OWNERSHIP_AUDIT_URL, {
       statusCode: 201,
       body: {
         data: {
-          score: 15,
+          id: "audit-e2e",
+          fullName: "Cypress Visitor",
+          visitorEmail: "cypress@example.com",
+          score: 100,
           category: "Strong Ownership",
+          diagnosticResult: "Highly mature, automated, and secure architecture.",
+          redirectTarget: "Coffee With Me",
+          createdAt: "2026-11-01T00:00:00.000Z",
         },
       },
     }).as("createOwnershipAudit");
 
     openOwnershipAudit();
+    startQuestions();
+    answerAllC();
 
-    selectAnswer("C");
-    clickNext();
-
-    selectAnswer("C");
-    clickNext();
-
-    selectAnswer("C");
-    completeAudit();
-
-    cy.wait("@createOwnershipAudit").its("request.body").should("deep.equal", {
-      step1: "C",
-      step2: "C",
-      step3: "C",
+    cy.contains("button", "Calculate Score").click();
+    cy.wait("@createOwnershipAudit").its("request.body").should("deep.include", {
+      fullName: "Cypress Visitor",
+      visitorEmail: "cypress@example.com",
+      q1: "C",
+      q10: "C",
     });
 
-    cy.contains("Optimized & Secure").should("be.visible");
-
+    cy.contains("100").should("be.visible");
+    cy.contains("button", "View Results").click();
     cy.contains("Strong Ownership").should("be.visible");
+    cy.contains("Coffee With Me").should("be.visible");
 
-    cy.contains("15 / 15").should("be.visible");
+    cy.contains("button", "Continue").click();
+    cy.contains("Analytics Recorded").should("be.visible");
   });
 
-  it("shows validation message when attempting to continue without answer", () => {
-    trackAnalyticsEvents();
-
+  it("does not complete when a question pair is unanswered", () => {
     openOwnershipAudit();
-
-    clickNext();
-
-    cy.contains("Please select an answer before continuing.").should(
-      "be.visible",
-    );
-  });
-
-  it("shows validation message when completing without all answers", () => {
-    trackAnalyticsEvents();
-
-    openOwnershipAudit();
-
-    selectAnswer("C");
-    clickNext();
-
-    selectAnswer("C");
-    clickNext();
-
-    completeAudit();
-
-    cy.contains("Please select an answer before completing.").should(
-      "be.visible",
-    );
+    startQuestions();
+    cy.contains("button", "Next").click();
+    cy.contains("Please answer both questions before continuing.").should("be.visible");
   });
 });
