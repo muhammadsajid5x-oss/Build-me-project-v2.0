@@ -5,18 +5,36 @@ import { PERMISSIONS } from "../permissions/index.js";
 import {
   createOwnershipAudit,
   listOwnershipAudits,
+  type CreateOwnershipAuditInput,
   type OwnershipAuditOption,
 } from "../services/ownership-audit.js";
 
 const router = Router();
 
 const VALID_OPTIONS: OwnershipAuditOption[] = ["A", "B", "C"];
+const QUESTION_KEYS = [
+  "q1",
+  "q2",
+  "q3",
+  "q4",
+  "q5",
+  "q6",
+  "q7",
+  "q8",
+  "q9",
+  "q10",
+] as const;
 
 function isOwnershipAuditOption(value: unknown): value is OwnershipAuditOption {
-  return (
-    typeof value === "string" &&
-    VALID_OPTIONS.includes(value as OwnershipAuditOption)
-  );
+  return typeof value === "string" && VALID_OPTIONS.includes(value as OwnershipAuditOption);
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 router.post("/", async (request, response, next) => {
@@ -30,44 +48,60 @@ router.post("/", async (request, response, next) => {
     return;
   }
 
-  const { step1, step2, step3, visitorEmail } = request.body;
+  const { fullName, visitorEmail } = request.body as Record<string, unknown>;
 
-  if (
-    !isOwnershipAuditOption(step1) ||
-    !isOwnershipAuditOption(step2) ||
-    !isOwnershipAuditOption(step3)
-  ) {
+  if (!isNonEmptyString(fullName) || fullName.trim().length < 2) {
     response.status(400).json({
       error: {
         code: "VALIDATION_ERROR",
-        message: "All three audit answers are required.",
+        message: "Full name is required.",
       },
     });
     return;
   }
 
-  if (
-    visitorEmail !== undefined &&
-    visitorEmail !== null &&
-    typeof visitorEmail !== "string"
-  ) {
+  if (!isNonEmptyString(visitorEmail) || !isValidEmail(visitorEmail.trim())) {
     response.status(400).json({
       error: {
         code: "VALIDATION_ERROR",
-        message: "Visitor email must be a string.",
+        message: "A valid visitor email is required.",
       },
     });
     return;
+  }
+
+  const answers = {} as CreateOwnershipAuditInput;
+
+  for (const key of QUESTION_KEYS) {
+    const value = (request.body as Record<string, unknown>)[key];
+
+    if (!isOwnershipAuditOption(value)) {
+      response.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "All ten audit answers are required and must be A, B, or C.",
+        },
+      });
+      return;
+    }
+
+    answers[key] = value;
   }
 
   try {
     const created = await createOwnershipAudit({
-      step1,
-      step2,
-      step3,
-      ...(typeof visitorEmail === "string" && visitorEmail.trim()
-        ? { visitorEmail: visitorEmail.trim() }
-        : {}),
+      fullName: fullName.trim(),
+      visitorEmail: visitorEmail.trim().toLowerCase(),
+      q1: answers.q1,
+      q2: answers.q2,
+      q3: answers.q3,
+      q4: answers.q4,
+      q5: answers.q5,
+      q6: answers.q6,
+      q7: answers.q7,
+      q8: answers.q8,
+      q9: answers.q9,
+      q10: answers.q10,
     });
 
     response.status(201).json({
