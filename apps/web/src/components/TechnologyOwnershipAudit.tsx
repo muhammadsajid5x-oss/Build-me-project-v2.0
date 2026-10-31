@@ -146,6 +146,7 @@ export default function TechnologyOwnershipAudit() {
   const [screen, setScreen] = useState(1);
   const [fullName, setFullName] = useState("");
   const [visitorEmail, setVisitorEmail] = useState("");
+  const [roleTitle, setRoleTitle] = useState("");
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [result, setResult] = useState<AuditResponse["data"] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -178,6 +179,10 @@ export default function TechnologyOwnershipAudit() {
       setError("Please enter a valid email address.");
       return false;
     }
+    if (roleTitle.trim().length < 2) {
+      setError("Please enter your role or title.");
+      return false;
+    }
     return true;
   };
 
@@ -206,6 +211,7 @@ export default function TechnologyOwnershipAudit() {
     const payload = {
       fullName: fullName.trim(),
       visitorEmail: visitorEmail.trim(),
+      roleTitle: roleTitle.trim(),
       q1: answers.q1,
       q2: answers.q2,
       q3: answers.q3,
@@ -254,6 +260,7 @@ export default function TechnologyOwnershipAudit() {
     setScreen(1);
     setFullName("");
     setVisitorEmail("");
+    setRoleTitle("");
     setAnswers({});
     setResult(null);
     setError(null);
@@ -283,54 +290,91 @@ export default function TechnologyOwnershipAudit() {
 
       {screen === 1 && (
         <section className="space-y-5">
-          <p className="text-gray-600">
-            Assess your technology ownership across architecture, assets, delivery,
-            team governance, security, and scaling. The audit has 10 questions and
-            produces a score from 20 to 100.
-          </p>
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
-            <p className="font-semibold text-gray-900">Scoring</p>
-            <p className="mt-2 text-sm text-gray-600">
-              A = 2 points · B = 5 points · C = 10 points
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
+              Ownership Audit - Step 1 Overview
             </p>
+            <h4 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">
+              Evaluate Your Technology Ownership
+            </h4>
           </div>
-          <Button type="button" variant="primary" onClick={() => setScreen(2)}>
-            Start Ownership Audit
+          <p className="leading-7 text-gray-600">
+            Evaluate your engineering readiness, source code ownership, infrastructure
+            control, and delivery bottlenecks. This 10-question assessment diagnoses
+            technical debt, team governance, and security gaps to provide clear
+            execution recommendations for your platform.
+          </p>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => setScreen(2)}
+            className="bg-[#2563EB] font-bold text-white hover:bg-[#1D4ED8]"
+          >
+            Start Audit
           </Button>
         </section>
       )}
 
       {screen === 2 && (
         <section className="space-y-5">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
+              Visitor Details
+            </p>
+            <h4 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">
+              Tell Us About You
+            </h4>
+          </div>
           <p className="text-gray-600">
-            Enter your details so your completed audit result can be associated with
-            the assessment.
+            Enter your details before starting the 10-question Ownership Audit.
           </p>
+
           <label className="block">
             <span className="text-sm font-semibold text-gray-900">Full Name</span>
             <input
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
+              placeholder="e.g. John Doe"
               className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               autoComplete="name"
               required
             />
           </label>
+
           <label className="block">
-            <span className="text-sm font-semibold text-gray-900">Email</span>
+            <span className="text-sm font-semibold text-gray-900">Work Email</span>
             <input
               type="email"
               value={visitorEmail}
               onChange={(event) => setVisitorEmail(event.target.value)}
+              placeholder="e.g. john@company.com"
               className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               autoComplete="email"
               required
             />
           </label>
+
+          <label className="block">
+            <span className="text-sm font-semibold text-gray-900">Your Role / Title</span>
+            <input
+              value={roleTitle}
+              onChange={(event) => setRoleTitle(event.target.value)}
+              placeholder="e.g. Founder, CTO, Product Lead"
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              autoComplete="organization-title"
+              required
+            />
+          </label>
+
           {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+
           <div className="flex justify-between border-t border-gray-200 pt-5">
-            <Button type="button" variant="secondary" onClick={() => setScreen(1)}>Back</Button>
-            <Button type="button" variant="primary" onClick={startAudit}>Begin Questions</Button>
+            <Button type="button" variant="secondary" onClick={() => setScreen(1)}>
+              Back
+            </Button>
+            <Button type="button" variant="primary" onClick={startAudit}>
+              Start Audit
+            </Button>
           </div>
         </section>
       )}
