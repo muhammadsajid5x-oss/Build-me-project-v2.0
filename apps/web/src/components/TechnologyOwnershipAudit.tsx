@@ -29,7 +29,7 @@ type AuditResponse = {
 };
 
 const apiBaseUrl = getApiBaseUrl(import.meta.env.VITE_API_URL);
-const OWNERSHIP_AUDIT_PATH = "/ownership-audits";
+const OWNERSHIP_AUDIT_PATH = "/";
 
 const questions: Question[] = [
   {
@@ -418,6 +418,32 @@ export default function TechnologyOwnershipAudit() {
           <div className="rounded-xl border border-gray-200 p-5">
             <p className="text-sm font-medium text-gray-500">Recommended Path</p>
             <p className="mt-1 text-xl font-semibold text-gray-900">{result.redirectTarget}</p>
+            <a
+              href={
+                result.redirectTarget === "Deliver My Project"
+                  ? "/deliver-my-project"
+                  : result.redirectTarget === "Mentor Me"
+                    ? "/mentor-me"
+                    : "/coffee-with-me"
+              }
+              onClick={() => {
+                const eventName =
+                  result.redirectTarget === "Deliver My Project"
+                    ? ANALYTICS_EVENTS.DELIVER_MY_PROJECT_CLICKED
+                    : result.redirectTarget === "Mentor Me"
+                      ? ANALYTICS_EVENTS.MENTOR_ME_CLICKED
+                      : ANALYTICS_EVENTS.COFFEE_WITH_ME_CLICKED;
+
+                trackAnalyticsEvent({
+                  name: eventName,
+                  eventType: "click",
+                  path: OWNERSHIP_AUDIT_PATH,
+                });
+              }}
+              className="mt-4 inline-flex rounded-xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white"
+            >
+              Continue to {result.redirectTarget}
+            </a>
           </div>
           <div className="flex justify-end border-t border-gray-200 pt-5">
             <Button type="button" variant="primary" onClick={() => setScreen(10)}>Continue</Button>
