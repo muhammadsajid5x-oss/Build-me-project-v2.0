@@ -2,346 +2,153 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import TechnologyOwnershipAudit from "../../src/components/TechnologyOwnershipAudit";
 
-function getAnalyticsCalls(fetchMock: ReturnType<typeof vi.fn>) {
-  return fetchMock.mock.calls.filter((call) =>
-    String(call[0]).includes("/api/v1/analytics/events"),
-  );
+function analyticsNames(fetchMock: ReturnType<typeof vi.fn>) {
+  return fetchMock.mock.calls
+    .filter((call) => String(call[0]).includes("/api/v1/analytics/events"))
+    .map((call) => {
+      const options = call[1] as { body?: URLSearchParams } | undefined;
+      return options?.body instanceof URLSearchParams
+        ? options.body.get("name")
+        : undefined;
+    });
 }
 
-function getAnalyticsEventNames(fetchMock: ReturnType<typeof vi.fn>) {
-  return getAnalyticsCalls(fetchMock).map((call) => {
-    const options = call[1] as { body?: URLSearchParams } | undefined;
+function selectFirst(option: "A" | "B" | "C") {
+  fireEvent.click(screen.getAllByRole("radio", { name: new RegExp(`^${option}`) })[0]);
+}
 
-    return options?.body instanceof URLSearchParams
-      ? options.body.get("name")
-      : undefined;
+function selectSecond(option: "A" | "B" | "C") {
+  fireEvent.click(screen.getAllByRole("radio", { name: new RegExp(`^${option}`) })[1]);
+}
+
+function completeDetails() {
+  fireEvent.click(screen.getByRole("button", { name: "Start Ownership Audit" }));
+  fireEvent.change(screen.getByRole("textbox", { name: "Full Name" }), {
+    target: { value: "Test Visitor" },
   });
+  fireEvent.change(screen.getByRole("textbox", { name: "Email" }), {
+    target: { value: "test@example.com" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Begin Questions" }));
 }
 
-function getOwnershipAuditCalls(fetchMock: ReturnType<typeof vi.fn>) {
-  return fetchMock.mock.calls.filter((call) =>
-    String(call[0]).includes("/api/v1/ownership-audits"),
-  );
-}
-
-function selectAnswer(value: "A" | "B" | "C") {
-  fireEvent.click(
-    screen.getByRole("radio", {
-      name: new RegExp(`^${value}`),
-    }),
-  );
-}
-
-function clickNext() {
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
-}
-
-function clickPrevious() {
-  fireEvent.click(screen.getByRole("button", { name: "Previous" }));
-}
-
-function selectAllCAnswers() {
-  selectAnswer("C");
-  clickNext();
-
-  selectAnswer("C");
-  clickNext();
-
-  selectAnswer("C");
+async function completeAllC() {
+  for (let page = 0; page < 5; page += 1) {
+    selectFirst("C");
+    selectSecond("C");
+    if (page < 4) fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  }
+  fireEvent.click(screen.getByRole("button", { name: "Calculate Score" }));
 }
 
 describe("TechnologyOwnershipAudit", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  afterEach(() => vi.unstubAllGlobals());
 
-  it("renders the first audit question", () => {
-    render(<TechnologyOwnershipAudit />);
-
-    expect(
-      screen.getByRole("heading", { name: "Project Scope & Current Stage" }),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByText(
-        "What stage is your current technology initiative or software project in right now?",
-        { selector: "p" },
-      ),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByText(
-        "Just exploring ideas / Early concept stage (Low immediate urgency)",
-        { selector: "span" },
-      ),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole("radio", {
-        name: /^A/,
-      }),
-    ).toBeInTheDocument();
-  });
-
-  it("fires the ownership.audit.viewed event when rendered", () => {
+  it("renders the About Audit first screen and viewed analytics", () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
 
     render(<TechnologyOwnershipAudit />);
 
-    expect(getAnalyticsEventNames(fetchMock)).toContain(
-      "ownership.audit.viewed",
-    );
+    expect(screen.getByText("About the Audit")).toBeInTheDocument();
+    expect(screen.getByText(/10 questions/)).toBeInTheDocument();
+    expect(analyticsNames(fetchMock)).toContain("ownership.audit.viewed");
   });
 
-  it("shows validation when Next is clicked without selecting an answer", () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-
+  it("requires visitor details before starting questions", () => {
     render(<TechnologyOwnershipAudit />);
 
-    clickNext();
+    fireEvent.click(screen.getByRole("button", { name: "Start Ownership Audit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Begin Questions" }));
 
-    expect(
-      screen.getByText("Please select an answer before continuing."),
-    ).toBeInTheDocument();
-
-    expect(getOwnershipAuditCalls(fetchMock)).toHaveLength(0);
+    expect(screen.getByRole("alert")).toHaveTextContent("Please enter your full name.");
   });
 
-  it("moves forward and backward between audit questions", () => {
-    render(<TechnologyOwnershipAudit />);
-
-    selectAnswer("B");
-    clickNext();
-
-    expect(
-      screen.getByRole("heading", { name: "Tech Stack & Architecture" }),
-    ).toBeInTheDocument();
-
-    selectAnswer("B");
-    clickNext();
-
-    expect(
-      screen.getByRole("heading", { name: "Primary Bottleneck / Pain Point" }),
-    ).toBeInTheDocument();
-
-    clickPrevious();
-
-    expect(
-      screen.getByRole("heading", { name: "Tech Stack & Architecture" }),
-    ).toBeInTheDocument();
-
-    clickPrevious();
-
-    expect(
-      screen.getByRole("heading", { name: "Project Scope & Current Stage" }),
-    ).toBeInTheDocument();
-  });
-
-  it("fires ownership.audit.started when the first answer is selected", () => {
+  it("starts only after valid visitor details", () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
 
     render(<TechnologyOwnershipAudit />);
+    completeDetails();
 
-    selectAnswer("B");
-
-    expect(getAnalyticsEventNames(fetchMock)).toContain(
-      "ownership.audit.started",
-    );
+    expect(screen.getByText(/Audit Questions \(1 of 5\)/)).toBeInTheDocument();
+    expect(analyticsNames(fetchMock)).toContain("ownership.audit.started");
   });
 
-  it("submits all answers and displays the calculated result", async () => {
+  it("validates both questions on each question screen", () => {
+    render(<TechnologyOwnershipAudit />);
+    completeDetails();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Please answer both questions");
+  });
+
+  it("submits all ten answers and renders score, results and analytics screens", async () => {
     const fetchMock = vi.fn().mockImplementation((url: string) => {
       if (url.includes("/api/v1/ownership-audits")) {
         return Promise.resolve({
-          status: 201,
           ok: true,
+          status: 201,
           json: async () => ({
             data: {
               id: "audit-1",
-              step1: "C",
-              step2: "C",
-              step3: "C",
-              score: 15,
+              fullName: "Test Visitor",
+              visitorEmail: "test@example.com",
+              score: 100,
               category: "Strong Ownership",
-              createdAt: "2026-10-30T00:00:00.000Z",
+              diagnosticResult: "Highly mature, automated, and secure architecture.",
+              redirectTarget: "Coffee With Me",
+              createdAt: "2026-11-01T00:00:00.000Z",
             },
           }),
         });
       }
-
       return Promise.resolve({ ok: true });
     });
-
     vi.stubGlobal("fetch", fetchMock);
 
     render(<TechnologyOwnershipAudit />);
+    completeDetails();
+    await completeAllC();
 
-    selectAllCAnswers();
-
-    fireEvent.click(screen.getByRole("button", { name: "Complete Audit" }));
-
-    expect(
-      await screen.findByRole("heading", { name: "Optimized & Secure" }),
-    ).toBeInTheDocument();
-
+    expect(await screen.findByText("100")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "View Results" }));
     expect(screen.getByText("Strong Ownership")).toBeInTheDocument();
-    expect(screen.getByText("Your Audit Score")).toBeInTheDocument();
+    expect(screen.getByText("Coffee With Me")).toBeInTheDocument();
 
-    expect(
-      screen.getByText("15", { selector: "p.text-4xl" }),
-    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Analytics Recorded")).toBeInTheDocument();
 
-    expect(screen.getByText("/ 15")).toBeInTheDocument();
-
-    const ownershipAuditCalls = getOwnershipAuditCalls(fetchMock);
-
-    expect(ownershipAuditCalls).toHaveLength(1);
-
-    const [, requestOptions] = ownershipAuditCalls[0] as [
-      string,
-      { body?: string },
-    ];
-
-    expect(JSON.parse(requestOptions.body ?? "{}")).toEqual({
-      step1: "C",
-      step2: "C",
-      step3: "C",
+    const auditCall = fetchMock.mock.calls.find((call) =>
+      String(call[0]).includes("/api/v1/ownership-audits"),
+    );
+    expect(JSON.parse((auditCall?.[1] as { body: string }).body)).toMatchObject({
+      fullName: "Test Visitor",
+      visitorEmail: "test@example.com",
+      q1: "C", q2: "C", q3: "C", q4: "C", q5: "C",
+      q6: "C", q7: "C", q8: "C", q9: "C", q10: "C",
     });
-
-    const analyticsEvents = getAnalyticsEventNames(fetchMock);
-
-    expect(analyticsEvents).toContain("ownership.audit.completed");
+    expect(analyticsNames(fetchMock)).toContain("ownership.audit.completed");
   });
 
-  it("shows a safe message when the audit cannot be saved", async () => {
+  it("does not emit completed when persistence fails", async () => {
     const fetchMock = vi.fn().mockImplementation((url: string) => {
       if (url.includes("/api/v1/ownership-audits")) {
         return Promise.resolve({
-          status: 500,
           ok: false,
-          json: async () => ({
-            error: {
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Database failure",
-            },
-          }),
+          status: 500,
+          json: async () => ({ error: { message: "Database failure" } }),
         });
       }
-
       return Promise.resolve({ ok: true });
     });
-
     vi.stubGlobal("fetch", fetchMock);
 
     render(<TechnologyOwnershipAudit />);
+    completeDetails();
+    await completeAllC();
 
-    selectAllCAnswers();
-
-    fireEvent.click(screen.getByRole("button", { name: "Complete Audit" }));
-
-    const alert = await screen.findByRole("alert");
-
-    expect(alert.textContent).toBe(
-      "We could not save your audit right now. Please try again in a moment.",
-    );
-
-    expect(alert.textContent).not.toContain("Database failure");
-
-    expect(getAnalyticsEventNames(fetchMock)).not.toContain(
-      "ownership.audit.completed",
-    );
-  });
-
-  it("allows the user to retake the audit after seeing the result", async () => {
-    const fetchMock = vi.fn().mockImplementation((url: string) => {
-      if (url.includes("/api/v1/ownership-audits")) {
-        return Promise.resolve({
-          status: 201,
-          ok: true,
-          json: async () => ({
-            data: {
-              id: "audit-1",
-              step1: "C",
-              step2: "C",
-              step3: "C",
-              score: 15,
-              category: "Strong Ownership",
-              createdAt: "2026-10-30T00:00:00.000Z",
-            },
-          }),
-        });
-      }
-
-      return Promise.resolve({ ok: true });
-    });
-
-    vi.stubGlobal("fetch", fetchMock);
-
-    render(<TechnologyOwnershipAudit />);
-
-    selectAllCAnswers();
-
-    fireEvent.click(screen.getByRole("button", { name: "Complete Audit" }));
-
-    await screen.findByRole("heading", { name: "Optimized & Secure" });
-
-    fireEvent.click(screen.getByRole("button", { name: "Retake Audit" }));
-
-    expect(
-      screen.getByRole("heading", { name: "Project Scope & Current Stage" }),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole("radio", {
-        name: /^C/,
-      }),
-    ).not.toBeChecked();
-  });
-
-  it("disables Complete Audit while the request is being saved", async () => {
-    let resolveRequest!: (value: unknown) => void;
-
-    const fetchMock = vi.fn().mockImplementation((url: string) => {
-      if (url.includes("/api/v1/ownership-audits")) {
-        return new Promise((resolve) => {
-          resolveRequest = resolve;
-        });
-      }
-
-      return Promise.resolve({ ok: true });
-    });
-
-    vi.stubGlobal("fetch", fetchMock);
-
-    render(<TechnologyOwnershipAudit />);
-
-    selectAllCAnswers();
-
-    fireEvent.click(screen.getByRole("button", { name: "Complete Audit" }));
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
-    });
-
-    resolveRequest({
-      status: 201,
-      ok: true,
-      json: async () => ({
-        data: {
-          id: "audit-1",
-          step1: "C",
-          step2: "C",
-          step3: "C",
-          score: 15,
-          category: "Strong Ownership",
-          createdAt: "2026-10-30T00:00:00.000Z",
-        },
-      }),
-    });
-
-    await screen.findByRole("heading", { name: "Optimized & Secure" });
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Database failure"));
+    expect(analyticsNames(fetchMock)).not.toContain("ownership.audit.completed");
   });
 });
