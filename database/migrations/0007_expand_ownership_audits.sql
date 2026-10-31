@@ -57,3 +57,9 @@ ALTER TABLE "ownership_audits"
   ALTER COLUMN "q10" SET NOT NULL,
   ALTER COLUMN "diagnostic_result" SET NOT NULL,
   ALTER COLUMN "redirect_target" SET NOT NULL;
+
+--> statement-breakpoint
+ALTER TABLE "ownership_audits"
+  ALTER COLUMN "step1" DROP NOT NULL,
+  ALTER COLUMN "step2" DROP NOT NULL,
+  ALTER COLUMN "step3" DROP NOT NULL;
