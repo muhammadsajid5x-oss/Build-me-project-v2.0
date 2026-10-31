@@ -16,18 +16,24 @@ export const ownershipAudits = pgTable("ownership_audits", {
     onDelete: "set null",
   }),
 
-  visitorEmail: text("visitor_email"),
+  fullName: text("full_name").notNull(),
+  visitorEmail: text("visitor_email").notNull(),
 
-  step1: text("step1").notNull(),
-
-  step2: text("step2").notNull(),
-
-  step3: text("step3").notNull(),
+  q1: text("q1").notNull(),
+  q2: text("q2").notNull(),
+  q3: text("q3").notNull(),
+  q4: text("q4").notNull(),
+  q5: text("q5").notNull(),
+  q6: text("q6").notNull(),
+  q7: text("q7").notNull(),
+  q8: text("q8").notNull(),
+  q9: text("q9").notNull(),
+  q10: text("q10").notNull(),
 
   score: integer("score").notNull(),
-
   category: text("category").notNull(),
-
+  diagnosticResult: text("diagnostic_result").notNull(),
+  redirectTarget: text("redirect_target").notNull(),
   answers: jsonb("answers").notNull(),
 
   createdAt: timestamp("created_at", {
