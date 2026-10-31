@@ -243,11 +243,8 @@ export default function TechnologyOwnershipAudit() {
         path: OWNERSHIP_AUDIT_PATH,
       });
     } catch (submissionError) {
-      setError(
-        submissionError instanceof Error
-          ? submissionError.message
-          : "We could not save your audit. Please try again.",
-      );
+      console.error("Ownership Audit submission failed.", submissionError);
+      setError("We could not save your audit. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
