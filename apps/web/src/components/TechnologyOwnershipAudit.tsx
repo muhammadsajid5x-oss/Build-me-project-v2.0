@@ -1,172 +1,155 @@
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@build-me/ui";
 
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import { getApiBaseUrl } from "../api-url";
 
-type AuditOptionValue = "A" | "B" | "C";
+type AuditOption = "A" | "B" | "C";
+type AnswerMap = Record<string, AuditOption | null>;
 
-interface AuditAnswer {
-  step1: AuditOptionValue | null;
-  step2: AuditOptionValue | null;
-  step3: AuditOptionValue | null;
-}
-
-interface StepOption {
-  value: AuditOptionValue;
-  label: string;
-}
-
-interface Step {
+type Question = {
   id: number;
   title: string;
   question: string;
-  options: StepOption[];
-}
+  options: Record<AuditOption, string>;
+};
 
-interface AuditResult {
-  title: string;
-  category: string;
-  meaning: string;
-  recommendedAction: string;
-}
-
-interface OwnershipAuditResponse {
+type AuditResponse = {
   data: {
     id: string;
-    step1: AuditOptionValue;
-    step2: AuditOptionValue;
-    step3: AuditOptionValue;
+    fullName: string;
+    visitorEmail: string;
     score: number;
-    category: string;
+    category: "High Risk" | "Moderate Control" | "Strong Ownership";
+    diagnosticResult: string;
+    redirectTarget: "Deliver My Project" | "Mentor Me" | "Coffee With Me";
     createdAt: string;
   };
-}
+};
 
 const apiBaseUrl = getApiBaseUrl(import.meta.env.VITE_API_URL);
 const OWNERSHIP_AUDIT_PATH = "/ownership-audits";
 
-const steps: Step[] = [
+const questions: Question[] = [
   {
     id: 1,
-    title: "Project Scope & Current Stage",
-    question:
-      "What stage is your current technology initiative or software project in right now?",
-    options: [
-      {
-        value: "A",
-        label:
-          "Just exploring ideas / Early concept stage (Low immediate urgency)",
-      },
-      {
-        value: "B",
-        label:
-          "Active development or refactoring, but hitting bottlenecks (Medium urgency, potential consulting/dev support)",
-      },
-      {
-        value: "C",
-        label:
-          "Ready to build, scale, or migrate immediately with dedicated budget (High-value prospect)",
-      },
-    ],
+    title: "Business Intent & Architecture Scope",
+    question: "What is the current status and urgency of your technology project or platform?",
+    options: {
+      A: "Urgent rescue required—we have broken code, missed deadlines, or scaling bottlenecks.",
+      B: "Active build or refactor in progress, but we need architecture guidance and oversight.",
+      C: "Stable platform with clear internal ownership; looking for high-level strategy or expansion.",
+    },
   },
   {
     id: 2,
-    title: "Tech Stack & Architecture",
-    question:
-      "What core technology stack or infrastructure are you building or scaling with?",
-    options: [
-      {
-        value: "A",
-        label:
-          "Traditional monolith / Legacy stack (PHP, WordPress, old .NET/Java)",
-      },
-      {
-        value: "B",
-        label:
-          "Modern Web Stack (React, Node.js, Python/FastAPI, PostgreSQL, Docker)",
-      },
-      {
-        value: "C",
-        label:
-          "Complex Cloud-Native / Multi-service architecture or Custom AI Integration",
-      },
-    ],
+    title: "Business Intent & Architecture Scope",
+    question: "How would you describe your core software architecture and stack management?",
+    options: {
+      A: "Legacy or fragmented tech stack with undocumented dependencies and ad-hoc hosting.",
+      B: "Modern stack (e.g., React, Node, Python, SQL) managed manually or via basic deployment scripts.",
+      C: "Standardized monorepo/microservices with automated CI/CD pipelines and IaC setup.",
+    },
   },
   {
     id: 3,
-    title: "Primary Bottleneck / Pain Point",
-    question:
-      "What is your biggest blocker to hitting your technical or delivery goals right now?",
-    options: [
-      {
-        value: "A",
-        label: "Lack of reliable engineering talent or development bandwidth",
-      },
-      {
-        value: "B",
-        label:
-          "Architectural debt, scaling issues, or database optimization problems",
-      },
-      {
-        value: "C",
-        label:
-          "DevSecOps, CI/CD pipeline setup, or deployment/infrastructure bottlenecks",
-      },
-    ],
+    title: "Asset Inventory & Source Code Ownership",
+    question: "Where does your source code live, and who has administrative ownership over it?",
+    options: {
+      A: "Code is stored on personal developer machines or managed entirely by third-party freelancers.",
+      B: "Centrally stored on GitHub/GitLab, but access permissions and branches are managed manually.",
+      C: "Managed in an organization-owned repo with enforced branch rules, automated linting, and PR reviews.",
+    },
+  },
+  {
+    id: 4,
+    title: "Asset Inventory & Source Code Ownership",
+    question: "Who holds the primary administrative credentials for your cloud servers, APIs, and SaaS tools?",
+    options: {
+      A: "Credentials are scattered across team members' personal emails or unknown accounts.",
+      B: "Shared via a central password manager, but lacks role-based access control or audit logs.",
+      C: "Managed under a centralized corporate identity with MFA and strict access roles.",
+    },
+  },
+  {
+    id: 5,
+    title: "Development Lifecycles & QA Governance",
+    question: "How do you test and verify code quality before releasing updates to production?",
+    options: {
+      A: "Manual testing directly in production or relying on end-users to report bugs.",
+      B: "Basic manual QA testing in a staging environment before manual deployments.",
+      C: "Automated test suites (Unit/Integration) enforced through automated CI/CD deployment pipelines.",
+    },
+  },
+  {
+    id: 6,
+    title: "Development Lifecycles & QA Governance",
+    question: "How are your application databases, state backups, and migrations handled?",
+    options: {
+      A: "Manual database changes run directly in production with irregular or missing backups.",
+      B: "Scheduled automated backups are active, but database migrations are run manually.",
+      C: "Version-controlled ORM migrations with automated daily backups, point-in-time recovery, and encryption.",
+    },
+  },
+  {
+    id: 7,
+    title: "Team Ownership & Offboarding Protocol",
+    question: "If your lead developer or key engineer stepped away today, how easily could a new developer take over?",
+    options: {
+      A: "Extremely difficult—most application logic and setup knowledge exist only in people's heads.",
+      B: "Moderately easy—we have a basic README and setup guide, but architectural decisions aren't documented.",
+      C: "Seamless—we maintain clear API documentation, setup scripts, and architectural decisions (ADRs).",
+    },
+  },
+  {
+    id: 8,
+    title: "Team Ownership & Offboarding Protocol",
+    question: "What process is executed when a developer or vendor leaves your project?",
+    options: {
+      A: "Ad-hoc—we change main passwords only if we remember or if an issue arises.",
+      B: "Manual offboarding checklist to revoke GitHub, cloud, and database access.",
+      C: "Automated offboarding via Single Sign-On (SSO) with instant access revocation across all tools.",
+    },
+  },
+  {
+    id: 9,
+    title: "Security, Performance & Budget Scaling",
+    question: "How do you monitor security vulnerabilities, dependency updates, and secrets in your codebase?",
+    options: {
+      A: "We don't actively scan; API keys and secrets are occasionally hardcoded in source files.",
+      B: "Environment variables are isolated (.env), but dependency updates and security patches are done reactively.",
+      C: "Automated secret scanning, automated dependency security alerts, and strict environment isolation.",
+    },
+  },
+  {
+    id: 10,
+    title: "Security, Performance & Budget Scaling",
+    question: "What is your primary constraint regarding engineering delivery right now?",
+    options: {
+      A: "Lack of technical direction and execution power—we need end-to-end execution support.",
+      B: "Lack of strategic coaching—we have developers but need high-level guidance to optimize workflows.",
+      C: "Budget and operations are fully optimized—we are simply networking or exploring elite advisory partnerships.",
+    },
   },
 ];
 
-function getAuditResult(score: number): AuditResult {
-  if (score <= 6) {
-    return {
-      title: "Tech Chaos & Orphaned Assets",
-      category: "High Risk",
-      meaning:
-        "There may be significant gaps in asset tracking and clear ownership. Unassigned accounts and rogue software can introduce security vulnerabilities, compliance risks, and wasted spending.",
-      recommendedAction:
-        "Conduct a full 30-day technology asset sweep, establish a centralized registry, and assign a point person to every active license immediately.",
-    };
-  }
-
-  if (score <= 11) {
-    return {
-      title: "Managed, but Reactive",
-      category: "Moderate Control",
-      meaning:
-        "You have basic tracking, but ownership may still depend on spreadsheets or informal procedures. Ownership can fall through the cracks during staffing changes or rapid scaling.",
-      recommendedAction:
-        "Move from manual spreadsheets to automated or dynamic tracking and standardize lifecycle governance so accounts transition correctly during offboarding.",
-    };
-  }
-
-  return {
-    title: "Optimized & Secure",
-    category: "Strong Ownership",
-    meaning:
-      "You appear to have high visibility over your technology footprint, clearly defined account owners, and proactive offboarding and maintenance policies.",
-    recommendedAction:
-      "Schedule quarterly vendor cost optimization reviews and introduce automated compliance checks.",
-  };
-}
+const pageGroups = [
+  [questions[0], questions[1]],
+  [questions[2], questions[3]],
+  [questions[4], questions[5]],
+  [questions[6], questions[7]],
+  [questions[8], questions[9]],
+];
 
 export default function TechnologyOwnershipAudit() {
-  const [currentStep, setCurrentStep] = useState(1);
-
-  const [answers, setAnswers] = useState<AuditAnswer>({
-    step1: null,
-    step2: null,
-    step3: null,
-  });
-
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [screen, setScreen] = useState(1);
+  const [fullName, setFullName] = useState("");
+  const [visitorEmail, setVisitorEmail] = useState("");
+  const [answers, setAnswers] = useState<AnswerMap>({});
+  const [result, setResult] = useState<AuditResponse["data"] | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
-
-  const currentStepData = steps[currentStep - 1];
-  const isLastStep = currentStep === steps.length;
 
   useEffect(() => {
     trackAnalyticsEvent({
@@ -176,288 +159,288 @@ export default function TechnologyOwnershipAudit() {
     });
   }, []);
 
-  const handleOptionSelect = (event: ChangeEvent<HTMLInputElement>) => {
-    const { value, name } = event.target;
+  const currentQuestions = useMemo(() => {
+    if (screen < 3 || screen > 7) return [];
+    return pageGroups[screen - 3];
+  }, [screen]);
 
-    setAnswers((previousAnswers) => ({
-      ...previousAnswers,
-      [name]: value as AuditOptionValue,
-    }));
-
-    setValidationError(null);
-    setSubmitError(null);
-
-    if (currentStep === 1) {
-      trackAnalyticsEvent({
-        name: ANALYTICS_EVENTS.OWNERSHIP_AUDIT_STARTED,
-        eventType: "click",
-        path: OWNERSHIP_AUDIT_PATH,
-      });
-    }
+  const setAnswer = (id: number, value: AuditOption) => {
+    setAnswers((previous) => ({ ...previous, [`q${id}`]: value }));
+    setError(null);
   };
 
-  const handleNext = () => {
-    const currentAnswer = answers[`step${currentStep}` as keyof AuditAnswer];
-
-    if (!currentAnswer) {
-      setValidationError("Please select an answer before continuing.");
-      return;
+  const validateDetails = () => {
+    if (fullName.trim().length < 2) {
+      setError("Please enter your full name.");
+      return false;
     }
-
-    setValidationError(null);
-    setSubmitError(null);
-    setCurrentStep((previousStep) => previousStep + 1);
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(visitorEmail.trim())) {
+      setError("Please enter a valid email address.");
+      return false;
+    }
+    return true;
   };
 
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setValidationError(null);
-      setSubmitError(null);
-      setCurrentStep((previousStep) => previousStep - 1);
+  const validateQuestions = () => {
+    if (currentQuestions.some((question) => !answers[`q${question.id}`])) {
+      setError("Please answer both questions before continuing.");
+      return false;
     }
+    return true;
   };
 
-  const handleComplete = async () => {
-    const currentAnswer = answers[`step${currentStep}` as keyof AuditAnswer];
+  const startAudit = () => {
+    if (!validateDetails()) return;
+    setError(null);
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.OWNERSHIP_AUDIT_STARTED,
+      eventType: "click",
+      path: OWNERSHIP_AUDIT_PATH,
+    });
+    setScreen(3);
+  };
 
-    if (!currentAnswer) {
-      setValidationError("Please select an answer before completing.");
-      return;
-    }
+  const completeAudit = async () => {
+    if (!validateQuestions()) return;
 
-    const selectedAnswers = [
-      answers.step1,
-      answers.step2,
-      answers.step3,
-    ].filter((answer): answer is AuditOptionValue => answer !== null);
+    const payload = {
+      fullName: fullName.trim(),
+      visitorEmail: visitorEmail.trim(),
+      q1: answers.q1,
+      q2: answers.q2,
+      q3: answers.q3,
+      q4: answers.q4,
+      q5: answers.q5,
+      q6: answers.q6,
+      q7: answers.q7,
+      q8: answers.q8,
+      q9: answers.q9,
+      q10: answers.q10,
+    };
 
-    if (selectedAnswers.length !== steps.length) {
-      setValidationError(
-        "Please answer all audit questions before completing.",
-      );
-      return;
-    }
-
-    setValidationError(null);
-    setSubmitError(null);
     setIsSubmitting(true);
+    setError(null);
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/v1/ownership-audits`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          step1: answers.step1,
-          step2: answers.step2,
-          step3: answers.step3,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to save Ownership Audit.");
+      const body = (await response.json()) as AuditResponse | { error?: { message?: string } };
+
+      if (!response.ok || !("data" in body)) {
+        throw new Error("error" in body ? body.error?.message : "Unable to save your audit.");
       }
 
-      const result = (await response.json()) as OwnershipAuditResponse;
-
-      setScore(result.data.score);
+      setResult(body.data);
+      setScreen(8);
 
       trackAnalyticsEvent({
         name: ANALYTICS_EVENTS.OWNERSHIP_AUDIT_COMPLETED,
         eventType: "click",
         path: OWNERSHIP_AUDIT_PATH,
       });
-    } catch {
-      setSubmitError(
-        "We could not save your audit right now. Please try again in a moment.",
+    } catch (submissionError) {
+      setError(
+        submissionError instanceof Error
+          ? submissionError.message
+          : "We could not save your audit. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleRestart = () => {
-    setCurrentStep(1);
-
-    setAnswers({
-      step1: null,
-      step2: null,
-      step3: null,
-    });
-
-    setScore(null);
-    setValidationError(null);
-    setSubmitError(null);
+  const restart = () => {
+    setScreen(1);
+    setFullName("");
+    setVisitorEmail("");
+    setAnswers({});
+    setResult(null);
+    setError(null);
   };
 
-  if (score !== null) {
-    const result = getAuditResult(score);
-
-    return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <p className="text-sm font-medium text-gray-500">
-            Ownership Audit Complete
-          </p>
-
-          <h3 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">
-            {result.title}
-          </h3>
-
-          <p className="mt-2 text-sm font-semibold text-gray-600">
-            {result.category}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-center">
-          <p className="text-sm text-gray-500">Your Audit Score</p>
-
-          <p className="mt-1 text-4xl font-bold text-gray-900">
-            {score}
-            <span className="text-lg font-medium text-gray-500"> / 15</span>
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-base font-semibold text-gray-900">
-              What this means
-            </h4>
-
-            <p className="mt-2 text-sm leading-6 text-gray-600">
-              {result.meaning}
-            </p>
-          </div>
-
-          <div>
-            <h4 className="text-base font-semibold text-gray-900">
-              Recommended action
-            </h4>
-
-            <p className="mt-2 text-sm leading-6 text-gray-600">
-              {result.recommendedAction}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex justify-end border-t border-gray-200 pt-5">
-          <Button type="button" variant="secondary" onClick={handleRestart}>
-            Retake Audit
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const progressLabel =
+    screen === 1
+      ? "Step 1 of 3 — About the Audit"
+      : screen === 2
+        ? "Step 2 of 3 — Visitor Details"
+        : screen <= 7
+          ? `Step 3 of 3 — Audit Questions (${screen - 2} of 5)`
+          : screen === 8
+            ? "Step 3 of 3 — Score"
+            : screen === 9
+              ? "Step 3 of 3 — Results"
+              : "Step 3 of 3 — Analytics";
 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-sm font-medium text-gray-500">
-          Step {currentStep} of {steps.length}
-        </p>
-      </div>
-
-      <div>
-        <h3 className="mb-2 text-lg font-semibold text-gray-900">
-          {currentStepData.title}
+        <p className="text-sm font-medium text-gray-500">{progressLabel}</p>
+        <h3 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">
+          Technology Ownership Audit
         </h3>
+      </div>
 
-        <p className="mb-5 text-gray-600">{currentStepData.question}</p>
+      {screen === 1 && (
+        <section className="space-y-5">
+          <p className="text-gray-600">
+            Assess your technology ownership across architecture, assets, delivery,
+            team governance, security, and scaling. The audit has 10 questions and
+            produces a score from 20 to 100.
+          </p>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
+            <p className="font-semibold text-gray-900">Scoring</p>
+            <p className="mt-2 text-sm text-gray-600">
+              A = 2 points · B = 5 points · C = 10 points
+            </p>
+          </div>
+          <Button type="button" variant="primary" onClick={() => setScreen(2)}>
+            Start Ownership Audit
+          </Button>
+        </section>
+      )}
 
-        <fieldset className="space-y-3">
-          <legend className="sr-only">{currentStepData.question}</legend>
+      {screen === 2 && (
+        <section className="space-y-5">
+          <p className="text-gray-600">
+            Enter your details so your completed audit result can be associated with
+            the assessment.
+          </p>
+          <label className="block">
+            <span className="text-sm font-semibold text-gray-900">Full Name</span>
+            <input
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              autoComplete="name"
+              required
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-semibold text-gray-900">Email</span>
+            <input
+              type="email"
+              value={visitorEmail}
+              onChange={(event) => setVisitorEmail(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              autoComplete="email"
+              required
+            />
+          </label>
+          {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+          <div className="flex justify-between border-t border-gray-200 pt-5">
+            <Button type="button" variant="secondary" onClick={() => setScreen(1)}>Back</Button>
+            <Button type="button" variant="primary" onClick={startAudit}>Begin Questions</Button>
+          </div>
+        </section>
+      )}
 
-          {currentStepData.options.map((option) => {
-            const answerKey = `step${currentStep}` as keyof AuditAnswer;
+      {screen >= 3 && screen <= 7 && (
+        <section className="space-y-6">
+          {currentQuestions.map((question) => (
+            <fieldset key={question.id} className="space-y-3">
+              <legend className="text-base font-semibold leading-6 text-gray-900">
+                {question.id}. {question.question}
+              </legend>
+              <p className="text-sm font-medium text-gray-500">{question.title}</p>
+              {(Object.entries(question.options) as [AuditOption, string][]).map(([value, label]) => {
+                const selected = answers[`q${question.id}`] === value;
+                return (
+                  <label
+                    key={value}
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 ${selected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <input
+                      type="radio"
+                      name={`q${question.id}`}
+                      value={value}
+                      checked={selected}
+                      onChange={() => setAnswer(question.id, value)}
+                      className="mt-1 h-4 w-4"
+                    />
+                    <span>
+                      <span className="font-semibold text-gray-900">{value}</span>
+                      <span className="mt-1 block text-sm leading-5 text-gray-600">{label}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </fieldset>
+          ))}
 
-            const inputId = `audit-${currentStep}-${option.value}`;
+          {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
 
-            const isSelected = answers[answerKey] === option.value;
-
-            return (
-              <label
-                key={option.value}
-                htmlFor={inputId}
-                className={[
-                  "flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors",
-                  "focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2",
-                  isSelected
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
-                ].join(" ")}
+          <div className="flex justify-between border-t border-gray-200 pt-5">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isSubmitting}
+              onClick={() => setScreen((value) => value - 1)}
+            >
+              Back
+            </Button>
+            {screen < 7 ? (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => validateQuestions() && setScreen((value) => value + 1)}
               >
-                <input
-                  id={inputId}
-                  type="radio"
-                  name={answerKey}
-                  value={option.value}
-                  checked={isSelected}
-                  onChange={handleOptionSelect}
-                  className="mt-1 h-4 w-4 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-                />
+                Next
+              </Button>
+            ) : (
+              <Button type="button" variant="primary" disabled={isSubmitting} onClick={completeAudit}>
+                {isSubmitting ? "Calculating..." : "Calculate Score"}
+              </Button>
+            )}
+          </div>
+        </section>
+      )}
 
-                <span className="flex-1">
-                  <span className="block font-semibold text-gray-900">
-                    {option.value}
-                  </span>
+      {screen === 8 && result && (
+        <section className="space-y-5 text-center">
+          <p className="text-sm font-medium text-gray-500">Your Ownership Score</p>
+          <p className="text-6xl font-bold text-gray-900">{result.score}<span className="text-xl text-gray-500"> / 100</span></p>
+          <p className="text-gray-600">Your score has been calculated from all 10 answers.</p>
+          <Button type="button" variant="primary" onClick={() => setScreen(9)}>View Results</Button>
+        </section>
+      )}
 
-                  <span className="mt-1 block text-sm leading-5 text-gray-600">
-                    {option.label}
-                  </span>
-                </span>
-              </label>
-            );
-          })}
-        </fieldset>
+      {screen === 9 && result && (
+        <section className="space-y-5">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
+            <p className="text-sm font-medium text-gray-500">Maturity Level</p>
+            <h4 className="mt-1 text-2xl font-bold text-gray-900">{result.category}</h4>
+            <p className="mt-3 text-gray-600">{result.diagnosticResult}</p>
+          </div>
+          <div className="rounded-xl border border-gray-200 p-5">
+            <p className="text-sm font-medium text-gray-500">Recommended Path</p>
+            <p className="mt-1 text-xl font-semibold text-gray-900">{result.redirectTarget}</p>
+          </div>
+          <div className="flex justify-end border-t border-gray-200 pt-5">
+            <Button type="button" variant="primary" onClick={() => setScreen(10)}>Continue</Button>
+          </div>
+        </section>
+      )}
 
-        {validationError && (
-          <p className="mt-3 text-sm text-red-600" role="alert">
-            {validationError}
-          </p>
-        )}
-
-        {submitError && (
-          <p className="mt-3 text-sm text-red-600" role="alert">
-            {submitError}
-          </p>
-        )}
-      </div>
-
-      <div className="flex items-center justify-between border-t border-gray-200 pt-5">
-        {currentStep > 1 ? (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handlePrevious}
-            disabled={isSubmitting}
-          >
-            Previous
-          </Button>
-        ) : (
-          <span />
-        )}
-
-        {!isLastStep ? (
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleNext}
-            disabled={isSubmitting}
-          >
-            Next
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleComplete}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Saving..." : "Complete Audit"}
-          </Button>
-        )}
-      </div>
+      {screen === 10 && result && (
+        <section className="space-y-5">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
+            <p className="font-semibold text-gray-900">Analytics Recorded</p>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              Your completed Ownership Audit is stored with your score, maturity
+              level, answers, and recommended path. The completion event is tracked
+              separately from the visitor journey so analytics failures never block
+              the result.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" variant="primary" onClick={restart}>Retake Audit</Button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
