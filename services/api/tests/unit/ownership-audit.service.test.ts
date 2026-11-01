@@ -3,9 +3,23 @@ const mocks = vi.hoisted(() => {
   const insertedRows = [
     {
       id: "77777777-7777-7777-7777-777777777777",
+      fullName: "Ada Lovelace",
       visitorEmail: "ada@example.com",
+      q1: "C",
+      q2: "C",
+      q3: "C",
+      q4: "C",
+      q5: "C",
+      q6: "C",
+      q7: "C",
+      q8: "C",
+      q9: "C",
+      q10: "C",
+      score: 100,
+      category: "Strong Ownership",
+      diagnosticResult: "Highly mature, automated, and secure architecture.",
+      redirectTarget: "Coffee With Me",
       answers: {
-        fullName: "Ada Lovelace",
         q1: "C",
         q2: "C",
         q3: "C",
@@ -17,8 +31,6 @@ const mocks = vi.hoisted(() => {
         q9: "C",
         q10: "C",
       },
-      score: 100,
-      category: "Strong Ownership",
       createdAt: new Date("2026-10-01T10:00:00.000Z"),
     },
   ];
@@ -47,9 +59,19 @@ vi.mock("../../../../database/dist/drizzle/client.js", () => ({
 vi.mock("../../../../database/dist/schema/ownership-audits.js", () => ({
   ownershipAudits: {
     id: "id",
-    step1: "step1",
-    step2: "step2",
-    step3: "step3",
+    fullName: "full_name",
+    q1: "q1",
+    q2: "q2",
+    q3: "q3",
+    q4: "q4",
+    q5: "q5",
+    q6: "q6",
+    q7: "q7",
+    q8: "q8",
+    q9: "q9",
+    q10: "q10",
+    diagnosticResult: "diagnostic_result",
+    redirectTarget: "redirect_target",
     score: "score",
     category: "category",
     visitorEmail: "visitor_email",
@@ -91,17 +113,34 @@ function returnedRow(
   score: number,
   category: string,
 ) {
+  const categoryDetails = {
+    "High Risk": {
+      diagnosticResult:
+        "High technical debt, unmanaged assets, critical execution gaps.",
+      redirectTarget: "Deliver My Project",
+    },
+    "Moderate Control": {
+      diagnosticResult:
+        "Functional foundation, but lacks automated governance and structure.",
+      redirectTarget: "Mentor Me",
+    },
+    "Strong Ownership": {
+      diagnosticResult: "Highly mature, automated, and secure architecture.",
+      redirectTarget: "Coffee With Me",
+    },
+  } as const;
   return {
     ...mocks.insertedRows[0],
-    answers: {
-      fullName: "Ada Lovelace",
-      ...answers,
-    },
+    fullName: "Ada Lovelace",
+    answers,
     score,
     category,
+    diagnosticResult:
+      categoryDetails[category as keyof typeof categoryDetails].diagnosticResult,
+    redirectTarget:
+      categoryDetails[category as keyof typeof categoryDetails].redirectTarget,
   };
-}
-describe("createOwnershipAudit", () => {
+}describe("createOwnershipAudit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -128,16 +167,23 @@ describe("createOwnershipAudit", () => {
     });
     expect(mocks.db.insert).toHaveBeenCalledOnce();
     expect(mocks.insertValues).toHaveBeenCalledWith({
+      fullName: "Ada Lovelace",
       visitorEmail: "ada@example.com",
-      step1: "C,C",
-      step2: "C,C,C,C",
-      step3: "C,C,C,C",
+      q1: "C",
+      q2: "C",
+      q3: "C",
+      q4: "C",
+      q5: "C",
+      q6: "C",
+      q7: "C",
+      q8: "C",
+      q9: "C",
+      q10: "C",
       score: 100,
       category: "Strong Ownership",
-      answers: {
-        fullName: "Ada Lovelace",
-        ...answers,
-      },
+      diagnosticResult: "Highly mature, automated, and secure architecture.",
+      redirectTarget: "Coffee With Me",
+      answers,
     });
     expect(result).toEqual({
       id: "77777777-7777-7777-7777-777777777777",
@@ -146,6 +192,8 @@ describe("createOwnershipAudit", () => {
       answers,
       score: 100,
       category: "Strong Ownership",
+      diagnosticResult: "Highly mature, automated, and secure architecture.",
+      redirectTarget: "Coffee With Me",
       createdAt: "2026-10-01T10:00:00.000Z",
     });
   });
@@ -299,7 +347,7 @@ describe("createOwnershipAudit", () => {
     expect(result.score).toBe(100);
     expect(result.category).toBe("Strong Ownership");
   });
-  it("persists the full name inside the existing answers JSON field", async () => {
+  it("persists the full name in the dedicated column", async () => {
     const answers = createAnswers([
       "A",
       "B",
@@ -322,10 +370,13 @@ describe("createOwnershipAudit", () => {
     });
     expect(mocks.insertValues).toHaveBeenCalledWith(
       expect.objectContaining({
-        answers: {
-          fullName: "Grace Hopper",
-          ...answers,
-        },
+        fullName: "Grace Hopper",
+        visitorEmail: "grace@example.com",
+        answers,
+        score: 35,
+        category: "High Risk",
+        diagnosticResult: "High technical debt, unmanaged assets, critical execution gaps.",
+        redirectTarget: "Deliver My Project",
       }),
     );
   });
@@ -370,5 +421,3 @@ describe("createOwnershipAudit", () => {
     ).rejects.toThrow("database down");
   });
 });
-
-
