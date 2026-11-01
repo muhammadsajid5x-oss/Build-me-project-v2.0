@@ -3,9 +3,7 @@ import { ownershipAudits } from "@build-me/database/schema/ownership-audits";
 
 export type OwnershipAuditOption = "A" | "B" | "C";
 
-export type CreateOwnershipAuditInput = {
-  fullName: string;
-  visitorEmail: string;
+export type OwnershipAuditAnswers = {
   q1: OwnershipAuditOption;
   q2: OwnershipAuditOption;
   q3: OwnershipAuditOption;
@@ -18,21 +16,26 @@ export type CreateOwnershipAuditInput = {
   q10: OwnershipAuditOption;
 };
 
-export type OwnershipAuditCategory =
-  | "High Risk"
-  | "Moderate Control"
-  | "Strong Ownership";
+export type CreateOwnershipAuditInput = {
+  fullName: string;
+  visitorEmail: string;
+  answers: OwnershipAuditAnswers;
+};
 
 export type OwnershipAuditResult = {
   id: string;
   fullName: string;
-  visitorEmail: string;
-  answers: Record<`q${number}`, OwnershipAuditOption>;
+  visitorEmail: string | null;
+  answers: OwnershipAuditAnswers | null;
   score: number;
-  category: OwnershipAuditCategory;
-  diagnosticResult: string;
-  redirectTarget: "Deliver My Project" | "Mentor Me" | "Coffee With Me";
+  category: string;
   createdAt: string;
+  legacy?: boolean;
+  legacySteps?: {
+    step1: string;
+    step2: string;
+    step3: string;
+  };
 };
 
 const SCORE_MAP: Record<OwnershipAuditOption, number> = {
@@ -41,94 +44,103 @@ const SCORE_MAP: Record<OwnershipAuditOption, number> = {
   C: 10,
 };
 
-function getOutcome(score: number): {
-  category: OwnershipAuditCategory;
-  diagnosticResult: string;
-  redirectTarget: OwnershipAuditResult["redirectTarget"];
-} {
+function calculateScore(answers: OwnershipAuditAnswers): number {
+  return Object.values(answers).reduce(
+    (total, answer) => total + SCORE_MAP[answer],
+    0,
+  );
+}
+
+function getCategory(score: number): string {
   if (score <= 35) {
-    return {
-      category: "High Risk",
-      diagnosticResult:
-        "High technical debt, unmanaged assets, critical execution gaps.",
-      redirectTarget: "Deliver My Project",
-    };
+    return "High Risk";
   }
 
   if (score <= 69) {
-    return {
-      category: "Moderate Control",
-      diagnosticResult:
-        "Functional foundation, but lacks automated governance and structure.",
-      redirectTarget: "Mentor Me",
-    };
+    return "Moderate Control";
+  }
+
+  return "Strong Ownership";
+}
+
+function isAuditOption(value: unknown): value is OwnershipAuditOption {
+  return value === "A" || value === "B" || value === "C";
+}
+
+function getAnswers(value: unknown): OwnershipAuditAnswers | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const answers = value as Record<string, unknown>;
+
+  const keys = [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "q6",
+    "q7",
+    "q8",
+    "q9",
+    "q10",
+  ] as const;
+
+  if (!keys.every((key) => isAuditOption(answers[key]))) {
+    return null;
   }
 
   return {
-    category: "Strong Ownership",
-    diagnosticResult: "Highly mature, automated, and secure architecture.",
-    redirectTarget: "Coffee With Me",
+    q1: answers.q1 as OwnershipAuditOption,
+    q2: answers.q2 as OwnershipAuditOption,
+    q3: answers.q3 as OwnershipAuditOption,
+    q4: answers.q4 as OwnershipAuditOption,
+    q5: answers.q5 as OwnershipAuditOption,
+    q6: answers.q6 as OwnershipAuditOption,
+    q7: answers.q7 as OwnershipAuditOption,
+    q8: answers.q8 as OwnershipAuditOption,
+    q9: answers.q9 as OwnershipAuditOption,
+    q10: answers.q10 as OwnershipAuditOption,
   };
 }
 
-const questionKeys = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10"] as const;
+function getFullName(value: unknown): string {
+  if (!value || typeof value !== "object") {
+    return "";
+  }
 
-export function calculateOwnershipAuditScore(
-  answers: Record<(typeof questionKeys)[number], OwnershipAuditOption>,
-): number {
-  return questionKeys.reduce((total, key) => total + SCORE_MAP[answers[key]], 0);
+  const fullName = (value as Record<string, unknown>).fullName;
+
+  return typeof fullName === "string" ? fullName : "";
 }
 
 export async function createOwnershipAudit(
   input: CreateOwnershipAuditInput,
 ): Promise<OwnershipAuditResult> {
-  const answers = {
-    q1: input.q1,
-    q2: input.q2,
-    q3: input.q3,
-    q4: input.q4,
-    q5: input.q5,
-    q6: input.q6,
-    q7: input.q7,
-    q8: input.q8,
-    q9: input.q9,
-    q10: input.q10,
-  };
-
-  const score = calculateOwnershipAuditScore(answers);
-  const outcome = getOutcome(score);
+  const score = calculateScore(input.answers);
+  const category = getCategory(score);
 
   const [created] = await db
     .insert(ownershipAudits)
     .values({
-      fullName: input.fullName,
       visitorEmail: input.visitorEmail,
-      ...answers,
+      step1: `${input.answers.q1},${input.answers.q2}`,
+      step2: `${input.answers.q3},${input.answers.q4},${input.answers.q5},${input.answers.q6}`,
+      step3: `${input.answers.q7},${input.answers.q8},${input.answers.q9},${input.answers.q10}`,
       score,
-      category: outcome.category,
-      diagnosticResult: outcome.diagnosticResult,
-      redirectTarget: outcome.redirectTarget,
-      answers,
+      category,
+      answers: {
+        fullName: input.fullName,
+        ...input.answers,
+      },
     })
     .returning({
       id: ownershipAudits.id,
-      fullName: ownershipAudits.fullName,
       visitorEmail: ownershipAudits.visitorEmail,
-      q1: ownershipAudits.q1,
-      q2: ownershipAudits.q2,
-      q3: ownershipAudits.q3,
-      q4: ownershipAudits.q4,
-      q5: ownershipAudits.q5,
-      q6: ownershipAudits.q6,
-      q7: ownershipAudits.q7,
-      q8: ownershipAudits.q8,
-      q9: ownershipAudits.q9,
-      q10: ownershipAudits.q10,
+      answers: ownershipAudits.answers,
       score: ownershipAudits.score,
       category: ownershipAudits.category,
-      diagnosticResult: ownershipAudits.diagnosticResult,
-      redirectTarget: ownershipAudits.redirectTarget,
-      answers: ownershipAudits.answers,
       createdAt: ownershipAudits.createdAt,
     });
 
@@ -136,15 +148,19 @@ export async function createOwnershipAudit(
     throw new Error("Failed to persist the Ownership Audit.");
   }
 
+  const answers = getAnswers(created.answers);
+
+  if (!answers) {
+    throw new Error("Failed to read the newly created Ownership Audit.");
+  }
+
   return {
     id: created.id,
-    fullName: created.fullName,
+    fullName: getFullName(created.answers),
     visitorEmail: created.visitorEmail,
-    answers: created.answers as OwnershipAuditResult["answers"],
+    answers,
     score: created.score,
-    category: created.category as OwnershipAuditCategory,
-    diagnosticResult: created.diagnosticResult,
-    redirectTarget: created.redirectTarget as OwnershipAuditResult["redirectTarget"],
+    category: created.category,
     createdAt: created.createdAt.toISOString(),
   };
 }
@@ -153,37 +169,47 @@ export async function listOwnershipAudits(): Promise<OwnershipAuditResult[]> {
   const audits = await db
     .select({
       id: ownershipAudits.id,
-      fullName: ownershipAudits.fullName,
       visitorEmail: ownershipAudits.visitorEmail,
-      q1: ownershipAudits.q1,
-      q2: ownershipAudits.q2,
-      q3: ownershipAudits.q3,
-      q4: ownershipAudits.q4,
-      q5: ownershipAudits.q5,
-      q6: ownershipAudits.q6,
-      q7: ownershipAudits.q7,
-      q8: ownershipAudits.q8,
-      q9: ownershipAudits.q9,
-      q10: ownershipAudits.q10,
+      step1: ownershipAudits.step1,
+      step2: ownershipAudits.step2,
+      step3: ownershipAudits.step3,
+      answers: ownershipAudits.answers,
       score: ownershipAudits.score,
       category: ownershipAudits.category,
-      diagnosticResult: ownershipAudits.diagnosticResult,
-      redirectTarget: ownershipAudits.redirectTarget,
-      answers: ownershipAudits.answers,
       createdAt: ownershipAudits.createdAt,
     })
     .from(ownershipAudits)
     .orderBy(ownershipAudits.createdAt);
 
-  return audits.map((audit) => ({
-    id: audit.id,
-    fullName: audit.fullName,
-    visitorEmail: audit.visitorEmail,
-    answers: audit.answers as OwnershipAuditResult["answers"],
-    score: audit.score,
-    category: audit.category as OwnershipAuditCategory,
-    diagnosticResult: audit.diagnosticResult,
-    redirectTarget: audit.redirectTarget as OwnershipAuditResult["redirectTarget"],
-    createdAt: audit.createdAt.toISOString(),
-  }));
+  return audits.map((audit) => {
+    const answers = getAnswers(audit.answers);
+
+    if (answers) {
+      return {
+        id: audit.id,
+        fullName: getFullName(audit.answers),
+        visitorEmail: audit.visitorEmail,
+        answers,
+        score: audit.score,
+        category: audit.category,
+        createdAt: audit.createdAt.toISOString(),
+      };
+    }
+
+    return {
+      id: audit.id,
+      fullName: "",
+      visitorEmail: audit.visitorEmail,
+      answers: null,
+      score: audit.score,
+      category: audit.category,
+      createdAt: audit.createdAt.toISOString(),
+      legacy: true,
+      legacySteps: {
+        step1: audit.step1,
+        step2: audit.step2,
+        step3: audit.step3,
+      },
+    };
+  });
 }

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 test.describe("Ownership Audit Performance", () => {
   test("Ownership Audit journey loads within the performance threshold", async ({
     page,
@@ -13,7 +13,7 @@ test.describe("Ownership Audit Performance", () => {
       .getByRole("button", { name: "Ownership Audit" })
       .click();
     await expect(
-      page.getByRole("heading", { name: "Ownership Audit" }),
+      page.getByRole("heading", { name: "Technology Ownership Audit", exact: true }),
     ).toBeVisible();
     const loadTime = Date.now() - start;
     expect(loadTime).toBeLessThan(5000);

@@ -37,7 +37,7 @@ function fillValidForm() {
   fireEvent.change(screen.getByLabelText("What would you like help with?"), {
     target: { value: "Designing scalable systems." },
   });
-  fireEvent.change(screen.getByLabelText("Current experience or context"), {
+  fireEvent.change(screen.getByLabelText("Current Experience / Context"), {
     target: { value: "5 years backend experience." },
   });
   fireEvent.change(
@@ -69,7 +69,7 @@ describe("MentorMePage", () => {
     render(<MentorMePage />);
 
     expect(
-      screen.getByRole("heading", { name: "Mentor Me" }),
+      screen.getByRole("heading", { name: "Request mentoring support" }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe("MentorMePage", () => {
       screen.getByLabelText("What would you like help with?"),
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText("Current experience or context"),
+      screen.getByLabelText("Current Experience / Context"),
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText("Preferred Mentoring Format (optional)"),
@@ -158,7 +158,7 @@ describe("MentorMePage", () => {
     fillValidForm();
     submit();
 
-    await screen.findByText("Please enter a valid email address.");
+    await screen.findByText("We could not submit your mentoring request right now. Please try again in a moment.");
 
     const analyticsEvents = getAnalyticsEventNames(fetchMock);
     expect(analyticsEvents).not.toContain("mentor.me.completed");
@@ -253,3 +253,4 @@ describe("MentorMePage", () => {
     ).toBeInTheDocument();
   });
 });
+

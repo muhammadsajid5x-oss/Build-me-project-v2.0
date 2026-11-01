@@ -38,15 +38,35 @@ export type CoffeeWithMeRequest = {
   createdAt: string;
 };
 
+export type OwnershipAuditOption = "A" | "B" | "C";
+
+export type OwnershipAuditAnswers = {
+  q1: OwnershipAuditOption;
+  q2: OwnershipAuditOption;
+  q3: OwnershipAuditOption;
+  q4: OwnershipAuditOption;
+  q5: OwnershipAuditOption;
+  q6: OwnershipAuditOption;
+  q7: OwnershipAuditOption;
+  q8: OwnershipAuditOption;
+  q9: OwnershipAuditOption;
+  q10: OwnershipAuditOption;
+};
+
 export type OwnershipAuditRequest = {
   id: string;
-  step1: "A" | "B" | "C";
-  step2: "A" | "B" | "C";
-  step3: "A" | "B" | "C";
+  fullName: string;
+  visitorEmail: string | null;
+  answers: OwnershipAuditAnswers | null;
   score: number;
   category: string;
-  visitorEmail: string | null;
   createdAt: string;
+  legacy?: boolean;
+  legacySteps?: {
+    step1: string;
+    step2: string;
+    step3: string;
+  };
 };
 
 type DeliveryProjectRequestsResponse = {
