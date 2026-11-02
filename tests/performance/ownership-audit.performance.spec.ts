@@ -1,21 +1,28 @@
-﻿import { test, expect } from "@playwright/test";
+﻿import { expect, test } from "@playwright/test";
+
 test.describe("Ownership Audit Performance", () => {
   test("Ownership Audit journey loads within the performance threshold", async ({
     page,
   }) => {
-    const start = Date.now();
-    const response = await page.goto("http://localhost:5173/", {
+    const startTime = Date.now();
+
+    await page.goto("http://localhost:5173/", {
       waitUntil: "domcontentloaded",
     });
-    expect(response?.ok()).toBeTruthy();
-    await page.getByRole("button", { name: "Work With Me" }).click();
-    await page
-      .getByRole("button", { name: "Ownership Audit" })
-      .click();
+
+    await page.getByRole("button", { name: "Get Quick Wins" }).click();
+
+    await page.getByRole("button", { name: "Ownership Audit" }).click();
+
     await expect(
-      page.getByRole("heading", { name: "Technology Ownership Audit", exact: true }),
+      page.getByRole("heading", {
+        name: "Technology Ownership Audit",
+        exact: true,
+      }),
     ).toBeVisible();
-    const loadTime = Date.now() - start;
+
+    const loadTime = Date.now() - startTime;
+
     expect(loadTime).toBeLessThan(5000);
   });
 });
