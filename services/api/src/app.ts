@@ -1,4 +1,5 @@
 import express from "express";
+import ownershipAuditRoutes from "./routes/ownership-audit.js";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import analyticsEventRoutes from "./routes/analytics-events.js";
@@ -68,6 +69,7 @@ app.use("/api/v1/foundation-checkins", foundationCheckinRoutes);
 app.use("/api/v1/delivery-project-requests", deliveryProjectRequestRoutes);
 app.use("/api/v1/mentor-me-requests", mentorMeRoutes);
 app.use("/api/v1/coffee-with-me-requests", coffeeWithMeRoutes);
+app.use("/api/v1/ownership-audits", ownershipAuditRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use((_request, _response, next) => {
   next(new Error("NOT_FOUND"));

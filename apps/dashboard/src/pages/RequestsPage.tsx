@@ -4,54 +4,61 @@ import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import LoadingState from "../components/LoadingState";
 import {
+  type CoffeeWithMeRequest,
   type DeliveryProjectRequest,
   type MentorMeRequest,
-  type CoffeeWithMeRequest,
+  type OwnershipAuditRequest,
+  fetchCoffeeWithMeRequests,
   fetchDeliveryProjectRequests,
   fetchMentorMeRequests,
-  fetchCoffeeWithMeRequests,
+  fetchOwnershipAuditRequests,
   formatCreatedAt,
 } from "../services/requests";
 
-type Tab = "deliver" | "mentor" | "coffee";
+type Tab = "deliver" | "mentor" | "coffee" | "ownership-audit";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "deliver", label: "Deliver My Project" },
   { id: "mentor", label: "Mentor Me" },
   { id: "coffee", label: "Coffee With Me" },
+  { id: "ownership-audit", label: "Ownership Audit" },
 ];
 
 export default function RequestsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("deliver");
 
-  // Deliver My Project state
   const [deliveryRequests, setDeliveryRequests] = useState<
     DeliveryProjectRequest[]
   >([]);
   const [deliveryLoading, setDeliveryLoading] = useState(true);
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
-  // Mentor Me state
   const [mentorRequests, setMentorRequests] = useState<MentorMeRequest[]>([]);
   const [mentorLoading, setMentorLoading] = useState(true);
   const [mentorError, setMentorError] = useState<string | null>(null);
 
-  // Coffee With Me state
   const [coffeeRequests, setCoffeeRequests] = useState<CoffeeWithMeRequest[]>(
     [],
   );
   const [coffeeLoading, setCoffeeLoading] = useState(true);
   const [coffeeError, setCoffeeError] = useState<string | null>(null);
 
+  const [ownershipAuditRequests, setOwnershipAuditRequests] = useState<
+    OwnershipAuditRequest[]
+  >([]);
+  const [ownershipAuditLoading, setOwnershipAuditLoading] = useState(true);
+  const [ownershipAuditError, setOwnershipAuditError] = useState<string | null>(
+    null,
+  );
+
   const loadDeliveryRequests = useCallback(async () => {
     setDeliveryLoading(true);
     setDeliveryError(null);
 
     const result = await fetchDeliveryProjectRequests();
+
     setDeliveryRequests(result.data);
-    if (result.error) {
-      setDeliveryError(result.error);
-    }
+    setDeliveryError(result.error);
     setDeliveryLoading(false);
   }, []);
 
@@ -60,10 +67,9 @@ export default function RequestsPage() {
     setMentorError(null);
 
     const result = await fetchMentorMeRequests();
+
     setMentorRequests(result.data);
-    if (result.error) {
-      setMentorError(result.error);
-    }
+    setMentorError(result.error);
     setMentorLoading(false);
   }, []);
 
@@ -72,31 +78,44 @@ export default function RequestsPage() {
     setCoffeeError(null);
 
     const result = await fetchCoffeeWithMeRequests();
+
     setCoffeeRequests(result.data);
-    if (result.error) {
-      setCoffeeError(result.error);
-    }
+    setCoffeeError(result.error);
     setCoffeeLoading(false);
   }, []);
 
-  // Load delivery requests on mount
+  const loadOwnershipAuditRequests = useCallback(async () => {
+    setOwnershipAuditLoading(true);
+    setOwnershipAuditError(null);
+
+    const result = await fetchOwnershipAuditRequests();
+
+    setOwnershipAuditRequests(result.data);
+    setOwnershipAuditError(result.error);
+    setOwnershipAuditLoading(false);
+  }, []);
+
   useEffect(() => {
     void loadDeliveryRequests();
   }, [loadDeliveryRequests]);
 
-  // Load mentor requests when tab is activated
   useEffect(() => {
     if (activeTab === "mentor") {
       void loadMentorRequests();
     }
   }, [activeTab, loadMentorRequests]);
 
-  // Load coffee requests when tab is activated
   useEffect(() => {
     if (activeTab === "coffee") {
       void loadCoffeeRequests();
     }
   }, [activeTab, loadCoffeeRequests]);
+
+  useEffect(() => {
+    if (activeTab === "ownership-audit") {
+      void loadOwnershipAuditRequests();
+    }
+  }, [activeTab, loadOwnershipAuditRequests]);
 
   return (
     <section aria-labelledby="requests-heading">
@@ -105,24 +124,26 @@ export default function RequestsPage() {
           Requests
         </h1>
         <p className="mt-1 text-sm text-gray-400">
-          Manage your project delivery and mentorship requests.
+          Manage your project delivery, mentorship, coffee, and ownership audit
+          requests.
         </p>
       </header>
 
       <nav aria-label="Request tabs" className="mb-6 border-b border-gray-800">
-        <ul className="flex gap-8" role="tablist">
+        <ul className="flex flex-wrap gap-8" role="tablist">
           {tabs.map((tab) => (
             <li key={tab.id} role="presentation">
               <button
                 role="tab"
+                type="button"
                 aria-selected={activeTab === tab.id}
                 aria-controls={`panel-${tab.id}`}
                 id={`tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
+                className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? "border-blue-500 text-white"
-                    : "border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600"
+                    : "border-transparent text-gray-400 hover:border-gray-600 hover:text-gray-200"
                 }`}
               >
                 {tab.label}
@@ -173,6 +194,20 @@ export default function RequestsPage() {
           onRetry={loadCoffeeRequests}
         />
       </div>
+
+      <div
+        id="panel-ownership-audit"
+        role="tabpanel"
+        aria-labelledby="tab-ownership-audit"
+        hidden={activeTab !== "ownership-audit"}
+      >
+        <OwnershipAuditContent
+          requests={ownershipAuditRequests}
+          loading={ownershipAuditLoading}
+          error={ownershipAuditError}
+          onRetry={loadOwnershipAuditRequests}
+        />
+      </div>
     </section>
   );
 }
@@ -202,54 +237,54 @@ function DeliverMyProjectContent({
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-900/50">
-      <table className="w-full" role="table">
+      <table className="w-full">
         <thead>
           <tr className="border-b border-gray-700">
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Name
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Email
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Project Description
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Expected Outcome
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Timeline
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Budget
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Status
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Created
             </th>
@@ -303,60 +338,60 @@ function MentorMeContent({
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-900/50">
-      <table className="w-full" role="table">
+      <table className="w-full">
         <thead>
           <tr className="border-b border-gray-700">
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Name
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Email
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Mentoring Area
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Help With
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Experience / Context
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Preferred Format
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Availability
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Status
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Created
             </th>
@@ -389,6 +424,7 @@ function MentorMeContent({
     </div>
   );
 }
+
 function CoffeeWithMeContent({
   requests,
   loading,
@@ -414,48 +450,48 @@ function CoffeeWithMeContent({
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-900/50">
-      <table className="w-full" role="table">
+      <table className="w-full">
         <thead>
           <tr className="border-b border-gray-700">
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Name
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Email
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Topic
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Preferred Format
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Availability
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Status
             </th>
             <th
               scope="col"
-              className="border-b px-3 py-2 font-semibold text-left"
+              className="border-b px-3 py-2 text-left font-semibold"
             >
               Created
             </th>
@@ -475,6 +511,182 @@ function CoffeeWithMeContent({
               </td>
               <td className="border-b px-3 py-2">{request.status}</td>
               <td className="border-b px-3 py-2">
+                {formatCreatedAt(request.createdAt)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function OwnershipAuditContent({
+  requests,
+  loading,
+  error,
+  onRetry,
+}: {
+  requests: OwnershipAuditRequest[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+}) {
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={onRetry} />;
+  }
+
+  if (requests.length === 0) {
+    return <EmptyState message="No Ownership Audit requests yet." />;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-900/50">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-700">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Visitor
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q1
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q2
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q3
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q4
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q5
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q6
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q7
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q8
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q9
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Q10
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Score
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Category
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Created
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map((request) => (
+            <tr key={request.id} className="align-top hover:bg-gray-800/50">
+              <td className="border-b px-3 py-2">
+                <div className="min-w-40">
+                  <div className="font-medium text-white">
+                    {request.fullName || "Anonymous"}
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {request.visitorEmail ?? "No email"}
+                  </div>
+                </div>
+              </td>
+
+              <td className="border-b px-3 py-2">
+                {request.answers?.q1 ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.answers?.q2 ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.answers?.q3 ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.answers?.q4 ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.answers?.q5 ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.answers?.q6 ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.answers?.q7 ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.answers?.q8 ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.answers?.q9 ?? "—"}
+              </td>
+              <td className="border-b px-3 py-2">
+                {request.answers?.q10 ?? "—"}
+              </td>
+
+              <td className="border-b px-3 py-2 font-semibold">
+                {request.score}
+              </td>
+
+              <td className="border-b px-3 py-2">{request.category}</td>
+
+              <td className="border-b px-3 py-2 whitespace-nowrap">
                 {formatCreatedAt(request.createdAt)}
               </td>
             </tr>

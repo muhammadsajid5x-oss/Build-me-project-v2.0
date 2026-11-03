@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
-config({ path: "../.env" });
+config({ path: new URL("../../.env", import.meta.url) });
 export default defineConfig({
   schema: "./schema/index.ts",
   out: "./migrations",

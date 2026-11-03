@@ -21,6 +21,10 @@
     "./schema/analytics-events": {
       "types": "./dist/schema/analytics-events.d.ts",
       "import": "./dist/schema/analytics-events.js"
+    },
+    "./schema/ownership-audits": {
+      "types": "./dist/schema/ownership-audits.d.ts",
+      "import": "./dist/schema/ownership-audits.js"
     }
   },
   "scripts": {
