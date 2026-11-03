@@ -152,6 +152,35 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
       data: { action: "completed" },
     }),
   },
+
+  "ownership.toolkit.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "ownership-toolkit",
+      data: { action: "clicked" },
+    }),
+  },
+
+  "ownership.toolkit.viewed": {
+    eventType: "view",
+    buildProperties: pageViewProperties,
+  },
+
+  "ownership.toolkit.completed": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "ownership-toolkit",
+      data: { action: "completed" },
+    }),
+  },
+
+  "ownership.toolkit.downloaded": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "ownership-toolkit",
+      data: { action: "downloaded" },
+    }),
+  },
 };
 
 router.use(

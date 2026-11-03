@@ -10,6 +10,7 @@ import foundationCheckinRoutes from "./routes/foundation-checkins.js";
 import healthRoutes from "./routes/health.js";
 import mentorMeRoutes from "./routes/mentor-me.js";
 import notificationRoutes from "./routes/notifications.js";
+import ownershipToolkitAccessRoutes from "./routes/ownership-toolkit-access.js";
 import {
   apiRateLimiter,
   errorHandler,
@@ -70,6 +71,7 @@ app.use("/api/v1/delivery-project-requests", deliveryProjectRequestRoutes);
 app.use("/api/v1/mentor-me-requests", mentorMeRoutes);
 app.use("/api/v1/coffee-with-me-requests", coffeeWithMeRoutes);
 app.use("/api/v1/ownership-audits", ownershipAuditRoutes);
+app.use("/api/v1/ownership-toolkit-accesses", ownershipToolkitAccessRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use((_request, _response, next) => {
   next(new Error("NOT_FOUND"));

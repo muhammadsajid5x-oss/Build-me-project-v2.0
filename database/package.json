@@ -25,6 +25,10 @@
     "./schema/ownership-audits": {
       "types": "./dist/schema/ownership-audits.d.ts",
       "import": "./dist/schema/ownership-audits.js"
+    },
+    "./schema/ownership-toolkit-accesses": {
+      "types": "./dist/schema/ownership-toolkit-accesses.d.ts",
+      "import": "./dist/schema/ownership-toolkit-accesses.js"
     }
   },
   "scripts": {

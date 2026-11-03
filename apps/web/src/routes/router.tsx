@@ -6,14 +6,17 @@ import AppLayout from "../layouts/AppLayout";
 import NotFoundPage from "../pages/NotFoundPage";
 
 const HomePage = lazyLoad(() => import("../pages/HomePage"), "HomePage");
+
 const FoundationTestPage = lazyLoad(
   () => import("../pages/FoundationTestPage"),
   "FoundationTestPage",
 );
+
 const RouteTestPage = lazyLoad(
   () => import("../pages/RouteTestPage"),
   "RouteTestPage",
 );
+
 const DeliverMyProjectPage = lazyLoad(
   () => import("../pages/DeliverMyProjectPage"),
   "DeliverMyProjectPage",
@@ -28,6 +31,12 @@ const CoffeeWithMePage = lazyLoad(
   () => import("../pages/CoffeeWithMePage"),
   "CoffeeWithMePage",
 );
+
+const OwnershipToolkitPage = lazyLoad(
+  () => import("../pages/OwnershipToolkitPage"),
+  "OwnershipToolkitPage",
+);
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -79,6 +88,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyLoadBoundary>
             <CoffeeWithMePage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "ownership-toolkit",
+        element: (
+          <LazyLoadBoundary>
+            <OwnershipToolkitPage />
           </LazyLoadBoundary>
         ),
       },
