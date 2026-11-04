@@ -32,7 +32,11 @@ export type AnalyticsEventName =
   | "ownership.toolkit.clicked"
   | "ownership.toolkit.viewed"
   | "ownership.toolkit.completed"
-  | "ownership.toolkit.downloaded";
+  | "ownership.toolkit.downloaded"
+  | "ownership.learning.circle.clicked"
+  | "circle.view"
+  | "circle.join.click"
+  | "circle.telegram.redirect";
 
 export const ANALYTICS_EVENTS = {
   WORK_WITH_ME_CLICKED: "work.with.me.clicked",
@@ -60,6 +64,11 @@ export const ANALYTICS_EVENTS = {
   OWNERSHIP_TOOLKIT_VIEWED: "ownership.toolkit.viewed",
   OWNERSHIP_TOOLKIT_COMPLETED: "ownership.toolkit.completed",
   OWNERSHIP_TOOLKIT_DOWNLOADED: "ownership.toolkit.downloaded",
+
+  OWNERSHIP_LEARNING_CIRCLE_CLICKED: "ownership.learning.circle.clicked",
+  CIRCLE_VIEW: "circle.view",
+  CIRCLE_JOIN_CLICK: "circle.join.click",
+  CIRCLE_TELEGRAM_REDIRECT: "circle.telegram.redirect",
 } as const satisfies Record<string, AnalyticsEventName>;
 
 export function trackAnalyticsEvent(event: {
