@@ -2,7 +2,7 @@ import request from "supertest";
 import app from "../../../services/api/src/app.js";
 
 // Mock the database client used by createOwnershipToolkitAccess
-jest.mock("../../../database/dist/drizzle/client.js", () => ({
+jest.mock("@build-me/database/drizzle/client", () => ({
   db: {
     insert: jest.fn(() => ({
       values: jest.fn(() => ({
@@ -25,7 +25,7 @@ jest.mock("../../../database/dist/drizzle/client.js", () => ({
 
 // Mock the Ownership Toolkit access schema
 jest.mock(
-  "../../../database/dist/schema/ownership-toolkit-accesses.js",
+  "@build-me/database/schema/ownership-toolkit-accesses",
   () => ({
     ownershipToolkitAccesses: {
       id: "id",
@@ -53,7 +53,7 @@ describe("POST /api/v1/ownership-toolkit-accesses", () => {
       fullName: "Ada Lovelace",
       visitorEmail: "ada@example.com",
     });
-    expect(response.body.data.id).toBeDefined();
+    expect(response.body.data.id).toBe("ownership-toolkit-test-id");
     expect(response.body.data.createdAt).toBeDefined();
   });
 
