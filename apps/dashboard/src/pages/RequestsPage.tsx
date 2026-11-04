@@ -8,6 +8,8 @@ import {
   type DeliveryProjectRequest,
   type MentorMeRequest,
   type OwnershipAuditRequest,
+  type OwnershipToolkitAccess,
+  fetchOwnershipToolkitAccesses,
   fetchCoffeeWithMeRequests,
   fetchDeliveryProjectRequests,
   fetchMentorMeRequests,
@@ -15,13 +17,19 @@ import {
   formatCreatedAt,
 } from "../services/requests";
 
-type Tab = "deliver" | "mentor" | "coffee" | "ownership-audit";
+type Tab =
+  | "deliver"
+  | "mentor"
+  | "coffee"
+  | "ownership-audit"
+  | "ownership-toolkit";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "deliver", label: "Deliver My Project" },
   { id: "mentor", label: "Mentor Me" },
   { id: "coffee", label: "Coffee With Me" },
   { id: "ownership-audit", label: "Ownership Audit" },
+  { id: "ownership-toolkit", label: "Ownership Toolkit" },
 ];
 
 export default function RequestsPage() {
@@ -50,6 +58,14 @@ export default function RequestsPage() {
   const [ownershipAuditError, setOwnershipAuditError] = useState<string | null>(
     null,
   );
+
+  const [ownershipToolkitAccesses, setOwnershipToolkitAccesses] = useState<
+    OwnershipToolkitAccess[]
+  >([]);
+  const [ownershipToolkitLoading, setOwnershipToolkitLoading] = useState(true);
+  const [ownershipToolkitError, setOwnershipToolkitError] = useState<
+    string | null
+  >(null);
 
   const loadDeliveryRequests = useCallback(async () => {
     setDeliveryLoading(true);
@@ -95,6 +111,17 @@ export default function RequestsPage() {
     setOwnershipAuditLoading(false);
   }, []);
 
+  const loadOwnershipToolkitAccesses = useCallback(async () => {
+    setOwnershipToolkitLoading(true);
+    setOwnershipToolkitError(null);
+
+    const result = await fetchOwnershipToolkitAccesses();
+
+    setOwnershipToolkitAccesses(result.data);
+    setOwnershipToolkitError(result.error);
+    setOwnershipToolkitLoading(false);
+  }, []);
+
   useEffect(() => {
     void loadDeliveryRequests();
   }, [loadDeliveryRequests]);
@@ -117,6 +144,12 @@ export default function RequestsPage() {
     }
   }, [activeTab, loadOwnershipAuditRequests]);
 
+  useEffect(() => {
+    if (activeTab === "ownership-toolkit") {
+      void loadOwnershipToolkitAccesses();
+    }
+  }, [activeTab, loadOwnershipToolkitAccesses]);
+
   return (
     <section aria-labelledby="requests-heading">
       <header className="mb-6">
@@ -124,8 +157,8 @@ export default function RequestsPage() {
           Requests
         </h1>
         <p className="mt-1 text-sm text-gray-400">
-          Manage your project delivery, mentorship, coffee, and ownership audit
-          requests.
+          Manage project delivery, mentorship, coffee, ownership audit, and
+          toolkit access records.
         </p>
       </header>
 
@@ -206,6 +239,20 @@ export default function RequestsPage() {
           loading={ownershipAuditLoading}
           error={ownershipAuditError}
           onRetry={loadOwnershipAuditRequests}
+        />
+      </div>
+
+      <div
+        id="panel-ownership-toolkit"
+        role="tabpanel"
+        aria-labelledby="tab-ownership-toolkit"
+        hidden={activeTab !== "ownership-toolkit"}
+      >
+        <OwnershipToolkitContent
+          accesses={ownershipToolkitAccesses}
+          loading={ownershipToolkitLoading}
+          error={ownershipToolkitError}
+          onRetry={loadOwnershipToolkitAccesses}
         />
       </div>
     </section>
@@ -688,6 +735,72 @@ function OwnershipAuditContent({
 
               <td className="border-b px-3 py-2 whitespace-nowrap">
                 {formatCreatedAt(request.createdAt)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function OwnershipToolkitContent({
+  accesses,
+  loading,
+  error,
+  onRetry,
+}: {
+  accesses: OwnershipToolkitAccess[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+}) {
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={onRetry} />;
+  }
+
+  if (accesses.length === 0) {
+    return (
+      <EmptyState message="No Technology Ownership Toolkit accesses yet." />
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-900/50">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-700">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Visitor Name
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Email Address
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Access Date
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {accesses.map((access) => (
+            <tr key={access.id} className="align-top hover:bg-gray-800/50">
+              <td className="border-b px-3 py-2">{access.fullName}</td>
+              <td className="border-b px-3 py-2">{access.visitorEmail}</td>
+              <td className="border-b px-3 py-2 whitespace-nowrap">
+                {formatCreatedAt(access.createdAt)}
               </td>
             </tr>
           ))}

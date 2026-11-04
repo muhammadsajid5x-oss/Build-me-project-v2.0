@@ -69,6 +69,13 @@ export type OwnershipAuditRequest = {
   };
 };
 
+export type OwnershipToolkitAccess = {
+  id: string;
+  fullName: string;
+  visitorEmail: string;
+  createdAt: string;
+};
+
 type DeliveryProjectRequestsResponse = {
   data: DeliveryProjectRequest[];
 };
@@ -85,6 +92,10 @@ type OwnershipAuditRequestsResponse = {
   data: OwnershipAuditRequest[];
 };
 
+type OwnershipToolkitAccessesResponse = {
+  data: OwnershipToolkitAccess[];
+};
+
 const deliveryLoadErrorMessage =
   "Delivery project requests could not be loaded. Please try again.";
 
@@ -96,6 +107,9 @@ const coffeeLoadErrorMessage =
 
 const ownershipAuditLoadErrorMessage =
   "Ownership Audit requests could not be loaded. Please try again.";
+
+const ownershipToolkitLoadErrorMessage =
+  "Ownership Toolkit access records could not be loaded. Please try again.";
 
 const unauthorizedMessage = "You are not authorised to view requests.";
 
@@ -201,6 +215,29 @@ export async function fetchOwnershipAuditRequests(): Promise<{
       error: isUnauthorizedError(error)
         ? unauthorizedMessage
         : ownershipAuditLoadErrorMessage,
+    };
+  }
+}
+
+export async function fetchOwnershipToolkitAccesses(): Promise<{
+  data: OwnershipToolkitAccess[];
+  error: string | null;
+}> {
+  try {
+    const response = await apiClient.get<OwnershipToolkitAccessesResponse>(
+      "api/v1/ownership-toolkit-accesses",
+    );
+
+    return {
+      data: Array.isArray(response?.data) ? response.data : [],
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      error: isUnauthorizedError(error)
+        ? unauthorizedMessage
+        : ownershipToolkitLoadErrorMessage,
     };
   }
 }

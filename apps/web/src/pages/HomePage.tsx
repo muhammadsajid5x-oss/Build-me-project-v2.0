@@ -6,11 +6,13 @@ import TechnologyOwnershipHero from "../components/Hero/hero-left";
 import HeroRight from "../components/Hero/hero-right";
 import { Modal, ModalHeader, ModalBody } from "@build-me/ui";
 import TechnologyOwnershipAudit from "../components/TechnologyOwnershipAudit";
+import TechnologyOwnershipToolkit from "../components/TechnologyOwnershipToolkit";
 
 export default function HomePage() {
   const [isImpactCardOpen, setIsImpactCardOpen] = useState(false);
   const [isQuickWinsCardOpen, setIsQuickWinsCardOpen] = useState(false);
   const [isOwnershipAuditOpen, setIsOwnershipAuditOpen] = useState(false);
+  const [isOwnershipToolkitOpen, setIsOwnershipToolkitOpen] = useState(false);
 
   // Existing Work With Me behaviour — unchanged
   const handleWorkWithMeClick = () => {
@@ -49,6 +51,22 @@ export default function HomePage() {
 
   const closeOwnershipAudit = () => {
     setIsOwnershipAuditOpen(false);
+  };
+
+  // Ownership Toolkit opens from the Get Quick Wins card
+  const handleOwnershipToolkitClick = () => {
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.OWNERSHIP_TOOLKIT_CLICKED,
+      eventType: "click",
+      path: "/",
+    });
+
+    setIsQuickWinsCardOpen(false);
+    setIsOwnershipToolkitOpen(true);
+  };
+
+  const closeOwnershipToolkit = () => {
+    setIsOwnershipToolkitOpen(false);
   };
 
   return (
@@ -270,7 +288,8 @@ export default function HomePage() {
             opportunities for improvement.
           </p>
 
-          <div className="mt-6">
+          <div className="mt-6 space-y-3">
+            {/* Ownership Audit option */}
             <button
               type="button"
               onClick={handleOwnershipAuditClick}
@@ -295,6 +314,33 @@ export default function HomePage() {
                 →
               </span>
             </button>
+
+            {/* Ownership Toolkit option */}
+            <button
+              type="button"
+              onClick={handleOwnershipToolkitClick}
+              className="
+                flex w-full items-center justify-between rounded-xl
+                border border-gray-200 px-4 py-4 text-left transition
+                hover:border-blue-500 hover:bg-blue-50
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:ring-offset-2
+              "
+            >
+              <span>
+                <span className="block text-base font-semibold text-gray-900">
+                  Ownership Toolkit
+                </span>
+                <span className="mt-1 block text-sm text-gray-500">
+                  Access practical lifecycle guidance, checklists, and the
+                  downloadable Technology Ownership Toolkit.
+                </span>
+              </span>
+
+              <span className="ml-4 text-gray-400" aria-hidden="true">
+                →
+              </span>
+            </button>
           </div>
         </dialog>
       )}
@@ -310,6 +356,21 @@ export default function HomePage() {
 
           <ModalBody>
             <TechnologyOwnershipAudit />
+          </ModalBody>
+        </Modal>
+      )}
+
+      {/* Ownership Toolkit modal */}
+      {isOwnershipToolkitOpen && (
+        <Modal open={isOwnershipToolkitOpen} onClose={closeOwnershipToolkit}>
+          <ModalHeader>
+            <h2 className="text-xl font-bold tracking-tight text-gray-900">
+              Technology Ownership Toolkit
+            </h2>
+          </ModalHeader>
+
+          <ModalBody>
+            <TechnologyOwnershipToolkit />
           </ModalBody>
         </Modal>
       )}
