@@ -76,6 +76,14 @@ export type OwnershipToolkitAccess = {
   createdAt: string;
 };
 
+export type OwnershipLearningCircleRequest = {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  createdAt: string;
+};
+
 type DeliveryProjectRequestsResponse = {
   data: DeliveryProjectRequest[];
 };
@@ -96,6 +104,10 @@ type OwnershipToolkitAccessesResponse = {
   data: OwnershipToolkitAccess[];
 };
 
+type OwnershipLearningCircleRequestsResponse = {
+  data: OwnershipLearningCircleRequest[];
+};
+
 const deliveryLoadErrorMessage =
   "Delivery project requests could not be loaded. Please try again.";
 
@@ -110,6 +122,9 @@ const ownershipAuditLoadErrorMessage =
 
 const ownershipToolkitLoadErrorMessage =
   "Ownership Toolkit access records could not be loaded. Please try again.";
+
+const ownershipLearningCircleLoadErrorMessage =
+  "Ownership Learning Circle requests could not be loaded. Please try again.";
 
 const unauthorizedMessage = "You are not authorised to view requests.";
 
@@ -238,6 +253,30 @@ export async function fetchOwnershipToolkitAccesses(): Promise<{
       error: isUnauthorizedError(error)
         ? unauthorizedMessage
         : ownershipToolkitLoadErrorMessage,
+    };
+  }
+}
+
+export async function fetchOwnershipLearningCircleRequests(): Promise<{
+  data: OwnershipLearningCircleRequest[];
+  error: string | null;
+}> {
+  try {
+    const response =
+      await apiClient.get<OwnershipLearningCircleRequestsResponse>(
+        "api/v1/ownership-learning-circle-requests",
+      );
+
+    return {
+      data: Array.isArray(response?.data) ? response.data : [],
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      error: isUnauthorizedError(error)
+        ? unauthorizedMessage
+        : ownershipLearningCircleLoadErrorMessage,
     };
   }
 }

@@ -181,6 +181,33 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
       data: { action: "downloaded" },
     }),
   },
+  "ownership.learning.circle.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "ownership-learning-circle",
+      data: { action: "open" },
+    }),
+  },
+  "circle.view": {
+    eventType: "view",
+    buildProperties: pageViewProperties,
+  },
+
+  "circle.join.click": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "ownership-learning-circle",
+      data: { action: "join" },
+    }),
+  },
+
+  "circle.telegram.redirect": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "ownership-learning-circle",
+      data: { action: "telegram-redirect" },
+    }),
+  },
 };
 
 router.use(
