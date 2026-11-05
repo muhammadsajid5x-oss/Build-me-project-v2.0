@@ -22,10 +22,10 @@ export default function AppLayout() {
   }, [location.key, location.pathname]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-white">
       <Navbar />
 
-      <main className="p-0">
+      <main className="block w-full p-0">
         <Outlet />
       </main>
     </div>

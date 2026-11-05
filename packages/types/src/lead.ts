@@ -7,4 +7,8 @@ export interface Lead {
   status: "new" | "contacted" | "qualified" | "converted" | "lost";
   createdAt: string;
   updatedAt: string;
+  projectDescription?: string;
+  expectedOutcome?: string;
+  timeline?: string;
+  budget?: string;
 }

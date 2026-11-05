@@ -1,0 +1,151 @@
+name: Promote Development to Main
+
+on:
+  push:
+    branches:
+      - development
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: promote-development
+  cancel-in-progress: true
+
+jobs:
+  promote:
+    name: Promote after all development gates pass
+    if: ${{ github.event.head_commit.message != 'ci: automate development promotion after all gates pass' && !contains(github.event.head_commit.message, '[skip promotion]') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Safety block for automation setup commit
+        if: ${{ contains(github.event.head_commit.message, '[promotion setup]') }}
+        run: |
+          echo "Promotion workflow setup commit; promotion intentionally blocked."
+          exit 1
+
+      - name: Wait for required development workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUIRED_WORKFLOWS: |
+            CI Quality Gate
+            Security Automation
+            Performance Automation
+            Analytics Automation
+        run: |
+          set -euo pipefail
+
+          echo "Checking required workflows for SHA: $GITHUB_SHA"
+
+          for attempt in {1..60}; do
+            all_passed=true
+            failed=false
+
+            while IFS= read -r workflow; do
+              [ -z "$workflow" ] && continue
+
+              conclusion=$(gh api \
+                -H "Accept: application/vnd.github+json" \
+                "/repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" \
+                --jq ".workflow_runs | map(select(.name == \"$workflow\" and .event == \"push\")) | sort_by(.created_at) | last | (.conclusion // .status // \"missing\")")
+
+              echo "$workflow: $conclusion"
+
+              case "$conclusion" in
+                success)
+                  ;;
+                failure|cancelled|timed_out|startup_failure|action_required)
+                  failed=true
+                  ;;
+                *)
+                  all_passed=false
+                  ;;
+              esac
+            done <<< "$REQUIRED_WORKFLOWS"
+
+            if [ "$failed" = "true" ]; then
+              echo "A required development workflow failed. Promotion stopped."
+              exit 1
+            fi
+
+            if [ "$all_passed" = "true" ]; then
+              echo "All development gates passed."
+              break
+            fi
+
+            if [ "$attempt" -eq 60 ]; then
+              echo "Timed out waiting for all development gates."
+              exit 1
+            fi
+
+            echo "Waiting 30 seconds before checking again..."
+            sleep 30
+          done
+
+      - name: Verify development has not advanced
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          current_sha=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/$GITHUB_REPOSITORY/git/ref/heads/development" \
+            --jq '.object.sha')
+
+          if [ "$current_sha" != "$GITHUB_SHA" ]; then
+            echo "Development advanced from $GITHUB_SHA to $current_sha while gates were running."
+            echo "Promotion skipped. The newer commit must pass all gates first."
+            exit 0
+          fi
+
+      - name: Checkout validated development commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Create promotion merge commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin main development
+
+          validated_sha="$GITHUB_SHA"
+          current_sha=$(git rev-parse origin/development)
+
+          if [ "$current_sha" != "$validated_sha" ]; then
+            echo "Development advanced while promotion was starting."
+            echo "Expected: $validated_sha"
+            echo "Current:  $current_sha"
+            exit 0
+          fi
+
+          git checkout -B promotion-main origin/main
+
+          if git merge-base --is-ancestor "$validated_sha" origin/main; then
+            echo "Main already contains the validated development commit. Nothing to promote."
+            exit 0
+          fi
+
+          if git merge-base --is-ancestor origin/main "$validated_sha"; then
+            echo "Validated development commit can be fast-forwarded into main."
+            git merge --ff-only "$validated_sha"
+          else
+            echo "Main and the validated development commit have diverged. Creating a normal merge commit."
+            git merge --no-ff --no-edit "$validated_sha"
+          fi
+
+          git push origin HEAD:main
+
+      - name: Trigger main CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          gh workflow run ci.yml --ref main

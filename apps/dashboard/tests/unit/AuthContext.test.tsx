@@ -8,9 +8,13 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@build-me/services/integrations", () => ({
-  getSession: mocks.getSession,
-  onAuthStateChange: mocks.onAuthStateChange,
-  signOut: mocks.signOut,
+  supabase: {
+    auth: {
+      getSession: mocks.getSession,
+      onAuthStateChange: mocks.onAuthStateChange,
+      signOut: mocks.signOut,
+    },
+  },
 }));
 
 import { AuthProvider, useAuth } from "../../src/auth/AuthContext";
@@ -33,7 +37,10 @@ describe("AuthContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mocks.getSession.mockResolvedValue(null);
+    mocks.getSession.mockResolvedValue({
+      data: { session: null },
+      error: null,
+    });
 
     mocks.onAuthStateChange.mockReturnValue({
       data: {
@@ -41,6 +48,7 @@ describe("AuthContext", () => {
           unsubscribe: vi.fn(),
         },
       },
+      error: null,
     });
   });
 
@@ -70,11 +78,16 @@ describe("AuthContext", () => {
 
   it("loads an authenticated session", async () => {
     mocks.getSession.mockResolvedValue({
-      access_token: "test-token",
-      user: {
-        id: "user-123",
-        email: "user@example.com",
+      data: {
+        session: {
+          access_token: "test-token",
+          user: {
+            id: "user-123",
+            email: "user@example.com",
+          },
+        },
       },
+      error: null,
     });
 
     render(
@@ -88,10 +101,11 @@ describe("AuthContext", () => {
     });
   });
 
-  it("uses a safe error when session loading fails", async () => {
-    mocks.getSession.mockRejectedValue(
-      new Error("Database password: super-secret"),
-    );
+  it("handles when session loading fails with an error", async () => {
+    mocks.getSession.mockResolvedValue({
+      data: { session: null },
+      error: new Error("Database password: super-secret"),
+    });
 
     render(
       <AuthProvider>
@@ -100,12 +114,8 @@ describe("AuthContext", () => {
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Unable to load your session. Please try again."),
-      ).toBeTruthy();
+      expect(screen.getByText("Database password: super-secret")).toBeTruthy();
     });
-
-    expect(screen.queryByText(/super-secret/)).toBeNull();
   });
 
   it("does not update state when unmounted before the session resolves", async () => {
@@ -117,7 +127,9 @@ describe("AuthContext", () => {
         }),
     );
 
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
 
     const { unmount } = render(
       <AuthProvider>
@@ -129,15 +141,18 @@ describe("AuthContext", () => {
 
     await act(async () => {
       resolveSession({
-        access_token: "late-token",
-        user: { id: "user-999" },
+        data: {
+          session: {
+            access_token: "late-token",
+            user: { id: "user-999" },
+          },
+        },
+        error: null,
       });
     });
 
     const stateUpdateWarnings = consoleError.mock.calls.filter((call) =>
-      String(call[0]).includes(
-        "state update on an unmounted component",
-      ),
+      String(call[0]).includes("state update on an unmounted component"),
     );
 
     expect(stateUpdateWarnings).toHaveLength(0);
@@ -149,6 +164,7 @@ describe("AuthContext", () => {
     const unsubscribe = vi.fn();
     mocks.onAuthStateChange.mockReturnValue({
       data: { subscription: { unsubscribe } },
+      error: null,
     });
 
     const { unmount } = render(

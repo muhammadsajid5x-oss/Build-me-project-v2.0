@@ -4,3 +4,6 @@ export * from "./Loading";
 export * from "./Card";
 export * from "./Layout";
 export * from "./Modal";
+export * from "./Avatar";
+export * from "./Input";
+export * from "./Dropdown";
