@@ -354,6 +354,15 @@ export default function TechnologyOwnershipAudit() {
     }, 0);
 
   const scrollToTop = () => {
+    const modalBody = document.querySelector<HTMLElement>(
+      ".ui-modal[open] .ui-modal__body",
+    );
+
+    if (modalBody) {
+      modalBody.scrollTo({ top: 0, behavior: "auto" });
+      return;
+    }
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
