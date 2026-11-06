@@ -68,7 +68,9 @@ jobs:
         run: pnpm --dir database db:migrate
 
       - name: Seed integration test data
-        run: pnpm --dir database exec tsx seeds/seed-testimonials.ts
+        run: |
+          pnpm --filter @build-me/database... build
+          pnpm --dir database exec tsx seeds/seed-testimonials.ts
         env:
           NODE_ENV: test
           DATABASE_SEED_CONFIRM: "1"
