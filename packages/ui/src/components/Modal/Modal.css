@@ -34,7 +34,7 @@
 }
 .ui-modal__content {
   display: flex;
-  max-height: calc(100vh - 2rem);
+  max-height: calc(100vh - 4rem);
   flex-direction: column;
 }
 .ui-modal__header,
