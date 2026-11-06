@@ -5,6 +5,7 @@ import { Modal, ModalHeader, ModalBody } from "@build-me/ui";
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import TechnologyOwnershipHero from "../components/Hero/hero-left";
 import HeroRight from "../components/Hero/hero-right";
+import Testimonials from "../components/Testimonials";
 import TechnologyOwnershipAudit from "../components/TechnologyOwnershipAudit";
 import TechnologyOwnershipToolkit from "../components/TechnologyOwnershipToolkit";
 import OwnershipLearningCircle from "../components/OwnershipLearningCircle";
@@ -100,7 +101,7 @@ export default function HomePage() {
         aria-labelledby="technology-ownership-heading"
         className="
           relative mx-auto grid w-full max-w-7xl grid-cols-1
-          items-start gap-0 px-4 pt-8 sm:px-6
+          items-start gap-0 px-4 pt-8 pb-0 sm:px-6
           lg:grid-cols-2 lg:px-4 lg:overflow-visible
         "
       >
@@ -212,6 +213,7 @@ export default function HomePage() {
                   Request mentoring support and guidance.
                 </span>
               </span>
+
               <span className="ml-4 text-gray-400" aria-hidden="true">
                 →
               </span>
@@ -239,6 +241,7 @@ export default function HomePage() {
                   Tell me about your project and I will review it.
                 </span>
               </span>
+
               <span className="ml-4 text-gray-400" aria-hidden="true">
                 →
               </span>
@@ -266,6 +269,7 @@ export default function HomePage() {
                   Grab a virtual coffee and chat about what is next for you.
                 </span>
               </span>
+
               <span className="ml-4 text-gray-400" aria-hidden="true">
                 →
               </span>
@@ -396,6 +400,9 @@ export default function HomePage() {
           </div>
         </dialog>
       )}
+
+      {/* Testimonials starts immediately after the Hero/CTA section */}
+      <Testimonials />
 
       {/* Existing Ownership Audit modal */}
       {isOwnershipAuditOpen && (

@@ -67,6 +67,14 @@ jobs:
       - name: Migrate database
         run: pnpm --dir database db:migrate
 
+      - name: Seed integration test data
+        run: |
+          pnpm --filter @build-me/database... build
+          pnpm --dir database exec tsx seeds/seed-testimonials.ts
+        env:
+          NODE_ENV: test
+          DATABASE_SEED_CONFIRM: "1"
+
       - name: Lint
         run: pnpm lint
 
