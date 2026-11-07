@@ -40,7 +40,10 @@ export type AnalyticsEventName =
   | "testimonials.viewed"
   | "testimonials.pagination.clicked"
   | "testimonial.helpful.clicked"
-  | "testimonial.story.clicked";
+  | "testimonial.story.clicked"
+  | "case.studies.viewed"
+  | "case.studies.pagination.clicked"
+  | "case.study.details.clicked";
 
 export const ANALYTICS_EVENTS = {
   WORK_WITH_ME_CLICKED: "work.with.me.clicked",
@@ -78,6 +81,9 @@ export const ANALYTICS_EVENTS = {
   TESTIMONIALS_PAGINATION_CLICKED: "testimonials.pagination.clicked",
   TESTIMONIAL_HELPFUL_CLICKED: "testimonial.helpful.clicked",
   TESTIMONIAL_STORY_CLICKED: "testimonial.story.clicked",
+  CASE_STUDIES_VIEWED: "case.studies.viewed",
+  CASE_STUDIES_PAGINATION_CLICKED: "case.studies.pagination.clicked",
+  CASE_STUDY_DETAILS_CLICKED: "case.study.details.clicked",
 } as const satisfies Record<string, AnalyticsEventName>;
 
 export function trackAnalyticsEvent(event: {
