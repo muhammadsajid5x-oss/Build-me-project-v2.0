@@ -66,7 +66,7 @@ export default function Testimonials() {
         if (mode === "testimonials") {
           const result: TestimonialsResponse = await response.json();
           setTestimonials(result.data); setTestimonialPagination(result.pagination);
-          setSummary(result.summary);
+          setSummary(result.summary ?? { averageRating: 0, reviewCount: result.pagination.total });
         } else {
           const result: CaseStudiesResponse = await response.json();
           setCaseStudies(result.data); setCaseStudyPagination(result.pagination);
