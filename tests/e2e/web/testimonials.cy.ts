@@ -69,6 +69,10 @@ const testimonialsPageOne = {
     total: 6,
     totalPages: 2,
   },
+  summary: {
+    averageRating: 5,
+    reviewCount: 6,
+  },
 };
 
 const testimonialsPageTwo = {
@@ -109,6 +113,10 @@ const testimonialsPageTwo = {
     limit: 4,
     total: 6,
     totalPages: 2,
+  },
+  summary: {
+    averageRating: 5,
+    reviewCount: 6,
   },
 };
 
@@ -155,7 +163,7 @@ describe("Testimonials", () => {
   });
 
   it("supports testimonial pagination", () => {
-    cy.get('nav[aria-label="Testimonials pagination"]')
+    cy.get('nav[aria-label="testimonials pagination"]')
       .should("be.visible")
       .within(() => {
         cy.contains("Page 1 of 2").should("be.visible");
@@ -167,7 +175,16 @@ describe("Testimonials", () => {
 
     cy.wait("@getTestimonialsPageTwo");
 
-    cy.get('nav[aria-label="Testimonials pagination"]')
+    cy.get('section[aria-labelledby="testimonials-heading"]')
+      .should("be.visible")
+      .within(() => {
+        cy.get("article").should("have.length", 2);
+        cy.get("blockquote").should("have.length", 2);
+        cy.contains("Hassan Ali").should("be.visible");
+        cy.contains("Maria Iqbal").should("be.visible");
+      });
+
+    cy.get('nav[aria-label="testimonials pagination"]')
       .should("be.visible")
       .within(() => {
         cy.contains("Page 2 of 2").should("be.visible");
@@ -177,10 +194,23 @@ describe("Testimonials", () => {
         cy.contains("button", "Previous").should("be.enabled").click();
       });
 
-    cy.get('nav[aria-label="Testimonials pagination"]')
+    cy.wait("@getTestimonialsPageOne");
+
+    cy.get('section[aria-labelledby="testimonials-heading"]')
+      .should("be.visible")
+      .within(() => {
+        cy.get("article").should("have.length", 4);
+        cy.get("blockquote").should("have.length", 4);
+        cy.contains("Ayesha Khan").should("be.visible");
+        cy.contains("Bilal Ahmed").should("be.visible");
+      });
+
+    cy.get('nav[aria-label="testimonials pagination"]')
       .should("be.visible")
       .within(() => {
         cy.contains("Page 1 of 2").should("be.visible");
+        cy.contains("button", "Previous").should("be.disabled");
+        cy.contains("button", "Next").should("be.enabled");
       });
   });
 

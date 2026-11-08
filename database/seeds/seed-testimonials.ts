@@ -115,6 +115,62 @@ async function seedTestimonials() {
         verified: true,
         published: true,
       },
+      {
+        name: "Omar Farooq",
+        role: "Technical Lead",
+        company: "Software Services",
+        avatar: "https://i.pravatar.cc/80?img=13",
+        category: "Engineering Quality",
+        content:
+          "The structured engineering process made technical delivery easier to review, test, and prepare for production.",
+        rating: 5,
+        helpfulCount: 15,
+        storyUrl: "https://example.com/testimonials/omar-farooq",
+        verified: true,
+        published: true,
+      },
+      {
+        name: "Fatima Noor",
+        role: "Product Owner",
+        company: "Digital Product Company",
+        avatar: "https://i.pravatar.cc/80?img=23",
+        category: "Product Delivery",
+        content:
+          "The collaboration between product needs and technology execution created a much clearer delivery path.",
+        rating: 5,
+        helpfulCount: 17,
+        storyUrl: "https://example.com/testimonials/fatima-noor",
+        verified: true,
+        published: true,
+      },
+      {
+        name: "Hamza Siddiqui",
+        role: "Full-Stack Developer",
+        company: "Technology Startup",
+        avatar: "https://i.pravatar.cc/80?img=15",
+        category: "Full-Stack Development",
+        content:
+          "The focus on testing, security, observability, and deployment helped make engineering decisions more deliberate.",
+        rating: 5,
+        helpfulCount: 13,
+        storyUrl: "https://example.com/testimonials/hamza-siddiqui",
+        verified: true,
+        published: true,
+      },
+      {
+        name: "Nadia Ahmed",
+        role: "Engineering Manager",
+        company: "Digital Platform",
+        avatar: "https://i.pravatar.cc/80?img=25",
+        category: "Technology Leadership",
+        content:
+          "The overall approach was useful and practical. A few areas needed additional refinement, but the delivery structure was strong.",
+        rating: 4,
+        helpfulCount: 11,
+        storyUrl: "https://example.com/testimonials/nadia-ahmed",
+        verified: true,
+        published: true,
+      },
     ];
 
     const names = testimonialValues.map((testimonial) => testimonial.name);

@@ -24,6 +24,10 @@ export type PaginatedTestimonials = {
     total: number;
     totalPages: number;
   };
+  summary: {
+    averageRating: number;
+    reviewCount: number;
+  };
 };
 
 async function getDatabase() {
@@ -40,6 +44,9 @@ async function getDatabase() {
  *
  * Pagination is server-side so the API remains the source of truth
  * regardless of how many testimonials exist.
+ *
+ * The rating summary is calculated from all published testimonials,
+ * not only the testimonials on the current page.
  */
 export async function listPublishedTestimonials(
   page = 1,
@@ -83,6 +90,15 @@ export async function listPublishedTestimonials(
   const total = countRows.length;
   const totalPages = total === 0 ? 0 : Math.ceil(total / safeLimit);
 
+  const ratingRows = await db
+    .select({
+      averageRating: sql<number>`avg(${testimonials.rating})`,
+    })
+    .from(testimonials)
+    .where(eq(testimonials.published, true));
+
+  const averageRating = Number(ratingRows[0]?.averageRating ?? 0);
+
   return {
     data: rows.map((testimonial) => ({
       id: testimonial.id,
@@ -104,6 +120,10 @@ export async function listPublishedTestimonials(
       limit: safeLimit,
       total,
       totalPages,
+    },
+    summary: {
+      averageRating,
+      reviewCount: total,
     },
   };
 }

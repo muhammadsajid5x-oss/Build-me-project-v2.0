@@ -1,92 +1,120 @@
 import { eq, inArray } from "drizzle-orm";
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
-
 config({ path: fileURLToPath(new URL("../../.env", import.meta.url)) });
-
 async function seedCaseStudies() {
-  if (process.env.NODE_ENV !== "development" && process.env.NODE_ENV !== "test") {
-    throw new Error("Case study seeding is allowed only in development or test mode.");
+  if (
+    process.env.NODE_ENV !== "development" &&
+    process.env.NODE_ENV !== "test"
+  ) {
+    throw new Error(
+      "Case study seeding is allowed only in development or test mode.",
+    );
   }
   if (process.env.DATABASE_SEED_CONFIRM !== "1") {
     throw new Error("Set DATABASE_SEED_CONFIRM=1 to confirm this seed run.");
   }
-  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not configured.");
-
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured.");
+  }
   const [{ db, connection }, { caseStudies }] = await Promise.all([
     import("../drizzle/client"),
     import("../schema"),
   ]);
-
   const values = [
     {
-      company: "Build Me",
+      company: "Cup&Commit",
       location: "Remote",
-      category: "Platform Engineering",
-      title: "Production-grade Technology Ownership Platform",
-      summary: "A personal technology platform built around delivery, operations, security, analytics, and continuous improvement.",
-      outcome: "A working platform with public journeys, backend APIs, database persistence, analytics, automated tests, and operational controls.",
-      content: "The platform connects product journeys with production engineering practices across planning, design, build, test, deploy, observe, secure, recover, analyse, and improve.",
+      category: "Deliver My Project",
+      title: "Deliver My Project",
+      summary:
+        "A complete delivery journey for turning a project need into a validated, production-ready outcome.",
+      outcome:
+        "A structured delivery request captures the project context, expected outcome, timeline, and budget so the work can move into an actionable delivery workflow.",
+      content:
+        "Deliver My Project is the Cup&Commit journey for teams and individuals who need technology work delivered end-to-end. The journey captures the right project information, validates the request, persists it through the backend, confirms the submission, and makes the request visible to the delivery workflow.",
+      storyUrl: "/deliver-my-project",
       published: true,
     },
     {
-      company: "Build Me",
+      company: "Cup&Commit",
       location: "Remote",
-      category: "Delivery",
-      title: "End-to-end project delivery request",
-      summary: "A visitor journey for requesting delivery support with validated project information and backend persistence.",
-      outcome: "Visitors can submit a delivery request through the website and the request is available to the delivery workflow.",
-      content: "The journey covers request capture, validation, API submission, confirmation, analytics, and backend visibility.",
+      category: "Mentor Me",
+      title: "Mentor Me",
+      summary:
+        "A focused mentoring journey for software engineers and technology professionals who want practical guidance.",
+      outcome:
+        "A structured mentoring request creates a clear starting point for focused technical guidance, learning, and execution support.",
+      content:
+        "Mentor Me is the Cup&Commit journey for people who want practical technology guidance. It provides a focused path to discuss engineering challenges, strengthen technical execution, and turn learning into practical progress.",
+      storyUrl: "/mentor-me",
       published: true,
     },
     {
-      company: "Build Me",
+      company: "Cup&Commit",
       location: "Remote",
-      category: "Engineering Quality",
-      title: "Evidence-driven engineering quality",
-      summary: "Automated quality gates covering unit, integration, end-to-end, analytics, performance, and security checks.",
-      outcome: "Feature delivery is supported by repeatable automated validation instead of manual-only verification.",
-      content: "The engineering workflow uses automated tests and security/performance checks to validate production readiness across the platform.",
-      published: true,
-    },
-    {
-      company: "Build Me",
-      location: "Remote",
-      category: "Analytics",
-      title: "Observable visitor journeys",
-      summary: "Typed analytics events connect important visitor interactions to measurable platform behaviour.",
-      outcome: "Key journeys can be observed through analytics events without interrupting the visitor experience.",
-      content: "Visitor-facing features emit typed view and click events through the analytics API using best-effort tracking.",
+      category: "Coffee With Me",
+      title: "Coffee With Me",
+      summary:
+        "A simple conversation journey for discussing technology, engineering, career, and ideas.",
+      outcome:
+        "A conversation request creates a clear path for connecting around a specific technology or professional topic.",
+      content:
+        "Coffee With Me is the Cup&Commit conversation journey. It is designed for meaningful discussions around technology, engineering, product delivery, career growth, and ideas where a focused conversation can create useful next steps.",
+      storyUrl: "/coffee-with-me",
       published: true,
     },
   ];
-
-  const titles = values.map((value) => value.title);
-  const existing = await db.select({ id: caseStudies.id, title: caseStudies.title })
+  const existingTitles = [
+    "Deliver My Project",
+    "Mentor Me",
+    "Coffee With Me",
+    "Production-grade Technology Ownership Platform",
+    "End-to-end project delivery request",
+    "Evidence-driven engineering quality",
+    "Observable visitor journeys",
+  ];
+  const existing = await db
+    .select({
+      id: caseStudies.id,
+      title: caseStudies.title,
+    })
     .from(caseStudies)
-    .where(inArray(caseStudies.title, titles));
+    .where(inArray(caseStudies.title, existingTitles));
   const existingByTitle = new Map(existing.map((row) => [row.title, row.id]));
-  const inserts = values.filter((value) => !existingByTitle.has(value.title));
-  const updates = values.filter((value) => existingByTitle.has(value.title));
-
-  if (inserts.length) {
-    const inserted = await db.insert(caseStudies).values(inserts).returning({ id: caseStudies.id });
-    console.info(`Inserted ${inserted.length} case studies.`);
+  const oldTitles = existing
+    .filter((row) => !values.some((value) => value.title === row.title))
+    .map((row) => row.title);
+  if (oldTitles.length > 0) {
+    await db.delete(caseStudies).where(inArray(caseStudies.title, oldTitles));
+    console.info(`Removed ${oldTitles.length} old case studies.`);
   }
-
-  await Promise.all(updates.map((value) => {
-    const id = existingByTitle.get(value.title);
-    return id ? db.update(caseStudies).set({
-      company: value.company, location: value.location, category: value.category,
-      summary: value.summary, outcome: value.outcome, content: value.content,
-      published: value.published, updatedAt: new Date(),
-    }).where(eq(caseStudies.id, id)) : Promise.resolve();
-  }));
-
-  console.info(`Case study seed completed. Processed ${values.length} case studies.`);
+  for (const value of values) {
+    const existingId = existingByTitle.get(value.title);
+    if (existingId) {
+      await db
+        .update(caseStudies)
+        .set({
+          company: value.company,
+          location: value.location,
+          category: value.category,
+          summary: value.summary,
+          outcome: value.outcome,
+          content: value.content,
+          storyUrl: value.storyUrl,
+          published: value.published,
+          updatedAt: new Date(),
+        })
+        .where(eq(caseStudies.id, existingId));
+    } else {
+      await db.insert(caseStudies).values(value);
+    }
+  }
+  console.info(
+    "Case study seed completed. Exactly 3 Cup&Commit journeys are configured.",
+  );
   await connection.end();
 }
-
 try {
   await seedCaseStudies();
 } catch (error) {

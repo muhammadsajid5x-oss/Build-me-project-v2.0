@@ -50,6 +50,24 @@ const testimonialStoryProperties = (): Record<string, unknown> => ({
   data: { action: "story-clicked" },
 });
 
+const caseStudiesViewProperties = (path?: string): Record<string, unknown> => ({
+  feature: "case-studies",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const caseStudiesPaginationProperties = (): Record<string, unknown> => ({
+  feature: "case-studies",
+  data: { action: "pagination-clicked" },
+});
+
+const caseStudyDetailsProperties = (): Record<string, unknown> => ({
+  feature: "case-study",
+  data: { action: "details-clicked" },
+});
+
 const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
   "hero.viewed": {
     eventType: "view",
@@ -255,6 +273,21 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
     eventType: "click",
     buildProperties: testimonialStoryProperties,
   },
+
+  "case.studies.viewed": {
+    eventType: "view",
+    buildProperties: caseStudiesViewProperties,
+  },
+
+  "case.studies.pagination.clicked": {
+    eventType: "click",
+    buildProperties: caseStudiesPaginationProperties,
+  },
+
+  "case.study.details.clicked": {
+    eventType: "click",
+    buildProperties: caseStudyDetailsProperties,
+  },
 };
 
 router.use(
@@ -335,10 +368,14 @@ router.post("/", async (request, response, next) => {
     await db.insert(analyticsEvents).values({
       name,
       eventType,
-      properties: eventDefinition?.buildProperties(path) ?? {},
+      properties: eventDefinition.buildProperties(path),
     });
 
-    response.status(202).json({ data: { accepted: true } });
+    response.status(202).json({
+      data: {
+        accepted: true,
+      },
+    });
   } catch (error) {
     next(error);
   }
