@@ -330,7 +330,7 @@ export default function HeroRight({
                 sm:bottom-14
                 sm:right-4
                 sm:w-140
-                lg:bottom-30
+                lg:bottom-28
                 lg:right-20
                 lg:w-197.5
               "
@@ -357,7 +357,7 @@ export default function HeroRight({
             items-end
             sm:mb-20
             sm:-ml-17.5
-            lg:mb-30
+            lg:mb-28
             lg:-ml-56
           "
         >

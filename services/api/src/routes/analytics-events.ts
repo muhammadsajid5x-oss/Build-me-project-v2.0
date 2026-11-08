@@ -25,6 +25,49 @@ const coffeeWithMeProperties = (): Record<string, unknown> => ({
   data: { destination: "/coffee-with-me" },
 });
 
+const testimonialsViewProperties = (
+  path?: string,
+): Record<string, unknown> => ({
+  feature: "testimonials",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const testimonialsPaginationProperties = (): Record<string, unknown> => ({
+  feature: "testimonials",
+  data: { action: "pagination-clicked" },
+});
+
+const testimonialHelpfulProperties = (): Record<string, unknown> => ({
+  feature: "testimonial",
+  data: { action: "helpful-clicked" },
+});
+
+const testimonialStoryProperties = (): Record<string, unknown> => ({
+  feature: "testimonial",
+  data: { action: "story-clicked" },
+});
+
+const caseStudiesViewProperties = (path?: string): Record<string, unknown> => ({
+  feature: "case-studies",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const caseStudiesPaginationProperties = (): Record<string, unknown> => ({
+  feature: "case-studies",
+  data: { action: "pagination-clicked" },
+});
+
+const caseStudyDetailsProperties = (): Record<string, unknown> => ({
+  feature: "case-study",
+  data: { action: "details-clicked" },
+});
+
 const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
   "hero.viewed": {
     eventType: "view",
@@ -181,6 +224,7 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
       data: { action: "downloaded" },
     }),
   },
+
   "ownership.learning.circle.clicked": {
     eventType: "click",
     buildProperties: () => ({
@@ -188,6 +232,7 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
       data: { action: "open" },
     }),
   },
+
   "circle.view": {
     eventType: "view",
     buildProperties: pageViewProperties,
@@ -207,6 +252,41 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
       feature: "ownership-learning-circle",
       data: { action: "telegram-redirect" },
     }),
+  },
+
+  "testimonials.viewed": {
+    eventType: "view",
+    buildProperties: testimonialsViewProperties,
+  },
+
+  "testimonials.pagination.clicked": {
+    eventType: "click",
+    buildProperties: testimonialsPaginationProperties,
+  },
+
+  "testimonial.helpful.clicked": {
+    eventType: "click",
+    buildProperties: testimonialHelpfulProperties,
+  },
+
+  "testimonial.story.clicked": {
+    eventType: "click",
+    buildProperties: testimonialStoryProperties,
+  },
+
+  "case.studies.viewed": {
+    eventType: "view",
+    buildProperties: caseStudiesViewProperties,
+  },
+
+  "case.studies.pagination.clicked": {
+    eventType: "click",
+    buildProperties: caseStudiesPaginationProperties,
+  },
+
+  "case.study.details.clicked": {
+    eventType: "click",
+    buildProperties: caseStudyDetailsProperties,
   },
 };
 
@@ -288,10 +368,14 @@ router.post("/", async (request, response, next) => {
     await db.insert(analyticsEvents).values({
       name,
       eventType,
-      properties: eventDefinition?.buildProperties(path) ?? {},
+      properties: eventDefinition.buildProperties(path),
     });
 
-    response.status(202).json({ data: { accepted: true } });
+    response.status(202).json({
+      data: {
+        accepted: true,
+      },
+    });
   } catch (error) {
     next(error);
   }
