@@ -1,7 +1,9 @@
 import { eq, inArray } from "drizzle-orm";
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
+
 config({ path: fileURLToPath(new URL("../../.env", import.meta.url)) });
+
 async function seedCaseStudies() {
   if (
     process.env.NODE_ENV !== "development" &&
@@ -11,16 +13,20 @@ async function seedCaseStudies() {
       "Case study seeding is allowed only in development or test mode.",
     );
   }
+
   if (process.env.DATABASE_SEED_CONFIRM !== "1") {
     throw new Error("Set DATABASE_SEED_CONFIRM=1 to confirm this seed run.");
   }
+
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is not configured.");
   }
+
   const [{ db, connection }, { caseStudies }] = await Promise.all([
     import("../drizzle/client"),
     import("../schema"),
   ]);
+
   const values = [
     {
       company: "Cup&Commit",
@@ -28,11 +34,11 @@ async function seedCaseStudies() {
       category: "Deliver My Project",
       title: "Deliver My Project",
       summary:
-        "A complete delivery journey for turning a project need into a validated, production-ready outcome.",
+        "An end-to-end technology delivery journey that helps clients turn a project requirement into a structured, actionable delivery request.",
       outcome:
-        "A structured delivery request captures the project context, expected outcome, timeline, and budget so the work can move into an actionable delivery workflow.",
+        "The visitor can submit a structured delivery request with project context, expected outcome, timeline, and budget, creating a clear starting point for technology delivery.",
       content:
-        "Deliver My Project is the Cup&Commit journey for teams and individuals who need technology work delivered end-to-end. The journey captures the right project information, validates the request, persists it through the backend, confirms the submission, and makes the request visible to the delivery workflow.",
+        "Deliver My Project addresses the need for a clear and structured way to start an end-to-end technology project. Its purpose is to move a visitor from an initial project need to an actionable delivery request. The functionality lets the visitor provide the project description, expected outcome, timeline, and budget, validates the submitted information, sends the request through the backend, persists the lead, and provides confirmation. This creates a practical bridge between a project requirement and the technology delivery process. The real-world value is that clients can communicate their technology needs in a structured way while the delivery workflow receives the information required to understand, assess, and progress the work.",
       storyUrl: "/deliver-my-project",
       published: true,
     },
@@ -42,11 +48,11 @@ async function seedCaseStudies() {
       category: "Mentor Me",
       title: "Mentor Me",
       summary:
-        "A focused mentoring journey for software engineers and technology professionals who want practical guidance.",
+        "A focused mentoring journey that helps software engineers and technology professionals turn technical challenges into structured learning and execution goals.",
       outcome:
-        "A structured mentoring request creates a clear starting point for focused technical guidance, learning, and execution support.",
+        "The visitor can submit a structured mentoring request that establishes the technical challenge, learning need, or execution goal for focused mentoring support.",
       content:
-        "Mentor Me is the Cup&Commit journey for people who want practical technology guidance. It provides a focused path to discuss engineering challenges, strengthen technical execution, and turn learning into practical progress.",
+        "Mentor Me addresses the need for practical technical guidance when engineers or technology professionals are facing a specific challenge or want to strengthen their execution skills. Its purpose is to create a focused path from a learning or engineering need to a structured mentoring conversation. The functionality lets the visitor provide the context needed to describe the technical challenge, learning need, or execution goal and establish a clear starting point for mentoring. This creates a focused mentoring journey rather than an open-ended interaction. The real-world value is a practical route for engineers and technology professionals to receive guidance connected to real engineering work, technical decisions, learning, and execution.",
       storyUrl: "/mentor-me",
       published: true,
     },
@@ -56,15 +62,16 @@ async function seedCaseStudies() {
       category: "Coffee With Me",
       title: "Coffee With Me",
       summary:
-        "A simple conversation journey for discussing technology, engineering, career, and ideas.",
+        "A focused conversation journey for discussing technology, engineering, product delivery, career development, and professional ideas.",
       outcome:
-        "A conversation request creates a clear path for connecting around a specific technology or professional topic.",
+        "The visitor can initiate a focused conversation around a specific technology or professional topic and establish a clear purpose for the discussion.",
       content:
-        "Coffee With Me is the Cup&Commit conversation journey. It is designed for meaningful discussions around technology, engineering, product delivery, career growth, and ideas where a focused conversation can create useful next steps.",
+        "Coffee With Me addresses situations where a focused conversation can help clarify a technology, engineering, product delivery, career, or professional question. Its purpose is to provide a simple and intentional way to start that conversation. The functionality lets the visitor start a focused conversation journey around a specific topic or professional question and continue to the relevant Coffee With Me path. This provides a clear alternative to an unstructured contact request. The real-world value is a low-friction way for people to discuss ideas, challenges, opportunities, and technology decisions with a clear purpose and expected direction.",
       storyUrl: "/coffee-with-me",
       published: true,
     },
   ];
+
   const existingTitles = [
     "Deliver My Project",
     "Mentor Me",
@@ -74,6 +81,7 @@ async function seedCaseStudies() {
     "Evidence-driven engineering quality",
     "Observable visitor journeys",
   ];
+
   const existing = await db
     .select({
       id: caseStudies.id,
@@ -81,16 +89,21 @@ async function seedCaseStudies() {
     })
     .from(caseStudies)
     .where(inArray(caseStudies.title, existingTitles));
+
   const existingByTitle = new Map(existing.map((row) => [row.title, row.id]));
+
   const oldTitles = existing
     .filter((row) => !values.some((value) => value.title === row.title))
     .map((row) => row.title);
+
   if (oldTitles.length > 0) {
     await db.delete(caseStudies).where(inArray(caseStudies.title, oldTitles));
     console.info(`Removed ${oldTitles.length} old case studies.`);
   }
+
   for (const value of values) {
     const existingId = existingByTitle.get(value.title);
+
     if (existingId) {
       await db
         .update(caseStudies)
@@ -110,11 +123,14 @@ async function seedCaseStudies() {
       await db.insert(caseStudies).values(value);
     }
   }
+
   console.info(
     "Case study seed completed. Exactly 3 Cup&Commit journeys are configured.",
   );
+
   await connection.end();
 }
+
 try {
   await seedCaseStudies();
 } catch (error) {
