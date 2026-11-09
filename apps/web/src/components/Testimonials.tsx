@@ -337,7 +337,7 @@ export default function Testimonials() {
     <section
       ref={sectionRef}
       aria-labelledby="testimonials-heading"
-      className="relative z-40 -mt-4 w-full bg-[#EAF0F6] px-4 pb-10 pt-8 sm:px-6 lg:-mt-20 lg:px-8"
+      className="relative z-40 -mt-4 w-full bg-[#EAF0F6] px-4 pb-1 pt-8 sm:px-6 lg:-mt-20 lg:px-8"
     >
       <div className="mx-auto w-full max-w-7xl">
         <div className="mx-auto max-w-4xl text-center">
@@ -483,7 +483,7 @@ export default function Testimonials() {
               {testimonials.map((testimonial) => (
                 <article
                   key={testimonial.id}
-                  className="flex h-full min-h-[280px] flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                  className="flex h-full min-h-70 flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
                 >
                   <div className="flex items-start gap-3">
                     {testimonial.avatar ? (
@@ -585,7 +585,7 @@ export default function Testimonials() {
               {caseStudies.slice(0, 3).map((study) => (
                 <article
                   key={study.id}
-                  className="flex h-full min-h-[310px] flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                  className="flex h-full min-h-77.5 flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
                 >
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-gray-900">

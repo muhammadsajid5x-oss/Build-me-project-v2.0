@@ -43,7 +43,14 @@ export type AnalyticsEventName =
   | "testimonial.story.clicked"
   | "case.studies.viewed"
   | "case.studies.pagination.clicked"
-  | "case.study.details.clicked";
+  | "case.study.details.clicked"
+  | "follow.us.viewed"
+  | "follow.us.clicked"
+  | "follow.us.whatsapp.clicked"
+  | "follow.us.telegram.clicked"
+  | "follow.us.linkedin.clicked"
+  | "follow.us.facebook.clicked"
+  | "follow.us.youtube.clicked";
 
 export const ANALYTICS_EVENTS = {
   WORK_WITH_ME_CLICKED: "work.with.me.clicked",
@@ -81,9 +88,18 @@ export const ANALYTICS_EVENTS = {
   TESTIMONIALS_PAGINATION_CLICKED: "testimonials.pagination.clicked",
   TESTIMONIAL_HELPFUL_CLICKED: "testimonial.helpful.clicked",
   TESTIMONIAL_STORY_CLICKED: "testimonial.story.clicked",
+
   CASE_STUDIES_VIEWED: "case.studies.viewed",
   CASE_STUDIES_PAGINATION_CLICKED: "case.studies.pagination.clicked",
   CASE_STUDY_DETAILS_CLICKED: "case.study.details.clicked",
+
+  FOLLOW_US_VIEWED: "follow.us.viewed",
+  FOLLOW_US_CLICKED: "follow.us.clicked",
+  FOLLOW_US_WHATSAPP_CLICKED: "follow.us.whatsapp.clicked",
+  FOLLOW_US_TELEGRAM_CLICKED: "follow.us.telegram.clicked",
+  FOLLOW_US_LINKEDIN_CLICKED: "follow.us.linkedin.clicked",
+  FOLLOW_US_FACEBOOK_CLICKED: "follow.us.facebook.clicked",
+  FOLLOW_US_YOUTUBE_CLICKED: "follow.us.youtube.clicked",
 } as const satisfies Record<string, AnalyticsEventName>;
 
 export function trackAnalyticsEvent(event: {

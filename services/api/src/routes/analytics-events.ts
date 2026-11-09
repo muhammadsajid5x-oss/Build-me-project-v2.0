@@ -1,9 +1,54 @@
 import { rateLimit } from "express-rate-limit";
 import { Router } from "express";
+import { logger } from "@build-me/utils/logging";
 
 const router = Router();
 
 type AnalyticsEventType = "view" | "click";
+
+const databaseErrorDetails = (
+  error: unknown,
+  seen = new Set<object>(),
+  depth = 0,
+): Record<string, unknown> => {
+  if (typeof error !== "object" || error === null) {
+    return { message: String(error) };
+  }
+
+  if (seen.has(error)) {
+    return { name: "CircularErrorCause" };
+  }
+  seen.add(error);
+
+  const details: Record<string, unknown> = {};
+  for (const key of [
+    "name",
+    "message",
+    "severity",
+    "code",
+    "detail",
+    "hint",
+    "constraint",
+    "schema",
+    "table",
+    "column",
+    "dataType",
+    "where",
+    "routine",
+  ]) {
+    const value = Reflect.get(error, key);
+    if (typeof value === "string") {
+      details[key] = value;
+    }
+  }
+
+  const cause = Reflect.get(error, "cause");
+  if (cause !== undefined && depth < 4) {
+    details.cause = databaseErrorDetails(cause, seen, depth + 1);
+  }
+
+  return details;
+};
 
 type AnalyticsEventDefinition = {
   readonly eventType: AnalyticsEventType;
@@ -66,6 +111,28 @@ const caseStudiesPaginationProperties = (): Record<string, unknown> => ({
 const caseStudyDetailsProperties = (): Record<string, unknown> => ({
   feature: "case-study",
   data: { action: "details-clicked" },
+});
+
+const followUsViewProperties = (path?: string): Record<string, unknown> => ({
+  feature: "follow-us",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const followUsClickProperties = (): Record<string, unknown> => ({
+  feature: "follow-us",
+  data: { action: "clicked" },
+});
+
+const followUsPlatformClickProperties = (
+  platform: "whatsapp" | "telegram" | "linkedin" | "facebook" | "youtube",
+): Record<string, unknown> => ({
+  feature: "follow-us",
+  data: {
+    action: `${platform}-clicked`,
+  },
 });
 
 const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
@@ -288,6 +355,41 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
     eventType: "click",
     buildProperties: caseStudyDetailsProperties,
   },
+
+  "follow.us.viewed": {
+    eventType: "view",
+    buildProperties: followUsViewProperties,
+  },
+
+  "follow.us.clicked": {
+    eventType: "click",
+    buildProperties: followUsClickProperties,
+  },
+
+  "follow.us.whatsapp.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("whatsapp"),
+  },
+
+  "follow.us.telegram.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("telegram"),
+  },
+
+  "follow.us.linkedin.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("linkedin"),
+  },
+
+  "follow.us.facebook.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("facebook"),
+  },
+
+  "follow.us.youtube.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("youtube"),
+  },
 };
 
 router.use(
@@ -377,6 +479,12 @@ router.post("/", async (request, response, next) => {
       },
     });
   } catch (error) {
+    logger.error("Analytics event insert failed.", {
+      service: "api",
+      operation: "analytics_event_insert",
+      eventName: name,
+      databaseError: databaseErrorDetails(error),
+    });
     next(error);
   }
 });
