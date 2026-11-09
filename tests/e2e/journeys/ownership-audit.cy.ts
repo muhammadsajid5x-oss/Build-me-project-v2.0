@@ -9,7 +9,6 @@
       .filter(":visible")
       .should("have.length", 1);
   }
-
   function openOwnershipAudit(): void {
     cy.visit("/");
 
