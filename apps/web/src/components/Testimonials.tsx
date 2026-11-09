@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 
 type Testimonial = {
@@ -359,10 +360,8 @@ export default function Testimonials() {
           </p>
         </div>
 
-        {/* Compact Review Summary */}
         <div className="mx-auto mt-4 max-w-3xl rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            {/* Overall Rating */}
             <div className="flex items-center gap-3 sm:border-r sm:border-gray-200 sm:pr-5">
               <div className="text-2xl font-bold tracking-tight text-gray-900">
                 {summary.averageRating.toFixed(1)}
@@ -386,8 +385,6 @@ export default function Testimonials() {
                 </p>
               </div>
             </div>
-
-            {/* Category Ratings */}
 
             <div className="w-full max-w-xl space-y-2">
               {[
@@ -765,13 +762,13 @@ export default function Testimonials() {
               Ready to take the next step?
             </p>
 
-            <a
-              href={journeyRoute}
+            <Link
+              to={journeyRoute}
               onClick={() => setSelectedCaseStudy(null)}
               className="mt-3 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
               {selectedCaseStudy.title}
-            </a>
+            </Link>
           </div>
         </dialog>
       )}
