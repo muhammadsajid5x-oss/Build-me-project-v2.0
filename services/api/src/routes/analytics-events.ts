@@ -135,6 +135,45 @@ const followUsPlatformClickProperties = (
   },
 });
 
+const shareThisPageViewProperties = (
+  path?: string,
+): Record<string, unknown> => ({
+  feature: "share-this-page",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const shareThisPageClickProperties = (): Record<string, unknown> => ({
+  feature: "share-this-page",
+  data: {
+    action: "clicked",
+  },
+});
+
+const shareThisPageChannelClickProperties = (
+  channel:
+    | "facebook"
+    | "instagram"
+    | "twitter"
+    | "linkedin"
+    | "pinterest"
+    | "tiktok"
+    | "telegram"
+    | "whatsapp"
+    | "youtube"
+    | "snapchat"
+    | "email"
+    | "app"
+    | "copy-link",
+): Record<string, unknown> => ({
+  feature: "share-this-page",
+  data: {
+    action: `${channel}-clicked`,
+  },
+});
+
 const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
   "hero.viewed": {
     eventType: "view",
@@ -389,6 +428,81 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
   "follow.us.youtube.clicked": {
     eventType: "click",
     buildProperties: () => followUsPlatformClickProperties("youtube"),
+  },
+
+  "share.this.page.viewed": {
+    eventType: "view",
+    buildProperties: shareThisPageViewProperties,
+  },
+
+  "share.this.page.clicked": {
+    eventType: "click",
+    buildProperties: shareThisPageClickProperties,
+  },
+
+  "share.this.page.facebook.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("facebook"),
+  },
+
+  "share.this.page.instagram.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("instagram"),
+  },
+
+  "share.this.page.twitter.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("twitter"),
+  },
+
+  "share.this.page.linkedin.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("linkedin"),
+  },
+
+  "share.this.page.pinterest.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("pinterest"),
+  },
+
+  "share.this.page.tiktok.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("tiktok"),
+  },
+
+  "share.this.page.telegram.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("telegram"),
+  },
+
+  "share.this.page.whatsapp.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("whatsapp"),
+  },
+
+  "share.this.page.youtube.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("youtube"),
+  },
+
+  "share.this.page.snapchat.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("snapchat"),
+  },
+
+  "share.this.page.email.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("email"),
+  },
+
+  "share.this.page.app.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("app"),
+  },
+
+  "share.this.page.copy.link.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("copy-link"),
   },
 };
 
