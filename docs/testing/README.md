@@ -32,12 +32,13 @@ CI Quality Gates
 
 Integration tests persist data, so run them only against a disposable test
 database. Set `TEST_DATABASE_URL` to that database's PostgreSQL connection
-string; local test runs will not reuse an existing development API.
+string in the environment or in the ignored root `.env.test.local` file; local
+test runs will not reuse an existing development API.
 
 In PowerShell:
 
 ```powershell
-$env:TEST_DATABASE_URL = "<disposable PostgreSQL connection string>"
+$env:TEST_DATABASE_URL = "<disposable localhost PostgreSQL connection string>"
 $env:DATABASE_URL = $env:TEST_DATABASE_URL
 $env:NODE_ENV = "test"
 pnpm --dir database db:migrate
