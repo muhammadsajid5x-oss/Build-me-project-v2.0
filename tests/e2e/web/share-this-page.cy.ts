@@ -34,6 +34,45 @@ describe("Share This Page", () => {
     });
   });
 
+  it("opens a channel share URL with safe window features", () => {
+    cy.window().then((win) => {
+      cy.stub(win, "open").as("shareWindow");
+    });
+
+    cy.get('button[aria-label="Share this page"]').click();
+    cy.get("dialog").getByRole("button", { name: "Facebook" }).click();
+
+    cy.get("@shareWindow").should("have.been.calledOnce");
+
+    cy.get("@shareWindow").then((stub) => {
+      const [url, target, features] = (stub as unknown as {
+        args: [string, string, string][];
+      }).args[0];
+
+      expect(url).to.contain("https://www.facebook.com/sharer/sharer.php");
+      expect(url).to.contain(encodeURIComponent(Cypress.config("baseUrl") ?? ""));
+      expect(target).to.equal("_blank");
+      expect(features).to.contain("noopener");
+      expect(features).to.contain("noreferrer");
+    });
+  });
+
+  it("copies the current page URL", () => {
+    cy.window().then((win) => {
+      Object.defineProperty(win.navigator, "clipboard", {
+        configurable: true,
+        value: {
+          writeText: cy.stub().as("writeText"),
+        },
+      });
+    });
+
+    cy.get('button[aria-label="Share this page"]').click();
+    cy.get("dialog").getByRole("button", { name: "Copy Link" }).click();
+
+    cy.get("@writeText").should("have.been.calledWith", Cypress.config("baseUrl") + "/");
+  });
+
   it("closes the share dialog with the close button", () => {
     cy.get('button[aria-label="Share this page"]').click();
 
