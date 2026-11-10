@@ -173,7 +173,24 @@ const shareThisPageChannelClickProperties = (
     action: `${channel}-clicked`,
   },
 });
+const giveReferralsViewProperties = (
+  path?: string,
+): Record<string, unknown> => ({
+  feature: "give-referrals",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
 
+const giveReferralsClickProperties = (
+  action: string,
+): Record<string, unknown> => ({
+  feature: "give-referrals",
+  data: {
+    action,
+  },
+});
 const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
   "hero.viewed": {
     eventType: "view",
@@ -503,6 +520,30 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
   "share.this.page.copy.link.clicked": {
     eventType: "click",
     buildProperties: () => shareThisPageChannelClickProperties("copy-link"),
+  },
+  "give.referrals.viewed": {
+    eventType: "view",
+    buildProperties: giveReferralsViewProperties,
+  },
+
+  "give.referrals.clicked": {
+    eventType: "click",
+    buildProperties: () => giveReferralsClickProperties("clicked"),
+  },
+
+  "give.referrals.step.one.completed": {
+    eventType: "click",
+    buildProperties: () => giveReferralsClickProperties("step-one-completed"),
+  },
+
+  "give.referrals.step.two.completed": {
+    eventType: "click",
+    buildProperties: () => giveReferralsClickProperties("step-two-completed"),
+  },
+
+  "give.referrals.completed": {
+    eventType: "click",
+    buildProperties: () => giveReferralsClickProperties("completed"),
   },
 };
 
