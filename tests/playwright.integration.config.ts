@@ -10,7 +10,7 @@ export default defineConfig({
       NODE_ENV: "test",
       PORT: "3000",
     },
-    reuseExistingServer: Boolean(process.env.CI),
+    reuseExistingServer: true,
     timeout: 120_000,
   },
 });
