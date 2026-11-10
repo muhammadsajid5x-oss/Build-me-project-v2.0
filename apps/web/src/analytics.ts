@@ -4,10 +4,6 @@ const apiBaseUrl = getApiBaseUrl(import.meta.env.VITE_API_URL);
 
 type AnalyticsEventType = "view" | "click";
 
-/**
- * The analytics events the API accepts. Keeping the names typed makes it
- * impossible to emit an event that the server would reject.
- */
 export type AnalyticsEventName =
   | "hero.viewed"
   | "hero.right.viewed"
@@ -50,7 +46,22 @@ export type AnalyticsEventName =
   | "follow.us.telegram.clicked"
   | "follow.us.linkedin.clicked"
   | "follow.us.facebook.clicked"
-  | "follow.us.youtube.clicked";
+  | "follow.us.youtube.clicked"
+  | "share.this.page.viewed"
+  | "share.this.page.clicked"
+  | "share.this.page.facebook.clicked"
+  | "share.this.page.instagram.clicked"
+  | "share.this.page.twitter.clicked"
+  | "share.this.page.linkedin.clicked"
+  | "share.this.page.pinterest.clicked"
+  | "share.this.page.tiktok.clicked"
+  | "share.this.page.telegram.clicked"
+  | "share.this.page.whatsapp.clicked"
+  | "share.this.page.youtube.clicked"
+  | "share.this.page.snapchat.clicked"
+  | "share.this.page.email.clicked"
+  | "share.this.page.app.clicked"
+  | "share.this.page.copy.link.clicked";
 
 export const ANALYTICS_EVENTS = {
   WORK_WITH_ME_CLICKED: "work.with.me.clicked",
@@ -100,6 +111,22 @@ export const ANALYTICS_EVENTS = {
   FOLLOW_US_LINKEDIN_CLICKED: "follow.us.linkedin.clicked",
   FOLLOW_US_FACEBOOK_CLICKED: "follow.us.facebook.clicked",
   FOLLOW_US_YOUTUBE_CLICKED: "follow.us.youtube.clicked",
+
+  SHARE_THIS_PAGE_VIEWED: "share.this.page.viewed",
+  SHARE_THIS_PAGE_CLICKED: "share.this.page.clicked",
+  SHARE_THIS_PAGE_FACEBOOK_CLICKED: "share.this.page.facebook.clicked",
+  SHARE_THIS_PAGE_INSTAGRAM_CLICKED: "share.this.page.instagram.clicked",
+  SHARE_THIS_PAGE_TWITTER_CLICKED: "share.this.page.twitter.clicked",
+  SHARE_THIS_PAGE_LINKEDIN_CLICKED: "share.this.page.linkedin.clicked",
+  SHARE_THIS_PAGE_PINTEREST_CLICKED: "share.this.page.pinterest.clicked",
+  SHARE_THIS_PAGE_TIKTOK_CLICKED: "share.this.page.tiktok.clicked",
+  SHARE_THIS_PAGE_TELEGRAM_CLICKED: "share.this.page.telegram.clicked",
+  SHARE_THIS_PAGE_WHATSAPP_CLICKED: "share.this.page.whatsapp.clicked",
+  SHARE_THIS_PAGE_YOUTUBE_CLICKED: "share.this.page.youtube.clicked",
+  SHARE_THIS_PAGE_SNAPCHAT_CLICKED: "share.this.page.snapchat.clicked",
+  SHARE_THIS_PAGE_EMAIL_CLICKED: "share.this.page.email.clicked",
+  SHARE_THIS_PAGE_APP_CLICKED: "share.this.page.app.clicked",
+  SHARE_THIS_PAGE_COPY_LINK_CLICKED: "share.this.page.copy.link.clicked",
 } as const satisfies Record<string, AnalyticsEventName>;
 
 export function trackAnalyticsEvent(event: {
@@ -116,8 +143,6 @@ export function trackAnalyticsEvent(event: {
     body.set("path", event.path);
   }
 
-  // Analytics is best effort. A synchronous failure or a rejected request
-  // must never interrupt the visitor journey it is reporting on.
   try {
     const request = fetch(`${apiBaseUrl}/api/v1/analytics/events`, {
       method: "POST",
@@ -127,6 +152,6 @@ export function trackAnalyticsEvent(event: {
 
     void request?.catch(() => undefined);
   } catch {
-    // The analytics endpoint is optional and never fails the visitor journey.
+    // Analytics failures must not interrupt the visitor journey.
   }
 }

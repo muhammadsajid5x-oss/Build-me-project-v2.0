@@ -69,6 +69,8 @@ jobs:
           echo "API failed to start"
           cat api.log
           exit 1
+        env:
+          NODE_ENV: test
 
       - name: SuperTest Security Tests
         run: pnpm exec jest --config tests/jest.config.cjs tests/security/api/api-security.jest.test.ts
