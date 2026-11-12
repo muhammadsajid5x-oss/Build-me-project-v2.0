@@ -1,18 +1,22 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
+import { Modal, ModalHeader, ModalBody } from "@build-me/ui";
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import TechnologyOwnershipHero from "../components/Hero/hero-left";
 import HeroRight from "../components/Hero/hero-right";
-import { Modal, ModalHeader, ModalBody } from "@build-me/ui";
+import Testimonials from "../components/Testimonials";
 import TechnologyOwnershipAudit from "../components/TechnologyOwnershipAudit";
 import TechnologyOwnershipToolkit from "../components/TechnologyOwnershipToolkit";
+import OwnershipLearningCircle from "../components/OwnershipLearningCircle";
 
 export default function HomePage() {
   const [isImpactCardOpen, setIsImpactCardOpen] = useState(false);
   const [isQuickWinsCardOpen, setIsQuickWinsCardOpen] = useState(false);
   const [isOwnershipAuditOpen, setIsOwnershipAuditOpen] = useState(false);
   const [isOwnershipToolkitOpen, setIsOwnershipToolkitOpen] = useState(false);
+  const [isOwnershipLearningCircleOpen, setIsOwnershipLearningCircleOpen] =
+    useState(false);
 
   // Existing Work With Me behaviour — unchanged
   const handleWorkWithMeClick = () => {
@@ -69,13 +73,35 @@ export default function HomePage() {
     setIsOwnershipToolkitOpen(false);
   };
 
+  // Ownership Learning Circle opens from the Get Quick Wins card
+  const handleOwnershipLearningCircleClick = () => {
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.OWNERSHIP_LEARNING_CIRCLE_CLICKED,
+      eventType: "click",
+      path: "/",
+    });
+
+    setIsQuickWinsCardOpen(false);
+    setIsOwnershipLearningCircleOpen(true);
+
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.CIRCLE_VIEW,
+      eventType: "view",
+      path: "/",
+    });
+  };
+
+  const closeOwnershipLearningCircle = () => {
+    setIsOwnershipLearningCircleOpen(false);
+  };
+
   return (
     <div className="relative w-full overflow-visible">
       <section
         aria-labelledby="technology-ownership-heading"
         className="
           relative mx-auto grid w-full max-w-7xl grid-cols-1
-          items-start gap-0 px-4 pt-8 sm:px-6
+          items-start gap-0 px-4 pt-8 pb-0 sm:px-6
           lg:grid-cols-2 lg:px-4 lg:overflow-visible
         "
       >
@@ -187,6 +213,7 @@ export default function HomePage() {
                   Request mentoring support and guidance.
                 </span>
               </span>
+
               <span className="ml-4 text-gray-400" aria-hidden="true">
                 →
               </span>
@@ -214,6 +241,7 @@ export default function HomePage() {
                   Tell me about your project and I will review it.
                 </span>
               </span>
+
               <span className="ml-4 text-gray-400" aria-hidden="true">
                 →
               </span>
@@ -241,6 +269,7 @@ export default function HomePage() {
                   Grab a virtual coffee and chat about what is next for you.
                 </span>
               </span>
+
               <span className="ml-4 text-gray-400" aria-hidden="true">
                 →
               </span>
@@ -341,9 +370,39 @@ export default function HomePage() {
                 →
               </span>
             </button>
+
+            {/* Ownership Learning Circle option */}
+            <button
+              type="button"
+              onClick={handleOwnershipLearningCircleClick}
+              className="
+                flex w-full items-center justify-between rounded-xl
+                border border-gray-200 px-4 py-4 text-left transition
+                hover:border-blue-500 hover:bg-blue-50
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                focus:ring-offset-2
+              "
+            >
+              <span>
+                <span className="block text-base font-semibold text-gray-900">
+                  Ownership Learning Circle
+                </span>
+                <span className="mt-1 block text-sm text-gray-500">
+                  Join a free community to learn and grow your Technology
+                  Ownership.
+                </span>
+              </span>
+
+              <span className="ml-4 text-gray-400" aria-hidden="true">
+                →
+              </span>
+            </button>
           </div>
         </dialog>
       )}
+
+      {/* Testimonials starts immediately after the Hero/CTA section */}
+      <Testimonials />
 
       {/* Existing Ownership Audit modal */}
       {isOwnershipAuditOpen && (
@@ -371,6 +430,24 @@ export default function HomePage() {
 
           <ModalBody>
             <TechnologyOwnershipToolkit />
+          </ModalBody>
+        </Modal>
+      )}
+
+      {/* Ownership Learning Circle modal */}
+      {isOwnershipLearningCircleOpen && (
+        <Modal
+          open={isOwnershipLearningCircleOpen}
+          onClose={closeOwnershipLearningCircle}
+        >
+          <ModalHeader>
+            <h2 className="text-xl font-bold tracking-tight text-gray-900">
+              Ownership Learning Circle
+            </h2>
+          </ModalHeader>
+
+          <ModalBody>
+            <OwnershipLearningCircle />
           </ModalBody>
         </Modal>
       )}

@@ -6,3 +6,5 @@ export * from "./analytics-events.js";
 export * from "./system-health.js";
 export * from "./ownership-audits.js";
 export * from "./ownership-toolkit-accesses.js";
+export * from "./testimonials.js";
+export * from "./case-studies.js";

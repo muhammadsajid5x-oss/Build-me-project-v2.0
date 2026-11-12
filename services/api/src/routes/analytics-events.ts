@@ -1,9 +1,54 @@
 import { rateLimit } from "express-rate-limit";
 import { Router } from "express";
+import { logger } from "@build-me/utils/logging";
 
 const router = Router();
 
 type AnalyticsEventType = "view" | "click";
+
+const databaseErrorDetails = (
+  error: unknown,
+  seen = new Set<object>(),
+  depth = 0,
+): Record<string, unknown> => {
+  if (typeof error !== "object" || error === null) {
+    return { message: String(error) };
+  }
+
+  if (seen.has(error)) {
+    return { name: "CircularErrorCause" };
+  }
+  seen.add(error);
+
+  const details: Record<string, unknown> = {};
+  for (const key of [
+    "name",
+    "message",
+    "severity",
+    "code",
+    "detail",
+    "hint",
+    "constraint",
+    "schema",
+    "table",
+    "column",
+    "dataType",
+    "where",
+    "routine",
+  ]) {
+    const value = Reflect.get(error, key);
+    if (typeof value === "string") {
+      details[key] = value;
+    }
+  }
+
+  const cause = Reflect.get(error, "cause");
+  if (cause !== undefined && depth < 4) {
+    details.cause = databaseErrorDetails(cause, seen, depth + 1);
+  }
+
+  return details;
+};
 
 type AnalyticsEventDefinition = {
   readonly eventType: AnalyticsEventType;
@@ -25,6 +70,127 @@ const coffeeWithMeProperties = (): Record<string, unknown> => ({
   data: { destination: "/coffee-with-me" },
 });
 
+const testimonialsViewProperties = (
+  path?: string,
+): Record<string, unknown> => ({
+  feature: "testimonials",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const testimonialsPaginationProperties = (): Record<string, unknown> => ({
+  feature: "testimonials",
+  data: { action: "pagination-clicked" },
+});
+
+const testimonialHelpfulProperties = (): Record<string, unknown> => ({
+  feature: "testimonial",
+  data: { action: "helpful-clicked" },
+});
+
+const testimonialStoryProperties = (): Record<string, unknown> => ({
+  feature: "testimonial",
+  data: { action: "story-clicked" },
+});
+
+const caseStudiesViewProperties = (path?: string): Record<string, unknown> => ({
+  feature: "case-studies",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const caseStudiesPaginationProperties = (): Record<string, unknown> => ({
+  feature: "case-studies",
+  data: { action: "pagination-clicked" },
+});
+
+const caseStudyDetailsProperties = (): Record<string, unknown> => ({
+  feature: "case-study",
+  data: { action: "details-clicked" },
+});
+
+const followUsViewProperties = (path?: string): Record<string, unknown> => ({
+  feature: "follow-us",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const followUsClickProperties = (): Record<string, unknown> => ({
+  feature: "follow-us",
+  data: { action: "clicked" },
+});
+
+const followUsPlatformClickProperties = (
+  platform: "whatsapp" | "telegram" | "linkedin" | "facebook" | "youtube",
+): Record<string, unknown> => ({
+  feature: "follow-us",
+  data: {
+    action: `${platform}-clicked`,
+  },
+});
+
+const shareThisPageViewProperties = (
+  path?: string,
+): Record<string, unknown> => ({
+  feature: "share-this-page",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const shareThisPageClickProperties = (): Record<string, unknown> => ({
+  feature: "share-this-page",
+  data: {
+    action: "clicked",
+  },
+});
+
+const shareThisPageChannelClickProperties = (
+  channel:
+    | "facebook"
+    | "instagram"
+    | "twitter"
+    | "linkedin"
+    | "pinterest"
+    | "tiktok"
+    | "telegram"
+    | "whatsapp"
+    | "youtube"
+    | "snapchat"
+    | "email"
+    | "app"
+    | "copy-link",
+): Record<string, unknown> => ({
+  feature: "share-this-page",
+  data: {
+    action: `${channel}-clicked`,
+  },
+});
+const giveReferralsViewProperties = (
+  path?: string,
+): Record<string, unknown> => ({
+  feature: "give-referrals",
+  data: {
+    action: "viewed",
+    path,
+  },
+});
+
+const giveReferralsClickProperties = (
+  action: string,
+): Record<string, unknown> => ({
+  feature: "give-referrals",
+  data: {
+    action,
+  },
+});
 const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
   "hero.viewed": {
     eventType: "view",
@@ -181,6 +347,204 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
       data: { action: "downloaded" },
     }),
   },
+
+  "ownership.learning.circle.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "ownership-learning-circle",
+      data: { action: "open" },
+    }),
+  },
+
+  "circle.view": {
+    eventType: "view",
+    buildProperties: pageViewProperties,
+  },
+
+  "circle.join.click": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "ownership-learning-circle",
+      data: { action: "join" },
+    }),
+  },
+
+  "circle.telegram.redirect": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "ownership-learning-circle",
+      data: { action: "telegram-redirect" },
+    }),
+  },
+
+  "testimonials.viewed": {
+    eventType: "view",
+    buildProperties: testimonialsViewProperties,
+  },
+
+  "testimonials.pagination.clicked": {
+    eventType: "click",
+    buildProperties: testimonialsPaginationProperties,
+  },
+
+  "testimonial.helpful.clicked": {
+    eventType: "click",
+    buildProperties: testimonialHelpfulProperties,
+  },
+
+  "testimonial.story.clicked": {
+    eventType: "click",
+    buildProperties: testimonialStoryProperties,
+  },
+
+  "case.studies.viewed": {
+    eventType: "view",
+    buildProperties: caseStudiesViewProperties,
+  },
+
+  "case.studies.pagination.clicked": {
+    eventType: "click",
+    buildProperties: caseStudiesPaginationProperties,
+  },
+
+  "case.study.details.clicked": {
+    eventType: "click",
+    buildProperties: caseStudyDetailsProperties,
+  },
+
+  "follow.us.viewed": {
+    eventType: "view",
+    buildProperties: followUsViewProperties,
+  },
+
+  "follow.us.clicked": {
+    eventType: "click",
+    buildProperties: followUsClickProperties,
+  },
+
+  "follow.us.whatsapp.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("whatsapp"),
+  },
+
+  "follow.us.telegram.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("telegram"),
+  },
+
+  "follow.us.linkedin.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("linkedin"),
+  },
+
+  "follow.us.facebook.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("facebook"),
+  },
+
+  "follow.us.youtube.clicked": {
+    eventType: "click",
+    buildProperties: () => followUsPlatformClickProperties("youtube"),
+  },
+
+  "share.this.page.viewed": {
+    eventType: "view",
+    buildProperties: shareThisPageViewProperties,
+  },
+
+  "share.this.page.clicked": {
+    eventType: "click",
+    buildProperties: shareThisPageClickProperties,
+  },
+
+  "share.this.page.facebook.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("facebook"),
+  },
+
+  "share.this.page.instagram.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("instagram"),
+  },
+
+  "share.this.page.twitter.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("twitter"),
+  },
+
+  "share.this.page.linkedin.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("linkedin"),
+  },
+
+  "share.this.page.pinterest.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("pinterest"),
+  },
+
+  "share.this.page.tiktok.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("tiktok"),
+  },
+
+  "share.this.page.telegram.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("telegram"),
+  },
+
+  "share.this.page.whatsapp.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("whatsapp"),
+  },
+
+  "share.this.page.youtube.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("youtube"),
+  },
+
+  "share.this.page.snapchat.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("snapchat"),
+  },
+
+  "share.this.page.email.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("email"),
+  },
+
+  "share.this.page.app.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("app"),
+  },
+
+  "share.this.page.copy.link.clicked": {
+    eventType: "click",
+    buildProperties: () => shareThisPageChannelClickProperties("copy-link"),
+  },
+  "give.referrals.viewed": {
+    eventType: "view",
+    buildProperties: giveReferralsViewProperties,
+  },
+
+  "give.referrals.clicked": {
+    eventType: "click",
+    buildProperties: () => giveReferralsClickProperties("clicked"),
+  },
+
+  "give.referrals.step.one.completed": {
+    eventType: "click",
+    buildProperties: () => giveReferralsClickProperties("step-one-completed"),
+  },
+
+  "give.referrals.step.two.completed": {
+    eventType: "click",
+    buildProperties: () => giveReferralsClickProperties("step-two-completed"),
+  },
+
+  "give.referrals.completed": {
+    eventType: "click",
+    buildProperties: () => giveReferralsClickProperties("completed"),
+  },
 };
 
 router.use(
@@ -261,11 +625,21 @@ router.post("/", async (request, response, next) => {
     await db.insert(analyticsEvents).values({
       name,
       eventType,
-      properties: eventDefinition?.buildProperties(path) ?? {},
+      properties: eventDefinition.buildProperties(path),
     });
 
-    response.status(202).json({ data: { accepted: true } });
+    response.status(202).json({
+      data: {
+        accepted: true,
+      },
+    });
   } catch (error) {
+    logger.error("Analytics event insert failed.", {
+      service: "api",
+      operation: "analytics_event_insert",
+      eventName: name,
+      databaseError: databaseErrorDetails(error),
+    });
     next(error);
   }
 });

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import { getApiBaseUrl } from "../api-url";
@@ -319,6 +320,8 @@ function getAuditResult(score: number): AuditResult {
 }
 
 export default function TechnologyOwnershipAudit() {
+  const navigate = useNavigate();
+
   const [stage, setStage] = useState<AuditStage>("intro");
   const [questionPage, setQuestionPage] = useState(1);
   const [fullName, setFullName] = useState("");
@@ -351,6 +354,15 @@ export default function TechnologyOwnershipAudit() {
     }, 0);
 
   const scrollToTop = () => {
+    const modalBody = document.querySelector<HTMLElement>(
+      ".ui-modal[open] .ui-modal__body",
+    );
+
+    if (modalBody) {
+      modalBody.scrollTo({ top: 0, behavior: "auto" });
+      return;
+    }
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -534,7 +546,7 @@ export default function TechnologyOwnershipAudit() {
       path: OWNERSHIP_AUDIT_PATH,
     });
 
-    window.location.href = result.href;
+    navigate(result.href);
   };
 
   const handleRestart = () => {
