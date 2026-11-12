@@ -22,7 +22,23 @@ jobs:
     name: Analytics Validation
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U test -d test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
       SUPABASE_URL: https://example.supabase.co
       SUPABASE_KEY: ci-test-key
       VITE_SUPABASE_URL: https://example.supabase.co
@@ -60,6 +76,9 @@ jobs:
       - name: Run Python analytics tests
         working-directory: services/analytics
         run: python -m pytest
+
+      - name: Migrate database
+        run: pnpm --dir database db:migrate
 
       - name: Build database dependencies
         run: pnpm --filter @build-me/database... build
