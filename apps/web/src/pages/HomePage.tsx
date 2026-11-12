@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 
 import { Modal, ModalHeader, ModalBody } from "@build-me/ui";
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
-import TechnologyOwnershipHero from "../components/Hero/hero-left";
+import HeroTop from "../components/Hero/HeroTop";
+import TechnologyOwnershipHero from "../components/Hero/HeroLeft";
+import HeroBottom from "../components/Hero/HeroBottom";
 import HeroRight from "../components/Hero/hero-right";
 import Testimonials from "../components/Testimonials";
 import TechnologyOwnershipAudit from "../components/TechnologyOwnershipAudit";
@@ -105,6 +107,12 @@ export default function HomePage() {
           lg:grid-cols-2 lg:px-4 lg:overflow-visible
         "
       >
+        {/* Hero Top */}
+        <div className="col-span-full">
+          <HeroTop />
+        </div>
+
+        {/* Hero Left */}
         <div
           className="
             relative z-20 min-w-0
@@ -112,43 +120,71 @@ export default function HomePage() {
           "
         >
           <TechnologyOwnershipHero />
-
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {/* Existing Work With Me button */}
-            <button
-              type="button"
-              onClick={handleWorkWithMeClick}
-              className="
-                inline-flex items-center justify-center rounded-lg
-                bg-blue-600 px-6 py-3 text-base font-semibold text-white
-                transition hover:bg-blue-700
-                focus:outline-none focus:ring-2 focus:ring-blue-600
-                focus:ring-offset-2
-              "
-            >
-              Work With Me
-            </button>
-
-            {/* Get Quick Wins button */}
-            <button
-              type="button"
-              onClick={handleGetQuickWinsClick}
-              className="
-                inline-flex items-center justify-center rounded-lg
-                border-2 border-blue-950 bg-white px-6 py-3
-                text-base font-semibold text-blue-800
-                transition hover:bg-blue-50
-                focus:outline-none focus:ring-2 focus:ring-blue-800
-                focus:ring-offset-2
-              "
-            >
-              Get Quick Wins
-            </button>
-          </div>
         </div>
 
-        <div className="relative z-10 min-w-0">
+        {/* Hero Right */}
+        <div
+          className="
+    relative z-10 min-w-0
+    translate-y-46
+    sm:translate-y-38
+    lg:translate-y-0
+  "
+        >
           <HeroRight />
+        </div>
+
+        {/* Hero Bottom */}
+        <div
+          className="
+    relative z-40 col-span-full
+    -mt-96 translate-x-4 sm:-mt-116 sm:translate-x-5 lg:translate-x-0
+    lg:-mt-56
+  "
+        >
+          <HeroBottom />
+        </div>
+
+        {/* Existing buttons — immediately after Hero Bottom */}
+        <div
+          className="
+    relative z-40 col-span-full
+    -mt-[266px]
+    sm:-mt-[380px]
+    lg:-mt-36
+    flex flex-wrap items-center gap-3
+  "
+        >
+          {/* Existing Work With Me button */}
+          <button
+            type="button"
+            onClick={handleWorkWithMeClick}
+            className="
+      inline-flex items-center justify-center rounded-lg
+      bg-blue-600 px-6 py-3 text-base font-semibold text-white
+      transition hover:bg-blue-700
+      focus:outline-none focus:ring-2 focus:ring-blue-600
+      focus:ring-offset-2
+    "
+          >
+            Work With Me
+          </button>
+
+          {/* Existing Get Quick Wins button */}
+          <button
+            type="button"
+            onClick={handleGetQuickWinsClick}
+            className="
+      inline-flex items-center justify-center rounded-lg
+      border-2 border-blue-950 bg-white px-6 py-3
+      text-base font-semibold text-blue-800
+      transition hover:bg-blue-50
+      focus:outline-none focus:ring-2 focus:ring-blue-800
+      focus:ring-offset-2
+    "
+          >
+            Get Quick Wins
+          </button>
         </div>
       </section>
 
@@ -318,7 +354,6 @@ export default function HomePage() {
           </p>
 
           <div className="mt-6 space-y-3">
-            {/* Ownership Audit option */}
             <button
               type="button"
               onClick={handleOwnershipAuditClick}
@@ -344,7 +379,6 @@ export default function HomePage() {
               </span>
             </button>
 
-            {/* Ownership Toolkit option */}
             <button
               type="button"
               onClick={handleOwnershipToolkitClick}
@@ -371,7 +405,6 @@ export default function HomePage() {
               </span>
             </button>
 
-            {/* Ownership Learning Circle option */}
             <button
               type="button"
               onClick={handleOwnershipLearningCircleClick}
@@ -401,10 +434,10 @@ export default function HomePage() {
         </dialog>
       )}
 
-      {/* Testimonials starts immediately after the Hero/CTA section */}
-      <Testimonials />
+      <div className="mt-41 sm:mt-28.5 lg:mt-2">
+        <Testimonials />
+      </div>
 
-      {/* Existing Ownership Audit modal */}
       {isOwnershipAuditOpen && (
         <Modal open={isOwnershipAuditOpen} onClose={closeOwnershipAudit}>
           <ModalHeader>
@@ -419,7 +452,6 @@ export default function HomePage() {
         </Modal>
       )}
 
-      {/* Ownership Toolkit modal */}
       {isOwnershipToolkitOpen && (
         <Modal open={isOwnershipToolkitOpen} onClose={closeOwnershipToolkit}>
           <ModalHeader>
@@ -434,7 +466,6 @@ export default function HomePage() {
         </Modal>
       )}
 
-      {/* Ownership Learning Circle modal */}
       {isOwnershipLearningCircleOpen && (
         <Modal
           open={isOwnershipLearningCircleOpen}

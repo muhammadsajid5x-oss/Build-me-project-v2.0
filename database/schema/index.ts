@@ -8,3 +8,6 @@ export * from "./ownership-audits.js";
 export * from "./ownership-toolkit-accesses.js";
 export * from "./testimonials.js";
 export * from "./case-studies.js";
+export * from "./service-plans.js";
+export * from "./bookings.js";
+export * from "./invoices.js";

@@ -111,7 +111,7 @@ export default function FollowUs() {
   return (
     <section
       aria-labelledby="follow-us-heading"
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-3"
     >
       <h2 id="follow-us-heading" className="text-sm font-bold text-[#0052FF]">
         Follow Us

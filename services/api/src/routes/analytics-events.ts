@@ -545,6 +545,50 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
     eventType: "click",
     buildProperties: () => giveReferralsClickProperties("completed"),
   },
+
+  "about.cta.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "about",
+      data: {
+        action: "cta-clicked",
+        destination: "/deliver-my-project",
+      },
+    }),
+  },
+
+  "about.terms.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "about",
+      data: {
+        action: "terms-clicked",
+        destination: "/terms-and-conditions",
+      },
+    }),
+  },
+
+  "about.privacy.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "about",
+      data: {
+        action: "privacy-clicked",
+        destination: "/privacy-policy",
+      },
+    }),
+  },
+
+  "about.cookie.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "about",
+      data: {
+        action: "cookie-clicked",
+        destination: "/cookie-policy",
+      },
+    }),
+  },
 };
 
 router.use(
