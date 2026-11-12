@@ -457,7 +457,7 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-14">
-            {journey.map((item, index) => (
+            {journey.map((item) => (
               <article
                 key={item.date}
                 className="grid gap-6 border-t border-black/10 py-8 sm:grid-cols-[100px_1fr] sm:py-10 lg:grid-cols-[140px_0.8fr_1.2fr] lg:items-start"

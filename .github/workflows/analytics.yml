@@ -64,6 +64,26 @@ jobs:
       - name: Build database dependencies
         run: pnpm --filter @build-me/database... build
 
+      - name: Start API
+        run: |
+          pnpm --filter @build-me/api dev > api.log 2>&1 &
+          echo $! > api.pid
+
+      - name: Wait for API
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000/health > /dev/null; then
+              echo "API is ready."
+              exit 0
+            fi
+
+            sleep 1
+          done
+
+          echo "API failed to start."
+          cat api.log
+          exit 1
+
       - name: Validate analytics test foundation
         shell: bash
         run: |
