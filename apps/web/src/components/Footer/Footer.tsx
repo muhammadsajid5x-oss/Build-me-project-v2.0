@@ -1,5 +1,6 @@
 import FollowUs from "./FollowUs";
 import ShareThisPage from "./ShareThisPage";
+import GiveReferrals from "./GiveReferrals";
 
 export default function Footer() {
   return (
@@ -12,11 +13,11 @@ export default function Footer() {
           {/* Child Story 11 — Follow Us */}
           <FollowUs />
 
-          {/* Child Story 12 — Share this Page */}
+          {/* Child Story 12 — Share This Page */}
           <ShareThisPage />
 
           {/* Child Story 13 — Give Referrals */}
-          <div aria-hidden="true" />
+          <GiveReferrals />
 
           {/* Child Story 14 — About Us */}
           <div aria-hidden="true" />
