@@ -126,8 +126,8 @@ export default function HomePage() {
         <div
           className="
     relative z-10 min-w-0
-    translate-y-46
-    sm:translate-y-38
+    translate-y-58
+    sm:translate-y-43
     lg:translate-y-0
   "
         >
@@ -149,9 +149,9 @@ export default function HomePage() {
         <div
           className="
     relative z-40 col-span-full
-    -mt-[266px]
-    sm:-mt-[380px]
-    lg:-mt-36
+    -mt-58
+    sm:-mt-91
+    lg:-mt-30
     flex flex-wrap items-center gap-3
   "
         >
@@ -194,14 +194,15 @@ export default function HomePage() {
           open
           aria-labelledby="impact-card-heading"
           className="
-            fixed inset-0 z-50 m-auto w-full max-w-lg
-            rounded-2xl bg-white p-6 shadow-xl sm:p-8
-          "
+      fixed inset-0 z-50 m-auto w-full max-w-lg
+      rounded-2xl border border-[#0052FF]/20
+      bg-white p-6 shadow-xl sm:p-8
+    "
         >
           <div className="flex items-start justify-between">
             <h2
               id="impact-card-heading"
-              className="text-xl font-bold tracking-tight text-gray-900"
+              className="text-xl font-bold tracking-tight text-[#0052FF]"
             >
               How would you like to work together?
             </h2>
@@ -211,10 +212,10 @@ export default function HomePage() {
               onClick={closeImpactCard}
               aria-label="Close Work With Me card"
               className="
-                ml-3 inline-flex h-8 w-8 items-center justify-center
-                rounded-full text-gray-600 transition hover:bg-gray-100
-                focus:outline-none focus:ring-2 focus:ring-blue-600
-              "
+          ml-3 inline-flex h-8 w-8 items-center justify-center
+          rounded-full text-[#0052FF] transition hover:bg-[#EBF3FE]
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span aria-hidden="true" className="text-lg leading-none">
                 ×
@@ -222,7 +223,7 @@ export default function HomePage() {
             </button>
           </div>
 
-          <p className="mt-3 text-sm text-gray-600">
+          <p className="mt-3 text-sm text-slate-700">
             Choose the path that best fits your needs.
           </p>
 
@@ -236,21 +237,23 @@ export default function HomePage() {
                 });
               }}
               className="
-                flex items-center justify-between rounded-xl border
-                border-gray-200 px-4 py-4 text-left transition
-                hover:border-gray-300 hover:bg-gray-50
-              "
+          flex items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Mentor Me
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Request mentoring support and guidance.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </Link>
@@ -264,21 +267,23 @@ export default function HomePage() {
                 });
               }}
               className="
-                flex items-center justify-between rounded-xl border
-                border-gray-200 px-4 py-4 text-left transition
-                hover:border-gray-300 hover:bg-gray-50
-              "
+          flex items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Deliver My Project
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Tell me about your project and I will review it.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </Link>
@@ -292,21 +297,23 @@ export default function HomePage() {
                 });
               }}
               className="
-                flex items-center justify-between rounded-xl border
-                border-gray-200 px-4 py-4 text-left transition
-                hover:border-gray-300 hover:bg-gray-50
-              "
+          flex items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Coffee With Me
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Grab a virtual coffee and chat about what is next for you.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </Link>
@@ -320,14 +327,15 @@ export default function HomePage() {
           open
           aria-labelledby="quick-wins-heading"
           className="
-            fixed inset-0 z-50 m-auto w-full max-w-lg
-            rounded-2xl bg-white p-6 shadow-xl sm:p-8
-          "
+      fixed inset-0 z-50 m-auto w-full max-w-lg
+      rounded-2xl border border-[#0052FF]/20
+      bg-white p-6 shadow-xl sm:p-8
+    "
         >
           <div className="flex items-start justify-between">
             <h2
               id="quick-wins-heading"
-              className="text-xl font-bold tracking-tight text-gray-900"
+              className="text-xl font-bold tracking-tight text-[#0052FF]"
             >
               Get Quick Wins
             </h2>
@@ -337,10 +345,10 @@ export default function HomePage() {
               onClick={closeQuickWinsCard}
               aria-label="Close Get Quick Wins card"
               className="
-                ml-3 inline-flex h-8 w-8 items-center justify-center
-                rounded-full text-gray-600 transition hover:bg-gray-100
-                focus:outline-none focus:ring-2 focus:ring-blue-600
-              "
+          ml-3 inline-flex h-8 w-8 items-center justify-center
+          rounded-full text-[#0052FF] transition hover:bg-[#EBF3FE]
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span aria-hidden="true" className="text-lg leading-none">
                 ×
@@ -348,7 +356,7 @@ export default function HomePage() {
             </button>
           </div>
 
-          <p className="mt-3 text-sm text-gray-600">
+          <p className="mt-3 text-sm text-slate-700">
             Discover where your technology ownership stands and identify
             opportunities for improvement.
           </p>
@@ -358,23 +366,24 @@ export default function HomePage() {
               type="button"
               onClick={handleOwnershipAuditClick}
               className="
-                flex w-full items-center justify-between rounded-xl
-                border border-gray-200 px-4 py-4 text-left transition
-                hover:border-blue-500 hover:bg-blue-50
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-                focus:ring-offset-2
-              "
+          flex w-full items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+          focus:ring-offset-2
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Ownership Audit
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Audit your technology ownership and maturity.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </button>
@@ -383,24 +392,25 @@ export default function HomePage() {
               type="button"
               onClick={handleOwnershipToolkitClick}
               className="
-                flex w-full items-center justify-between rounded-xl
-                border border-gray-200 px-4 py-4 text-left transition
-                hover:border-blue-500 hover:bg-blue-50
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-                focus:ring-offset-2
-              "
+          flex w-full items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+          focus:ring-offset-2
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Ownership Toolkit
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Access practical lifecycle guidance, checklists, and the
                   downloadable Technology Ownership Toolkit.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </button>
@@ -409,24 +419,25 @@ export default function HomePage() {
               type="button"
               onClick={handleOwnershipLearningCircleClick}
               className="
-                flex w-full items-center justify-between rounded-xl
-                border border-gray-200 px-4 py-4 text-left transition
-                hover:border-blue-500 hover:bg-blue-50
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-                focus:ring-offset-2
-              "
+          flex w-full items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+          focus:ring-offset-2
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Ownership Learning Circle
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Join a free community to learn and grow your Technology
                   Ownership.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </button>
@@ -434,7 +445,7 @@ export default function HomePage() {
         </dialog>
       )}
 
-      <div className="mt-41 sm:mt-28.5 lg:mt-2">
+      <div className="mt-41 sm:mt-28.5 lg:mt-6">
         <Testimonials />
       </div>
 
@@ -472,7 +483,7 @@ export default function HomePage() {
           onClose={closeOwnershipLearningCircle}
         >
           <ModalHeader>
-            <h2 className="text-xl font-bold tracking-tight text-gray-900">
+            <h2 className="text-xl font-bold tracking-tight text-blue-600">
               Ownership Learning Circle
             </h2>
           </ModalHeader>

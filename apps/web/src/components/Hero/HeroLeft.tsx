@@ -65,12 +65,12 @@ export default function HeroLeft({
         <br className="hidden sm:inline" /> get real results
       </p>
 
-      <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-l font-small text-slate-900">
+      <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-lg font-small text-slate-900">
         Modern web applications built to perform, scale, and impress.
         <br className="hidden sm:inline" />
-        and impress. Clean design, fast performance, and smooth
+        Clean design, fast performance, and smooth user experience
         <br className="hidden sm:inline" />
-        user experience that helps businesses grow with ease.
+        that helps businesses grow with ease.
       </p>
     </div>
   );

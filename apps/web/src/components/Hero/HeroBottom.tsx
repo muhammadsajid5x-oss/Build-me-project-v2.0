@@ -7,7 +7,7 @@ export default function HeroBottom() {
         Reliable solutions that help you grow.
       </h2>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-3">
+      <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-3">
         {facts.map((fact) => (
           <div key={fact} className="flex items-center gap-2">
             <span
