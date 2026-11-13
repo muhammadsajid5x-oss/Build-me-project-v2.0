@@ -140,7 +140,7 @@ export default function OwnershipLearningCircle() {
       {step === "intro" && (
         <section className="space-y-5">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-blue-600">
               Join the Ownership Learning Circle
             </h2>
 
@@ -152,7 +152,7 @@ export default function OwnershipLearningCircle() {
 
           <div className="space-y-4">
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-semibold text-blue-600">
                 What is the Learning Circle?
               </h3>
 
@@ -164,7 +164,7 @@ export default function OwnershipLearningCircle() {
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-900">Who is it for?</h3>
+              <h3 className="font-semibold text-blue-600">Who is it for?</h3>
 
               <p className="mt-2 leading-7 text-gray-600">
                 Developers, engineers, technology leaders, and anyone who wants
@@ -173,7 +173,7 @@ export default function OwnershipLearningCircle() {
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-semibold text-blue-600">
                 What do members get?
               </h3>
 
@@ -199,7 +199,7 @@ export default function OwnershipLearningCircle() {
       {step === "details" && (
         <section className="space-y-5">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-blue-600">
               Join the Learning Circle
             </h2>
 

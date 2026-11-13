@@ -4,6 +4,7 @@ import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
 import { inArray } from "drizzle-orm";
 import { seedProjects, seedUsers } from "./data";
+import { seedServicePlans } from "./service-plans";
 
 config({ path: fileURLToPath(new URL("../../.env", import.meta.url)) });
 
@@ -42,10 +43,8 @@ function assertSafeSeedTarget() {
 async function seed() {
   assertSafeSeedTarget();
 
-  const [{ db, connection }, { users, projects }] = await Promise.all([
-    import("../drizzle/client"),
-    import("../schema"),
-  ]);
+  const [{ db, connection }, { users, projects, servicePlans }] =
+    await Promise.all([import("../drizzle/client"), import("../schema")]);
 
   try {
     const counts = await db.transaction(async (tx) => {
@@ -83,9 +82,28 @@ async function seed() {
         .onConflictDoNothing()
         .returning({ id: projects.id });
 
+      const insertedServicePlans = await tx
+        .insert(servicePlans)
+        .values([...seedServicePlans])
+        .onConflictDoUpdate({
+          target: servicePlans.slug,
+          set: {
+            service: servicePlans.service,
+            planName: servicePlans.planName,
+            description: servicePlans.description,
+            price: servicePlans.price,
+            currency: servicePlans.currency,
+            billingPeriod: servicePlans.billingPeriod,
+            active: servicePlans.active,
+            updatedAt: new Date(),
+          },
+        })
+        .returning({ id: servicePlans.id });
+
       return {
         users: insertedUsers.length,
         projects: insertedProjects.length,
+        servicePlans: insertedServicePlans.length,
       };
     });
 

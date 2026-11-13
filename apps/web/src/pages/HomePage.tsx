@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 
 import { Modal, ModalHeader, ModalBody } from "@build-me/ui";
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
-import TechnologyOwnershipHero from "../components/Hero/hero-left";
+import HeroTop from "../components/Hero/HeroTop";
+import TechnologyOwnershipHero from "../components/Hero/HeroLeft";
+import HeroBottom from "../components/Hero/HeroBottom";
 import HeroRight from "../components/Hero/hero-right";
 import Testimonials from "../components/Testimonials";
 import TechnologyOwnershipAudit from "../components/TechnologyOwnershipAudit";
@@ -105,6 +107,12 @@ export default function HomePage() {
           lg:grid-cols-2 lg:px-4 lg:overflow-visible
         "
       >
+        {/* Hero Top */}
+        <div className="col-span-full">
+          <HeroTop />
+        </div>
+
+        {/* Hero Left */}
         <div
           className="
             relative z-20 min-w-0
@@ -112,43 +120,71 @@ export default function HomePage() {
           "
         >
           <TechnologyOwnershipHero />
-
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {/* Existing Work With Me button */}
-            <button
-              type="button"
-              onClick={handleWorkWithMeClick}
-              className="
-                inline-flex items-center justify-center rounded-lg
-                bg-blue-600 px-6 py-3 text-base font-semibold text-white
-                transition hover:bg-blue-700
-                focus:outline-none focus:ring-2 focus:ring-blue-600
-                focus:ring-offset-2
-              "
-            >
-              Work With Me
-            </button>
-
-            {/* Get Quick Wins button */}
-            <button
-              type="button"
-              onClick={handleGetQuickWinsClick}
-              className="
-                inline-flex items-center justify-center rounded-lg
-                border-2 border-blue-950 bg-white px-6 py-3
-                text-base font-semibold text-blue-800
-                transition hover:bg-blue-50
-                focus:outline-none focus:ring-2 focus:ring-blue-800
-                focus:ring-offset-2
-              "
-            >
-              Get Quick Wins
-            </button>
-          </div>
         </div>
 
-        <div className="relative z-10 min-w-0">
+        {/* Hero Right */}
+        <div
+          className="
+    relative z-10 min-w-0
+    translate-y-58
+    sm:translate-y-43
+    lg:translate-y-0
+  "
+        >
           <HeroRight />
+        </div>
+
+        {/* Hero Bottom */}
+        <div
+          className="
+    relative z-40 col-span-full
+    -mt-96 translate-x-4 sm:-mt-116 sm:translate-x-5 lg:translate-x-0
+    lg:-mt-56
+  "
+        >
+          <HeroBottom />
+        </div>
+
+        {/* Existing buttons — immediately after Hero Bottom */}
+        <div
+          className="
+    relative z-40 col-span-full
+    -mt-58
+    sm:-mt-91
+    lg:-mt-30
+    flex flex-wrap items-center gap-3
+  "
+        >
+          {/* Existing Work With Me button */}
+          <button
+            type="button"
+            onClick={handleWorkWithMeClick}
+            className="
+      inline-flex items-center justify-center rounded-lg
+      bg-blue-600 px-6 py-3 text-base font-semibold text-white
+      transition hover:bg-blue-700
+      focus:outline-none focus:ring-2 focus:ring-blue-600
+      focus:ring-offset-2
+    "
+          >
+            Work With Me
+          </button>
+
+          {/* Existing Get Quick Wins button */}
+          <button
+            type="button"
+            onClick={handleGetQuickWinsClick}
+            className="
+      inline-flex items-center justify-center rounded-lg
+      border-2 border-blue-950 bg-white px-6 py-3
+      text-base font-semibold text-blue-800
+      transition hover:bg-blue-50
+      focus:outline-none focus:ring-2 focus:ring-blue-800
+      focus:ring-offset-2
+    "
+          >
+            Get Quick Wins
+          </button>
         </div>
       </section>
 
@@ -158,14 +194,15 @@ export default function HomePage() {
           open
           aria-labelledby="impact-card-heading"
           className="
-            fixed inset-0 z-50 m-auto w-full max-w-lg
-            rounded-2xl bg-white p-6 shadow-xl sm:p-8
-          "
+      fixed inset-0 z-50 m-auto w-full max-w-lg
+      rounded-2xl border border-[#0052FF]/20
+      bg-white p-6 shadow-xl sm:p-8
+    "
         >
           <div className="flex items-start justify-between">
             <h2
               id="impact-card-heading"
-              className="text-xl font-bold tracking-tight text-gray-900"
+              className="text-xl font-bold tracking-tight text-[#0052FF]"
             >
               How would you like to work together?
             </h2>
@@ -175,10 +212,10 @@ export default function HomePage() {
               onClick={closeImpactCard}
               aria-label="Close Work With Me card"
               className="
-                ml-3 inline-flex h-8 w-8 items-center justify-center
-                rounded-full text-gray-600 transition hover:bg-gray-100
-                focus:outline-none focus:ring-2 focus:ring-blue-600
-              "
+          ml-3 inline-flex h-8 w-8 items-center justify-center
+          rounded-full text-[#0052FF] transition hover:bg-[#EBF3FE]
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span aria-hidden="true" className="text-lg leading-none">
                 ×
@@ -186,7 +223,7 @@ export default function HomePage() {
             </button>
           </div>
 
-          <p className="mt-3 text-sm text-gray-600">
+          <p className="mt-3 text-sm text-slate-700">
             Choose the path that best fits your needs.
           </p>
 
@@ -200,21 +237,23 @@ export default function HomePage() {
                 });
               }}
               className="
-                flex items-center justify-between rounded-xl border
-                border-gray-200 px-4 py-4 text-left transition
-                hover:border-gray-300 hover:bg-gray-50
-              "
+          flex items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Mentor Me
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Request mentoring support and guidance.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </Link>
@@ -228,21 +267,23 @@ export default function HomePage() {
                 });
               }}
               className="
-                flex items-center justify-between rounded-xl border
-                border-gray-200 px-4 py-4 text-left transition
-                hover:border-gray-300 hover:bg-gray-50
-              "
+          flex items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Deliver My Project
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Tell me about your project and I will review it.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </Link>
@@ -256,21 +297,23 @@ export default function HomePage() {
                 });
               }}
               className="
-                flex items-center justify-between rounded-xl border
-                border-gray-200 px-4 py-4 text-left transition
-                hover:border-gray-300 hover:bg-gray-50
-              "
+          flex items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Coffee With Me
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Grab a virtual coffee and chat about what is next for you.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </Link>
@@ -284,14 +327,15 @@ export default function HomePage() {
           open
           aria-labelledby="quick-wins-heading"
           className="
-            fixed inset-0 z-50 m-auto w-full max-w-lg
-            rounded-2xl bg-white p-6 shadow-xl sm:p-8
-          "
+      fixed inset-0 z-50 m-auto w-full max-w-lg
+      rounded-2xl border border-[#0052FF]/20
+      bg-white p-6 shadow-xl sm:p-8
+    "
         >
           <div className="flex items-start justify-between">
             <h2
               id="quick-wins-heading"
-              className="text-xl font-bold tracking-tight text-gray-900"
+              className="text-xl font-bold tracking-tight text-[#0052FF]"
             >
               Get Quick Wins
             </h2>
@@ -301,10 +345,10 @@ export default function HomePage() {
               onClick={closeQuickWinsCard}
               aria-label="Close Get Quick Wins card"
               className="
-                ml-3 inline-flex h-8 w-8 items-center justify-center
-                rounded-full text-gray-600 transition hover:bg-gray-100
-                focus:outline-none focus:ring-2 focus:ring-blue-600
-              "
+          ml-3 inline-flex h-8 w-8 items-center justify-center
+          rounded-full text-[#0052FF] transition hover:bg-[#EBF3FE]
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+        "
             >
               <span aria-hidden="true" className="text-lg leading-none">
                 ×
@@ -312,88 +356,88 @@ export default function HomePage() {
             </button>
           </div>
 
-          <p className="mt-3 text-sm text-gray-600">
+          <p className="mt-3 text-sm text-slate-700">
             Discover where your technology ownership stands and identify
             opportunities for improvement.
           </p>
 
           <div className="mt-6 space-y-3">
-            {/* Ownership Audit option */}
             <button
               type="button"
               onClick={handleOwnershipAuditClick}
               className="
-                flex w-full items-center justify-between rounded-xl
-                border border-gray-200 px-4 py-4 text-left transition
-                hover:border-blue-500 hover:bg-blue-50
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-                focus:ring-offset-2
-              "
+          flex w-full items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+          focus:ring-offset-2
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Ownership Audit
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Audit your technology ownership and maturity.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </button>
 
-            {/* Ownership Toolkit option */}
             <button
               type="button"
               onClick={handleOwnershipToolkitClick}
               className="
-                flex w-full items-center justify-between rounded-xl
-                border border-gray-200 px-4 py-4 text-left transition
-                hover:border-blue-500 hover:bg-blue-50
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-                focus:ring-offset-2
-              "
+          flex w-full items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+          focus:ring-offset-2
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Ownership Toolkit
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Access practical lifecycle guidance, checklists, and the
                   downloadable Technology Ownership Toolkit.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </button>
 
-            {/* Ownership Learning Circle option */}
             <button
               type="button"
               onClick={handleOwnershipLearningCircleClick}
               className="
-                flex w-full items-center justify-between rounded-xl
-                border border-gray-200 px-4 py-4 text-left transition
-                hover:border-blue-500 hover:bg-blue-50
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-                focus:ring-offset-2
-              "
+          flex w-full items-center justify-between rounded-xl
+          border border-[#0052FF]/30 bg-[#EBF3FE]
+          px-4 py-4 text-left transition
+          hover:border-[#0052FF] hover:bg-blue-100
+          focus:outline-none focus:ring-2 focus:ring-[#0052FF]
+          focus:ring-offset-2
+        "
             >
               <span>
-                <span className="block text-base font-semibold text-gray-900">
+                <span className="block text-base font-semibold text-[#0052FF]">
                   Ownership Learning Circle
                 </span>
-                <span className="mt-1 block text-sm text-gray-500">
+                <span className="mt-1 block text-sm text-slate-700">
                   Join a free community to learn and grow your Technology
                   Ownership.
                 </span>
               </span>
 
-              <span className="ml-4 text-gray-400" aria-hidden="true">
+              <span className="ml-4 text-[#0052FF]" aria-hidden="true">
                 →
               </span>
             </button>
@@ -401,10 +445,10 @@ export default function HomePage() {
         </dialog>
       )}
 
-      {/* Testimonials starts immediately after the Hero/CTA section */}
-      <Testimonials />
+      <div className="mt-41 sm:mt-28.5 lg:mt-6">
+        <Testimonials />
+      </div>
 
-      {/* Existing Ownership Audit modal */}
       {isOwnershipAuditOpen && (
         <Modal open={isOwnershipAuditOpen} onClose={closeOwnershipAudit}>
           <ModalHeader>
@@ -419,7 +463,6 @@ export default function HomePage() {
         </Modal>
       )}
 
-      {/* Ownership Toolkit modal */}
       {isOwnershipToolkitOpen && (
         <Modal open={isOwnershipToolkitOpen} onClose={closeOwnershipToolkit}>
           <ModalHeader>
@@ -434,14 +477,13 @@ export default function HomePage() {
         </Modal>
       )}
 
-      {/* Ownership Learning Circle modal */}
       {isOwnershipLearningCircleOpen && (
         <Modal
           open={isOwnershipLearningCircleOpen}
           onClose={closeOwnershipLearningCircle}
         >
           <ModalHeader>
-            <h2 className="text-xl font-bold tracking-tight text-gray-900">
+            <h2 className="text-xl font-bold tracking-tight text-blue-600">
               Ownership Learning Circle
             </h2>
           </ModalHeader>

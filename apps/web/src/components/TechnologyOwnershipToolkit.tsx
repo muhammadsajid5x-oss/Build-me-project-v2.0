@@ -15,6 +15,12 @@ type VisitorDetails = {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const primaryButtonClass =
+  "w-full rounded-lg bg-[#0052FF] px-5 py-3 font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-[#0052FF] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+
+const secondaryButtonClass =
+  "w-full rounded-lg border-2 border-[#0052FF] bg-white px-5 py-3 font-semibold text-[#0052FF] transition hover:bg-[#EBF3FE] focus:outline-none focus:ring-2 focus:ring-[#0052FF] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+
 export default function TechnologyOwnershipToolkit() {
   const navigate = useNavigate();
 
@@ -24,6 +30,8 @@ export default function TechnologyOwnershipToolkit() {
   const [error, setError] = useState("");
   const [downloadError, setDownloadError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const stepNumber = step === "intro" ? 1 : step === "details" ? 2 : 3;
 
   const handleContinue = () => {
     setError("");
@@ -106,29 +114,27 @@ export default function TechnologyOwnershipToolkit() {
   };
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full-lg max-w-400 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-gray-600">
+        <p className="text-sm font-semibold text-[#0052FF]">
           Technology Ownership Toolkit
         </p>
 
-        <p className="text-sm text-gray-500">
-          {step === "intro" && "Step 1 of 3"}
-          {step === "details" && "Step 2 of 3"}
-          {step === "content" && "Step 3 of 3"}
+        <p className="text-sm font-medium text-gray-700">
+          Step {stepNumber} of 3
         </p>
       </div>
 
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-gray-200"
+        className="h-2 w-full overflow-hidden rounded-full bg-[#EBF3FE]"
         role="progressbar"
         aria-label="Toolkit journey progress"
         aria-valuemin={1}
         aria-valuemax={3}
-        aria-valuenow={step === "intro" ? 1 : step === "details" ? 2 : 3}
+        aria-valuenow={stepNumber}
       >
         <div
-          className="h-full rounded-full bg-blue-600 transition-all"
+          className="h-full rounded-full bg-[#0052FF] transition-all"
           style={{
             width:
               step === "intro"
@@ -141,48 +147,38 @@ export default function TechnologyOwnershipToolkit() {
       </div>
 
       {step === "intro" && (
-        <section className="space-y-5">
+        <section className="space-y-4 rounded-2xl bg-[#EBF3FE] p-5 sm:p-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Why use the Technology Ownership Toolkit?
+            <p className="text-sm font-semibold uppercase tracking-wide text-[#0052FF]">
+              Step 1
+            </p>
+
+            <h2 className="text-2xl font-bold text-[#0052FF]">
+              Technology Ownership Toolkit
             </h2>
 
-            <p className="leading-7 text-gray-600">
+            <p className="text-sm leading-6 text-gray-800">
               {toolkit.introduction.description}
             </p>
-
-            <p className="leading-7 text-gray-600">
-              This practical toolkit helps you understand and apply ownership
-              across the complete technology lifecycle.
-            </p>
           </div>
 
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <h3 className="font-semibold text-gray-900">
-              The ownership principle
+          <div>
+            <h3 className="text-sm font-bold text-[#0052FF]">
+              What you will get
             </h3>
 
-            <p className="mt-2 leading-7 text-gray-700">
-              {toolkit.introduction.principle}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="font-semibold text-gray-900">What you will get</h3>
-
-            <ul className="list-disc space-y-2 pl-5 text-gray-600">
-              <li>The complete ten-stage ownership lifecycle.</li>
-              <li>Practical checklists for every lifecycle stage.</li>
-              <li>Evidence guidance and production readiness checks.</li>
-              <li>Ownership review questions and responsibilities.</li>
-              <li>An online version and downloadable PDF.</li>
+            <ul className="mt-2 grid gap-1 text-sm leading-5 text-gray-800 sm:grid-cols-2">
+              <li>• Complete ownership lifecycle</li>
+              <li>• Practical stage checklists</li>
+              <li>• Evidence and readiness guidance</li>
+              <li>• Ownership review questions</li>
             </ul>
           </div>
 
           <button
             type="button"
             onClick={handleContinue}
-            className="w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className={primaryButtonClass}
           >
             Continue Next Step
           </button>
@@ -190,13 +186,17 @@ export default function TechnologyOwnershipToolkit() {
       )}
 
       {step === "details" && (
-        <section className="space-y-5">
+        <section className="space-y-5 rounded-2xl bg-[#EBF3FE] p-5 sm:p-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[#0052FF]">
+              Step 2
+            </p>
+
+            <h2 className="text-2xl font-bold text-[#0052FF]">
               Access the Toolkit
             </h2>
 
-            <p className="leading-7 text-gray-600">
+            <p className="leading-7 text-gray-800">
               Please provide your details to access the complete Technology
               Ownership Toolkit.
             </p>
@@ -210,7 +210,7 @@ export default function TechnologyOwnershipToolkit() {
             <div className="space-y-2">
               <label
                 htmlFor="toolkit-full-name"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-semibold text-gray-900"
               >
                 Full name
               </label>
@@ -225,7 +225,7 @@ export default function TechnologyOwnershipToolkit() {
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
                 placeholder="Enter your full name"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-[#0052FF] focus:ring-2 focus:ring-[#0052FF]/20"
                 aria-invalid={Boolean(error) && fullName.trim().length < 2}
                 aria-describedby={
                   error && fullName.trim().length < 2
@@ -238,7 +238,7 @@ export default function TechnologyOwnershipToolkit() {
             <div className="space-y-2">
               <label
                 htmlFor="toolkit-visitor-email"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-semibold text-gray-900"
               >
                 Email address
               </label>
@@ -252,7 +252,7 @@ export default function TechnologyOwnershipToolkit() {
                 value={visitorEmail}
                 onChange={(event) => setVisitorEmail(event.target.value)}
                 placeholder="Enter your email address"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-[#0052FF] focus:ring-2 focus:ring-[#0052FF]/20"
                 aria-invalid={
                   Boolean(error) && !emailPattern.test(visitorEmail.trim())
                 }
@@ -282,7 +282,7 @@ export default function TechnologyOwnershipToolkit() {
                   setStep("intro");
                 }}
                 disabled={isSubmitting}
-                className="w-full rounded-lg border border-gray-300 px-5 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className={secondaryButtonClass}
               >
                 Back
               </button>
@@ -290,7 +290,7 @@ export default function TechnologyOwnershipToolkit() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className={primaryButtonClass}
               >
                 {isSubmitting ? "Saving..." : "Access Toolkit"}
               </button>
@@ -300,15 +300,19 @@ export default function TechnologyOwnershipToolkit() {
       )}
 
       {step === "content" && (
-        <section className="space-y-6">
+        <section className="space-y-6 rounded-2xl bg-[#EBF3FE] p-5 sm:p-6">
           <div className="space-y-3">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[#0052FF]">
+              Step 3
+            </p>
+
+            <h2 className="text-2xl font-bold text-[#0052FF]">
               {toolkit.title}
             </h2>
 
-            <p className="leading-7 text-gray-600">{toolkit.subtitle}</p>
+            <p className="leading-7 text-gray-800">{toolkit.subtitle}</p>
 
-            <p className="leading-7 text-gray-600">
+            <p className="leading-7 text-gray-800">
               Your details have been saved. Choose how you would like to access
               the complete Technology Ownership Toolkit.
             </p>
@@ -318,13 +322,13 @@ export default function TechnologyOwnershipToolkit() {
             <button
               type="button"
               onClick={handleViewOnline}
-              className="flex min-h-36 flex-col items-center justify-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-6 text-center transition hover:border-blue-400 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex min-h-36 flex-col items-center justify-center gap-3 rounded-xl border-2 border-[#0052FF] bg-white p-6 text-center transition hover:bg-[#EBF3FE] focus:outline-none focus:ring-2 focus:ring-[#0052FF] focus:ring-offset-2"
             >
-              <span className="text-lg font-bold text-gray-900">
+              <span className="text-lg font-bold text-[#0052FF]">
                 View Online
               </span>
 
-              <span className="text-sm leading-6 text-gray-600">
+              <span className="text-sm leading-6 text-gray-800">
                 Open the complete Technology Ownership Toolkit in your browser.
               </span>
             </button>
@@ -332,13 +336,13 @@ export default function TechnologyOwnershipToolkit() {
             <button
               type="button"
               onClick={handleDownload}
-              className="flex min-h-36 flex-col items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white p-6 text-center transition hover:border-blue-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex min-h-36 flex-col items-center justify-center gap-3 rounded-xl border-2 border-[#0052FF] bg-white p-6 text-center transition hover:bg-[#EBF3FE] focus:outline-none focus:ring-2 focus:ring-[#0052FF] focus:ring-offset-2"
             >
-              <span className="text-lg font-bold text-gray-900">
+              <span className="text-lg font-bold text-[#0052FF]">
                 Download PDF
               </span>
 
-              <span className="text-sm leading-6 text-gray-600">
+              <span className="text-sm leading-6 text-gray-800">
                 Download the complete toolkit as a PDF document.
               </span>
             </button>
