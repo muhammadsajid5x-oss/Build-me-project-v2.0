@@ -5,10 +5,6 @@ import { getApiBaseUrl } from "../api-url";
 
 const apiBaseUrl = getApiBaseUrl(import.meta.env.VITE_API_URL);
 
-/**
- * The route the Deliver My Project journey is served from. It is reported with
- * the view event so the journey can be identified in analytics.
- */
 const DELIVER_MY_PROJECT_PATH = "/deliver-my-project";
 
 type FormData = {
@@ -22,6 +18,43 @@ type FormData = {
 
 type FormErrors = Partial<Record<keyof FormData, string>>;
 
+type ServicePlan = {
+  id: string;
+  service: string;
+  planName: string;
+  slug: string;
+  description: string;
+  price: number;
+  currency: string;
+  billingPeriod: string;
+  active: boolean;
+};
+
+type Booking = {
+  id: string;
+  leadId: string;
+  planId: string;
+  service: string;
+  planName: string;
+  price: number;
+  currency: string;
+  billingPeriod: string;
+  status: "pending_payment" | "paid" | "cancelled";
+  createdAt: string;
+};
+
+type Invoice = {
+  id: string;
+  bookingId: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  status: "pending" | "paid" | "void";
+  issuedAt: string;
+  dueAt: string | null;
+  paidAt: string | null;
+};
+
 const initialFormData: FormData = {
   name: "",
   email: "",
@@ -31,11 +64,6 @@ const initialFormData: FormData = {
   budget: "",
 };
 
-/**
- * The maximum lengths accepted by the API. They are repeated here so the
- * visitor gets immediate feedback, while the API remains the authoritative
- * validation.
- */
 const maxLengths: Record<keyof FormData, number> = {
   name: 100,
   email: 254,
@@ -48,10 +76,14 @@ const maxLengths: Record<keyof FormData, number> = {
 const genericSubmitError =
   "We could not submit your request right now. Please try again in a moment.";
 
-/**
- * Maps the API validation details onto the form fields. Unknown fields and
- * any non-validation payload are ignored so no server internals are shown.
- */
+function formatPrice(plan: ServicePlan) {
+  const amount = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 0,
+  }).format(plan.price);
+
+  return plan.billingPeriod === "monthly" ? `$${amount} / mo` : `$${amount}`;
+}
+
 function readFieldErrors(body: unknown): FormErrors {
   if (typeof body !== "object" || body === null) {
     return {};
@@ -95,19 +127,76 @@ function readFieldErrors(body: unknown): FormErrors {
   return fieldErrors;
 }
 
+function validateForm(formData: FormData): FormErrors {
+  const errors: FormErrors = {};
+
+  if (!formData.name.trim()) {
+    errors.name = "Name is required.";
+  } else if (formData.name.trim().length > maxLengths.name) {
+    errors.name = `Name must be ${maxLengths.name} characters or fewer.`;
+  }
+
+  if (!formData.email.trim()) {
+    errors.email = "Email is required.";
+  } else if (formData.email.trim().length > maxLengths.email) {
+    errors.email = `Email must be ${maxLengths.email} characters or fewer.`;
+  } else {
+    const emailValue = formData.email.trim();
+    const atIndex = emailValue.indexOf("@");
+    const dotIndex = emailValue.lastIndexOf(".");
+
+    const isValidEmail =
+      atIndex > 0 && dotIndex > atIndex + 1 && dotIndex < emailValue.length - 1;
+
+    if (!isValidEmail) {
+      errors.email = "Please enter a valid email address.";
+    }
+  }
+
+  if (!formData.projectDescription.trim()) {
+    errors.projectDescription = "Project description is required.";
+  } else if (
+    formData.projectDescription.trim().length > maxLengths.projectDescription
+  ) {
+    errors.projectDescription = `Project description must be ${maxLengths.projectDescription} characters or fewer.`;
+  }
+
+  if (!formData.expectedOutcome.trim()) {
+    errors.expectedOutcome = "Expected outcome is required.";
+  } else if (
+    formData.expectedOutcome.trim().length > maxLengths.expectedOutcome
+  ) {
+    errors.expectedOutcome = `Expected outcome must be ${maxLengths.expectedOutcome} characters or fewer.`;
+  }
+
+  if (formData.timeline.trim().length > maxLengths.timeline) {
+    errors.timeline = `Timeline must be ${maxLengths.timeline} characters or fewer.`;
+  }
+
+  if (formData.budget.trim().length > maxLengths.budget) {
+    errors.budget = `Budget must be ${maxLengths.budget} characters or fewer.`;
+  }
+
+  return errors;
+}
+
 export default function DeliverMyProjectPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [plans, setPlans] = useState<ServicePlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [plansError, setPlansError] = useState<string | null>(null);
+
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+
   const hasTrackedView = useRef(false);
 
-  /**
-   * The journey has actually become visible, so the view event is fired here
-   * rather than on the click that selected the path. The ref keeps the event
-   * to a single occurrence even when effects are re-run.
-   */
   useEffect(() => {
     if (hasTrackedView.current) {
       return;
@@ -122,6 +211,53 @@ export default function DeliverMyProjectPage() {
     });
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPlans() {
+      try {
+        setIsLoadingPlans(true);
+        setPlansError(null);
+
+        const response = await fetch(`${apiBaseUrl}/api/v1/service-plans`);
+
+        if (!response.ok) {
+          throw new Error("Unable to load pricing plans.");
+        }
+
+        const body = (await response.json()) as {
+          data?: ServicePlan[];
+        };
+
+        if (!cancelled) {
+          const deliveryPlans = (body.data ?? []).filter(
+            (plan) => plan.active && plan.service === "deliver-my-project",
+          );
+
+          setPlans(deliveryPlans);
+        }
+      } catch {
+        if (!cancelled) {
+          setPlansError(
+            "Unable to load pricing plans. Please refresh the page and try again.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPlans(false);
+        }
+      }
+    }
+
+    void loadPlans();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? null;
+
   const updateField = (field: keyof FormData, value: string) => {
     setFormData((current) => ({
       ...current,
@@ -132,67 +268,19 @@ export default function DeliverMyProjectPage() {
       ...current,
       [field]: undefined,
     }));
-  };
 
-  const validate = (): FormErrors => {
-    const nextErrors: FormErrors = {};
-
-    if (!formData.name.trim()) {
-      nextErrors.name = "Name is required.";
-    } else if (formData.name.trim().length > maxLengths.name) {
-      nextErrors.name = `Name must be ${maxLengths.name} characters or fewer.`;
-    }
-
-    if (!formData.email.trim()) {
-      nextErrors.email = "Email is required.";
-    } else if (formData.email.trim().length > maxLengths.email) {
-      nextErrors.email = `Email must be ${maxLengths.email} characters or fewer.`;
-    } else {
-      // Non-backtracking deterministic validation check
-      const emailValue = formData.email.trim();
-      const atIndex = emailValue.indexOf("@");
-      const dotIndex = emailValue.lastIndexOf(".");
-      const isValidEmail =
-        atIndex > 0 &&
-        dotIndex > atIndex + 1 &&
-        dotIndex < emailValue.length - 1;
-
-      if (!isValidEmail) {
-        nextErrors.email = "Please enter a valid email address.";
-      }
-    }
-
-    if (!formData.projectDescription.trim()) {
-      nextErrors.projectDescription = "Project description is required.";
-    } else if (
-      formData.projectDescription.trim().length > maxLengths.projectDescription
-    ) {
-      nextErrors.projectDescription = `Project description must be ${maxLengths.projectDescription} characters or fewer.`;
-    }
-
-    if (!formData.expectedOutcome.trim()) {
-      nextErrors.expectedOutcome = "Expected outcome is required.";
-    } else if (
-      formData.expectedOutcome.trim().length > maxLengths.expectedOutcome
-    ) {
-      nextErrors.expectedOutcome = `Expected outcome must be ${maxLengths.expectedOutcome} characters or fewer.`;
-    }
-
-    if (formData.timeline.trim().length > maxLengths.timeline) {
-      nextErrors.timeline = `Timeline must be ${maxLengths.timeline} characters or fewer.`;
-    }
-
-    if (formData.budget.trim().length > maxLengths.budget) {
-      nextErrors.budget = `Budget must be ${maxLengths.budget} characters or fewer.`;
-    }
-
-    return nextErrors;
+    setSubmitError(null);
   };
 
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const nextErrors = validate();
+    if (!selectedPlan) {
+      setSubmitError("Please choose a price plan before submitting.");
+      return;
+    }
+
+    const nextErrors = validateForm(formData);
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -205,36 +293,116 @@ export default function DeliverMyProjectPage() {
     setSubmitError(null);
 
     try {
-      const response = await fetch(
+      /*
+       * Step 1:
+       * Create the visitor's project request.
+       *
+       * The API returns the lead ID. We use that server-created ID for
+       * the booking instead of trusting the browser with a fabricated ID.
+       */
+      const leadResponse = await fetch(
         `${apiBaseUrl}/api/v1/delivery-project-requests`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            projectDescription: formData.projectDescription.trim(),
+            expectedOutcome: formData.expectedOutcome.trim(),
+            ...(formData.timeline.trim()
+              ? { timeline: formData.timeline.trim() }
+              : {}),
+            ...(formData.budget.trim()
+              ? { budget: formData.budget.trim() }
+              : {}),
+          }),
         },
       );
 
-      if (response.status === 201) {
-        // The request is persisted, so the journey is complete. Analytics must
-        // never block the confirmation shown to the visitor.
-        trackAnalyticsEvent({
-          name: ANALYTICS_EVENTS.DELIVER_MY_PROJECT_COMPLETED,
-          eventType: "click",
-        });
-        setSubmitted(true);
-        return;
+      const leadBody = (await leadResponse.json().catch(() => null)) as {
+        data?: {
+          id?: string;
+        };
+      } | null;
+
+      if (leadResponse.status !== 201 || !leadBody?.data?.id) {
+        const fieldErrors = readFieldErrors(leadBody);
+
+        if (leadResponse.status === 400 && Object.keys(fieldErrors).length) {
+          setErrors(fieldErrors);
+          setSubmitError("Please review the highlighted fields and try again.");
+          return;
+        }
+
+        throw new Error("DELIVERY_REQUEST_FAILED");
       }
 
-      const body = await response.json().catch(() => undefined);
-      const fieldErrors = readFieldErrors(body);
+      const leadId = leadBody.data.id;
 
-      if (response.status === 400 && Object.keys(fieldErrors).length > 0) {
-        setErrors(fieldErrors);
-        setSubmitError("Please review the highlighted fields and try again.");
-        return;
+      /*
+       * Step 2:
+       * Create the booking.
+       *
+       * The backend looks up the selected plan and its price from the
+       * database. The frontend never sends a price.
+       */
+      const bookingResponse = await fetch(`${apiBaseUrl}/api/v1/bookings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          leadId,
+          planId: selectedPlan.id,
+        }),
+      });
+
+      const bookingBody = (await bookingResponse.json().catch(() => null)) as {
+        data?: Booking;
+      } | null;
+
+      if (bookingResponse.status !== 201 || !bookingBody?.data) {
+        throw new Error("BOOKING_FAILED");
       }
 
-      setSubmitError(genericSubmitError);
+      const createdBooking = bookingBody.data;
+      setBooking(createdBooking);
+
+      /*
+       * Step 3:
+       * Create the invoice from the booking.
+       *
+       * The backend uses the booking amount, so the invoice amount is also
+       * controlled by the database-backed plan price.
+       */
+      const invoiceResponse = await fetch(`${apiBaseUrl}/api/v1/invoices`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bookingId: createdBooking.id,
+        }),
+      });
+
+      const invoiceBody = (await invoiceResponse.json().catch(() => null)) as {
+        data?: Invoice;
+      } | null;
+
+      if (invoiceResponse.status !== 201 || !invoiceBody?.data) {
+        throw new Error("INVOICE_FAILED");
+      }
+
+      setInvoice(invoiceBody.data);
+
+      trackAnalyticsEvent({
+        name: ANALYTICS_EVENTS.DELIVER_MY_PROJECT_COMPLETED,
+        eventType: "click",
+        path: DELIVER_MY_PROJECT_PATH,
+      });
     } catch {
       setSubmitError(genericSubmitError);
     } finally {
@@ -242,37 +410,73 @@ export default function DeliverMyProjectPage() {
     }
   };
 
-  if (submitted) {
+  if (booking && invoice && selectedPlan) {
     return (
-      <main className="min-h-screen w-full bg-white px-4 py-12 text-gray-900 sm:px-6">
+      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
         <section
           aria-labelledby="delivery-project-success-heading"
           className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
         >
-          <p className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-500">
+          <p className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-700">
             Deliver My Project
           </p>
 
           <h1
             id="delivery-project-success-heading"
-            className="text-3xl font-bold tracking-tight text-gray-900"
+            className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
           >
-            Request received
+            Booking received
           </h1>
 
           <p className="mt-4 text-gray-600">
-            Thank you. Your project request has been received and will be
-            reviewed.
+            Your project request and booking have been created successfully.
           </p>
+
+          <div className="mt-8 grid gap-6 sm:grid-cols-2">
+            <div className="rounded-xl bg-[#EBF3FE] p-5">
+              <p className="text-sm font-medium text-gray-600">Selected Plan</p>
+
+              <p className="mt-2 text-xl font-bold text-gray-900">
+                {selectedPlan.planName}
+              </p>
+
+              <p className="mt-2 text-2xl font-bold text-blue-700">
+                {formatPrice(selectedPlan)}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-[#EBF3FE] p-5">
+              <p className="text-sm font-medium text-gray-600">Invoice</p>
+
+              <p className="mt-2 text-xl font-bold text-gray-900">
+                {invoice.invoiceNumber}
+              </p>
+
+              <p className="mt-2 text-lg font-semibold text-blue-700">
+                {invoice.currency} {invoice.amount}
+              </p>
+
+              <p className="mt-1 text-sm font-medium text-gray-600">
+                Payment: Pending
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-xl border border-gray-200 bg-white p-5">
+            <p className="text-sm leading-6 text-gray-600">
+              Your booking is currently pending payment. Payment processing will
+              be connected separately.
+            </p>
+          </div>
         </section>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
+    <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
       <section aria-labelledby="delivery-project-heading">
-        <p className="mb-2 text-sm font-medium uppercase tracking-wide text-gray-500">
+        <p className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-700">
           Work With Me
         </p>
 
@@ -284,18 +488,119 @@ export default function DeliverMyProjectPage() {
         </h1>
 
         <p className="mt-4 max-w-2xl text-gray-600">
-          Tell me about your project, the outcome you want to achieve, and the
-          delivery context. I&apos;ll use this information to understand how I
-          can help.
+          Choose the delivery plan that fits your project, then tell me about
+          what you want to build and the outcome you want to achieve.
         </p>
+      </section>
+
+      <section aria-labelledby="delivery-price-plans-heading" className="mt-10">
+        <div className="mb-6">
+          <h2
+            id="delivery-price-plans-heading"
+            className="text-2xl font-bold text-blue-700 sm:text-3xl"
+          >
+            Price Plans
+          </h2>
+
+          <p className="mt-2 text-gray-600">
+            Choose the right level of delivery support for your project.
+          </p>
+        </div>
+
+        {isLoadingPlans && (
+          <div className="rounded-xl bg-[#EBF3FE] px-6 py-8 text-center">
+            <p className="text-sm font-medium text-gray-700">
+              Loading price plans...
+            </p>
+          </div>
+        )}
+
+        {plansError && (
+          <div
+            role="alert"
+            className="rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-700"
+          >
+            {plansError}
+          </div>
+        )}
+
+        {!isLoadingPlans && !plansError && (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {plans.map((plan) => {
+              const isSelected = selectedPlanId === plan.id;
+
+              return (
+                <article
+                  key={plan.id}
+                  className={`flex h-full flex-col rounded-xl border-2 bg-[#EBF3FE] p-6 transition ${
+                    isSelected
+                      ? "border-blue-600 shadow-md"
+                      : "border-transparent"
+                  }`}
+                >
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {plan.planName}
+                  </h3>
+
+                  <p className="mt-3 min-h-12 text-sm leading-6 text-gray-600">
+                    {plan.description}
+                  </p>
+
+                  <p className="mt-6 text-3xl font-bold text-blue-700">
+                    {formatPrice(plan)}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedPlanId(plan.id);
+                      setSubmitError(null);
+                    }}
+                    className={`mt-6 inline-flex items-center justify-center rounded-lg px-5 py-3 text-base font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 ${
+                      isSelected
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "border-2 border-blue-600 bg-white text-gray-900 hover:bg-blue-50"
+                    }`}
+                  >
+                    {isSelected ? "Selected" : "Choose Plan"}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <form
         onSubmit={handleSubmit}
         noValidate
         aria-busy={isSubmitting}
-        className="mt-8 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+        className="mt-10 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
       >
+        {selectedPlan && (
+          <div className="rounded-xl bg-[#EBF3FE] p-5">
+            <p className="text-sm font-medium text-gray-600">Selected Plan</p>
+
+            <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xl font-bold text-gray-900">
+                {selectedPlan.planName}
+              </p>
+
+              <p className="text-xl font-bold text-blue-700">
+                {formatPrice(selectedPlan)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!selectedPlan && (
+          <div className="rounded-xl border border-blue-200 bg-[#EBF3FE] px-5 py-4">
+            <p className="text-sm font-medium text-gray-700">
+              Please choose a price plan above before submitting your project.
+            </p>
+          </div>
+        )}
+
         {submitError && (
           <p
             role="alert"
@@ -320,9 +625,10 @@ export default function DeliverMyProjectPage() {
             value={formData.name}
             onChange={(event) => updateField("name", event.target.value)}
             maxLength={maxLengths.name}
+            autoComplete="name"
             aria-invalid={Boolean(errors.name)}
             aria-describedby={errors.name ? "name-error" : undefined}
-            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-gray-500"
+            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
           />
 
           {errors.name && (
@@ -347,9 +653,10 @@ export default function DeliverMyProjectPage() {
             value={formData.email}
             onChange={(event) => updateField("email", event.target.value)}
             maxLength={maxLengths.email}
+            autoComplete="email"
             aria-invalid={Boolean(errors.email)}
             aria-describedby={errors.email ? "email-error" : undefined}
-            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-gray-500"
+            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
           />
 
           {errors.email && (
@@ -382,7 +689,7 @@ export default function DeliverMyProjectPage() {
                 ? "project-description-error"
                 : undefined
             }
-            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-gray-500"
+            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
           />
 
           {errors.projectDescription && (
@@ -416,7 +723,7 @@ export default function DeliverMyProjectPage() {
             aria-describedby={
               errors.expectedOutcome ? "expected-outcome-error" : undefined
             }
-            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-gray-500"
+            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
           />
 
           {errors.expectedOutcome && (
@@ -446,11 +753,9 @@ export default function DeliverMyProjectPage() {
               onChange={(event) => updateField("timeline", event.target.value)}
               maxLength={maxLengths.timeline}
               aria-invalid={Boolean(errors.timeline)}
-              aria-describedby={
-                errors.timeline ? "timeline-error" : undefined
-              }
-              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-gray-500"
+              aria-describedby={errors.timeline ? "timeline-error" : undefined}
               placeholder="e.g. 6 weeks"
+              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
             />
 
             {errors.timeline && (
@@ -476,11 +781,9 @@ export default function DeliverMyProjectPage() {
               onChange={(event) => updateField("budget", event.target.value)}
               maxLength={maxLengths.budget}
               aria-invalid={Boolean(errors.budget)}
-              aria-describedby={
-                errors.budget ? "budget-error" : undefined
-              }
-              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-gray-500"
+              aria-describedby={errors.budget ? "budget-error" : undefined}
               placeholder="e.g. $1,000–$2,000"
+              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
             />
 
             {errors.budget && (
@@ -493,10 +796,11 @@ export default function DeliverMyProjectPage() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-3 font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isSubmitting || !selectedPlan}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <span>{isSubmitting ? "Submitting..." : "Submit Project Request"}</span>
+          <span>{isSubmitting ? "Creating Booking..." : "Book This Plan"}</span>
+
           <svg
             className="h-5 w-5"
             fill="none"

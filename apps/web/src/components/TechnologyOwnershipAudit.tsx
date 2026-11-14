@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
@@ -6,7 +6,7 @@ import { getApiBaseUrl } from "../api-url";
 
 type AuditOption = "A" | "B" | "C";
 
-type AuditStage = "intro" | "details" | "questions" | "results";
+type AuditStage = "details" | "questions" | "results";
 
 type Question = {
   number: number;
@@ -273,14 +273,6 @@ const questions: Question[] = [
   },
 ];
 
-const questionPages: Record<number, [number, number]> = {
-  1: [1, 2],
-  2: [3, 4],
-  3: [5, 6],
-  4: [7, 8],
-  5: [9, 10],
-};
-
 function createInitialAnswers(): Answers {
   return Object.fromEntries(
     questions.map((question) => [question.number, null]),
@@ -322,12 +314,16 @@ function getAuditResult(score: number): AuditResult {
 export default function TechnologyOwnershipAudit() {
   const navigate = useNavigate();
 
-  const [stage, setStage] = useState<AuditStage>("intro");
-  const [questionPage, setQuestionPage] = useState(1);
+  const [stage, setStage] = useState<AuditStage>("details");
+  const [questionNumber, setQuestionNumber] = useState(1);
+
   const [fullName, setFullName] = useState("");
   const [visitorEmail, setVisitorEmail] = useState("");
+
   const [answers, setAnswers] = useState<Answers>(createInitialAnswers);
+
   const [score, setScore] = useState<number | null>(null);
+
   const [validationError, setValidationError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -340,18 +336,7 @@ export default function TechnologyOwnershipAudit() {
     });
   }, []);
 
-  const currentQuestionNumbers = questionPages[questionPage];
-
-  const currentQuestions = useMemo(
-    () => currentQuestionNumbers.map((number) => questions[number - 1]),
-    [currentQuestionNumbers],
-  );
-
-  const calculateScore = () =>
-    questions.reduce((total, question) => {
-      const answer = answers[question.number];
-      return total + (answer ? SCORE_MAP[answer] : 0);
-    }, 0);
+  const currentQuestion = questions[questionNumber - 1];
 
   const scrollToTop = () => {
     const modalBody = document.querySelector<HTMLElement>(
@@ -359,7 +344,11 @@ export default function TechnologyOwnershipAudit() {
     );
 
     if (modalBody) {
-      modalBody.scrollTo({ top: 0, behavior: "auto" });
+      modalBody.scrollTo({
+        top: 0,
+        behavior: "auto",
+      });
+
       return;
     }
 
@@ -383,39 +372,19 @@ export default function TechnologyOwnershipAudit() {
     return true;
   };
 
-  const handleAnswer = (questionNumber: number, value: AuditOption) => {
-    setAnswers((previous) => ({
-      ...previous,
-      [questionNumber]: value,
-    }));
+  const calculateScore = (currentAnswers: Answers) =>
+    questions.reduce((total, question) => {
+      const answer = currentAnswers[question.number];
 
-    setValidationError(null);
-    setSubmitError(null);
+      return total + (answer ? SCORE_MAP[answer] : 0);
+    }, 0);
 
-    if (questionNumber === 1) {
-      trackAnalyticsEvent({
-        name: ANALYTICS_EVENTS.OWNERSHIP_AUDIT_STARTED,
-        eventType: "click",
-        path: OWNERSHIP_AUDIT_PATH,
-      });
-    }
-  };
-
-  const handleComplete = async () => {
-    const selectedAnswers = questions.map(
-      (question) => answers[question.number],
-    );
-
-    if (selectedAnswers.some((answer) => answer === null)) {
-      setValidationError("Please answer all 10 questions before continuing.");
+  const submitAudit = async (finalAnswers: Answers) => {
+    if (isSubmitting) {
       return;
     }
 
-    if (!validateVisitorDetails()) {
-      return;
-    }
-
-    const calculatedScore = calculateScore();
+    const calculatedScore = calculateScore(finalAnswers);
 
     setValidationError(null);
     setSubmitError(null);
@@ -433,7 +402,7 @@ export default function TechnologyOwnershipAudit() {
           answers: Object.fromEntries(
             questions.map((question) => [
               `q${question.number}`,
-              answers[question.number],
+              finalAnswers[question.number],
             ]),
           ),
         }),
@@ -461,74 +430,77 @@ export default function TechnologyOwnershipAudit() {
     }
   };
 
-  const handleNext = async () => {
+  const handleDetailsContinue = () => {
     setValidationError(null);
     setSubmitError(null);
 
-    if (stage === "intro") {
-      setStage("details");
+    if (!validateVisitorDetails()) {
+      return;
+    }
+
+    setQuestionNumber(1);
+    setStage("questions");
+    scrollToTop();
+  };
+
+  const handleAnswer = (value: AuditOption) => {
+    if (isSubmitting) {
+      return;
+    }
+
+    const updatedAnswers: Answers = {
+      ...answers,
+      [questionNumber]: value,
+    };
+
+    setAnswers(updatedAnswers);
+    setValidationError(null);
+    setSubmitError(null);
+
+    if (questionNumber === 1) {
+      trackAnalyticsEvent({
+        name: ANALYTICS_EVENTS.OWNERSHIP_AUDIT_STARTED,
+        eventType: "click",
+        path: OWNERSHIP_AUDIT_PATH,
+      });
+    }
+
+    if (questionNumber < questions.length) {
+      setQuestionNumber((previous) => previous + 1);
       scrollToTop();
       return;
     }
 
-    if (stage === "details") {
-      if (!validateVisitorDetails()) {
-        return;
-      }
-
-      setStage("questions");
-      setQuestionPage(1);
-      scrollToTop();
-      return;
-    }
-
-    if (stage !== "questions") {
-      return;
-    }
-
-    const unanswered = currentQuestions.some(
-      (question) => !answers[question.number],
-    );
-
-    if (unanswered) {
-      setValidationError("Please answer both questions before continuing.");
-      return;
-    }
-
-    if (questionPage < 5) {
-      setQuestionPage((previous) => previous + 1);
-      scrollToTop();
-      return;
-    }
-
-    await handleComplete();
+    void submitAudit(updatedAnswers);
   };
 
   const handlePrevious = () => {
+    if (isSubmitting) {
+      return;
+    }
+
     setValidationError(null);
     setSubmitError(null);
 
     if (stage === "details") {
-      setStage("intro");
-      scrollToTop();
       return;
     }
 
     if (stage === "questions") {
-      if (questionPage > 1) {
-        setQuestionPage((previous) => previous - 1);
+      if (questionNumber === 1) {
+        setStage("details");
         scrollToTop();
         return;
       }
 
-      setStage("details");
+      setQuestionNumber((previous) => previous - 1);
       scrollToTop();
       return;
     }
 
     if (stage === "results") {
       setStage("questions");
-      setQuestionPage(5);
+      setQuestionNumber(10);
       scrollToTop();
     }
   };
@@ -550,8 +522,8 @@ export default function TechnologyOwnershipAudit() {
   };
 
   const handleRestart = () => {
-    setStage("intro");
-    setQuestionPage(1);
+    setStage("details");
+    setQuestionNumber(1);
     setFullName("");
     setVisitorEmail("");
     setAnswers(createInitialAnswers());
@@ -562,54 +534,28 @@ export default function TechnologyOwnershipAudit() {
     scrollToTop();
   };
 
-  const buttonClass =
-    "rounded-md bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const primaryButtonClass =
+    "inline-flex items-center justify-center rounded-lg bg-[#0052FF] px-5 py-3 font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-[#0052FF] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
-  if (stage === "intro") {
-    return (
-      <div className="space-y-6">
-        <div>
-          <p className="text-sm font-medium text-gray-500">Step 1 of 3</p>
-
-          <h3 className="mt-2 text-2xl font-bold text-gray-900">
-            Technology Ownership Audit
-          </h3>
-
-          <p className="mt-3 leading-7 text-gray-600">
-            Assess your technology ownership across architecture, source code,
-            infrastructure, testing, databases, documentation, offboarding,
-            security, and scaling.
-          </p>
-
-          <p className="mt-3 leading-7 text-gray-600">
-            Answer 10 questions to receive a score out of 100 and identify the
-            most appropriate next step.
-          </p>
-        </div>
-
-        <button type="button" className={buttonClass} onClick={handleNext}>
-          Start Ownership Audit
-        </button>
-      </div>
-    );
-  }
+  const secondaryButtonClass =
+    "inline-flex items-center justify-center rounded-lg border-2 border-[#0052FF] bg-white px-5 py-3 font-semibold text-[#0052FF] transition hover:bg-[#EBF3FE] focus:outline-none focus:ring-2 focus:ring-[#0052FF] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
   if (stage === "details") {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 rounded-2xl bg-[#EBF3FE] p-6 sm:p-8">
         <div>
-          <p className="text-sm font-medium text-gray-500">Step 1 of 3</p>
+          <p className="text-sm font-semibold text-[#0052FF]">Step 1 of 3</p>
 
-          <h3 className="mt-2 text-2xl font-bold text-gray-900">
-            Visitor Details
+          <h3 className="mt-2 text-2xl font-bold text-[#0052FF] sm:text-3xl">
+            Your Details
           </h3>
 
-          <p className="mt-2 text-gray-600">
-            Enter your name and email to continue the audit.
+          <p className="mt-3 leading-7 text-gray-700">
+            Enter your name and email to begin your Technology Ownership Audit.
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-gray-900">
               Full Name
@@ -618,9 +564,12 @@ export default function TechnologyOwnershipAudit() {
             <input
               type="text"
               value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
+              onChange={(event) => {
+                setFullName(event.target.value);
+                setValidationError(null);
+              }}
               autoComplete="name"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-[#0052FF] focus:ring-2 focus:ring-[#0052FF]"
             />
           </label>
 
@@ -632,29 +581,28 @@ export default function TechnologyOwnershipAudit() {
             <input
               type="email"
               value={visitorEmail}
-              onChange={(event) => setVisitorEmail(event.target.value)}
+              onChange={(event) => {
+                setVisitorEmail(event.target.value);
+                setValidationError(null);
+              }}
               autoComplete="email"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-[#0052FF] focus:ring-2 focus:ring-[#0052FF]"
             />
           </label>
         </div>
 
         {validationError && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm font-medium text-red-600" role="alert">
             {validationError}
           </p>
         )}
 
-        <div className="flex justify-between border-t border-gray-200 pt-5">
+        <div className="border-t border-blue-200 pt-5">
           <button
             type="button"
-            className={buttonClass}
-            onClick={handlePrevious}
+            className={primaryButtonClass}
+            onClick={handleDetailsContinue}
           >
-            Back
-          </button>
-
-          <button type="button" className={buttonClass} onClick={handleNext}>
             Continue
           </button>
         </div>
@@ -664,110 +612,100 @@ export default function TechnologyOwnershipAudit() {
 
   if (stage === "questions") {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 rounded-2xl bg-[#EBF3FE] p-6 sm:p-8">
         <div>
-          <p className="text-sm font-medium text-gray-500">Step 2 of 3</p>
+          <p className="text-sm font-semibold text-[#0052FF]">Step 2 of 3</p>
 
-          <p className="mt-2 text-sm font-medium text-gray-500">
-            Questions {currentQuestions[0]?.number}–
-            {currentQuestions[1]?.number}
+          <p className="mt-2 text-sm font-semibold text-gray-700">
+            Question {questionNumber} of {questions.length}
           </p>
+
+          <div
+            className="mt-3 h-2 overflow-hidden rounded-full bg-white"
+            aria-hidden="true"
+          >
+            <div
+              className="h-full rounded-full bg-[#0052FF] transition-all duration-300"
+              style={{
+                width: `${(questionNumber / questions.length) * 100}%`,
+              }}
+            />
+          </div>
         </div>
 
-        <div className="space-y-8">
-          {currentQuestions.map((question) => {
-            const selectedAnswer = answers[question.number];
+        <fieldset className="space-y-5">
+          <legend className="w-full">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[#0052FF]">
+              {currentQuestion.title}
+            </p>
 
-            return (
-              <fieldset key={question.number} className="space-y-3">
-                <legend className="w-full">
-                  <p className="text-sm font-semibold text-gray-500">
-                    Question {String(question.number).padStart(2, "0")}
-                  </p>
+            <h3 className="mt-3 text-xl font-bold leading-8 text-[#0052FF] sm:text-2xl">
+              {currentQuestion.question}
+            </h3>
+          </legend>
 
-                  <h3 className="mt-1 text-lg font-bold text-gray-900">
-                    {question.title}
-                  </h3>
+          <div className="space-y-3">
+            {currentQuestion.options.map((option) => {
+              const selectedAnswer = answers[currentQuestion.number];
+              const isSelected = selectedAnswer === option.value;
 
-                  <p className="mt-2 leading-6 text-gray-600">
-                    {question.question}
-                  </p>
-                </legend>
+              return (
+                <label
+                  key={option.value}
+                  className={[
+                    "flex cursor-pointer items-start gap-3 rounded-xl border-2 bg-white p-4 transition",
+                    isSelected
+                      ? "border-[#0052FF] bg-blue-50"
+                      : "border-transparent hover:border-blue-300",
+                  ].join(" ")}
+                >
+                  <input
+                    type="radio"
+                    name={`question-${currentQuestion.number}`}
+                    value={option.value}
+                    checked={isSelected}
+                    onChange={() => handleAnswer(option.value)}
+                    disabled={isSubmitting}
+                    className="mt-1 h-4 w-4 accent-[#0052FF]"
+                  />
 
-                <div className="space-y-3">
-                  {question.options.map((option) => (
-                    <label
-                      key={option.value}
-                      className={[
-                        "flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors",
-                        selectedAnswer === option.value
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
-                      ].join(" ")}
-                    >
-                      <input
-                        type="radio"
-                        name={`question-${question.number}`}
-                        value={option.value}
-                        checked={selectedAnswer === option.value}
-                        onChange={() =>
-                          handleAnswer(question.number, option.value)
-                        }
-                        className="mt-1 h-4 w-4"
-                      />
+                  <span className="flex-1">
+                    <span className="block font-semibold text-gray-900">
+                      {option.value}
+                    </span>
 
-                      <span className="flex-1">
-                        <span className="block font-semibold text-gray-900">
-                          {option.value}
-                        </span>
-
-                        <span className="mt-1 block text-sm leading-6 text-gray-600">
-                          {option.label}
-                        </span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            );
-          })}
-        </div>
-
-        {validationError && (
-          <p className="text-sm text-red-600" role="alert">
-            {validationError}
-          </p>
-        )}
+                    <span className="mt-1 block text-sm leading-6 text-gray-700">
+                      {option.label}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
 
         {submitError && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm font-medium text-red-600" role="alert">
             {submitError}
           </p>
         )}
 
-        <div className="flex justify-between border-t border-gray-200 pt-5">
+        <div className="border-t border-blue-200 pt-5">
           <button
             type="button"
-            className={buttonClass}
+            className={secondaryButtonClass}
             onClick={handlePrevious}
             disabled={isSubmitting}
           >
             Back
           </button>
-
-          <button
-            type="button"
-            className={buttonClass}
-            onClick={() => void handleNext()}
-            disabled={isSubmitting}
-          >
-            {questionPage === 5
-              ? isSubmitting
-                ? "Saving..."
-                : "Continue to Score"
-              : "Next"}
-          </button>
         </div>
+
+        {isSubmitting && (
+          <p className="text-sm font-medium text-gray-600" role="status">
+            Preparing your Ownership Audit results...
+          </p>
+        )}
       </div>
     );
   }
@@ -775,51 +713,58 @@ export default function TechnologyOwnershipAudit() {
   const result = score !== null ? getAuditResult(score) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-2xl bg-[#EBF3FE] p-6 sm:p-8">
       <div className="text-center">
-        <p className="text-sm font-medium text-gray-500">Step 3 of 3</p>
+        <p className="text-sm font-semibold text-[#0052FF]">Step 3 of 3</p>
 
-        <h3 className="mt-2 text-2xl font-bold text-gray-900">
+        <h3 className="mt-2 text-2xl font-bold text-[#0052FF] sm:text-3xl">
           Your Ownership Audit Results
         </h3>
+
+        <p className="mt-3 leading-7 text-gray-700">
+          Your score shows your current level of technology ownership and the
+          most relevant next step.
+        </p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
-        <p className="text-sm text-gray-500">Your Score</p>
+      <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+        <p className="text-sm font-semibold text-gray-600">Your Score</p>
 
-        <p className="mt-1 text-6xl font-bold text-gray-900">{score}</p>
+        <p className="mt-2 text-6xl font-bold text-[#0052FF]">{score}</p>
 
-        <p className="mt-2 text-gray-500">out of 100</p>
+        <p className="mt-2 text-gray-600">out of 100</p>
       </div>
 
-      <div className="text-center">
-        <h4 className="text-xl font-bold text-gray-900">{result?.category}</h4>
+      <div className="rounded-xl bg-white p-6 text-center">
+        <h4 className="text-xl font-bold text-[#0052FF]">{result?.category}</h4>
 
-        <p className="mt-3 leading-7 text-gray-600">{result?.diagnostic}</p>
+        <p className="mt-3 leading-7 text-gray-700">{result?.diagnostic}</p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 p-5">
-        <p className="text-sm font-medium text-gray-500">
+      <div className="rounded-xl bg-white p-6">
+        <p className="text-sm font-semibold text-[#0052FF]">
           Recommended Next Step
         </p>
 
-        <p className="mt-1 text-lg font-bold text-gray-900">{result?.cta}</p>
+        <p className="mt-2 text-xl font-bold text-gray-900">{result?.cta}</p>
       </div>
 
-      <div className="border-t border-gray-200 pt-5">
-        <div className="flex items-center justify-between gap-4">
-          <button type="button" className={buttonClass} onClick={handleRestart}>
-            Retake Audit
-          </button>
+      <div className="flex flex-col gap-3 border-t border-blue-200 pt-5 sm:flex-row sm:justify-between">
+        <button
+          type="button"
+          className={secondaryButtonClass}
+          onClick={handleRestart}
+        >
+          Retake Audit
+        </button>
 
-          <button
-            type="button"
-            className={buttonClass}
-            onClick={handleResultCta}
-          >
-            {result?.cta}
-          </button>
-        </div>
+        <button
+          type="button"
+          className={primaryButtonClass}
+          onClick={handleResultCta}
+        >
+          {result?.cta}
+        </button>
       </div>
     </div>
   );

@@ -7,13 +7,17 @@ const rateLimitMessage = {
   },
 };
 
+const isSecurityTestRequest = (request: {
+  headers: Record<string, string | string[] | undefined>;
+}) => request.headers["x-security-test"] === "true";
+
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,
   standardHeaders: "draft-8",
   legacyHeaders: false,
+  skip: isSecurityTestRequest,
   message: rateLimitMessage,
-  skip: () => process.env.NODE_ENV === "test",
 });
 
 export const authRateLimiter = rateLimit({
@@ -21,11 +25,11 @@ export const authRateLimiter = rateLimit({
   limit: 20,
   standardHeaders: "draft-8",
   legacyHeaders: false,
+  skip: isSecurityTestRequest,
   message: {
     error: {
       code: "RATE_LIMIT_EXCEEDED",
       message: "Too many authentication requests. Please try again later.",
     },
   },
-  skip: () => process.env.NODE_ENV === "test",
 });

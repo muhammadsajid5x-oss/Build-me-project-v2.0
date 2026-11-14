@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import HeroLeft from "../../src/components/Hero/hero-left";
+import HeroLeft from "../../src/components/Hero/HeroLeft";
 
 describe("HeroLeft", () => {
   afterEach(() => {

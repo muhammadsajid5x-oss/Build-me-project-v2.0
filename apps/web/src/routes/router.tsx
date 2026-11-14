@@ -37,6 +37,23 @@ const OwnershipToolkitPage = lazyLoad(
   "OwnershipToolkitPage",
 );
 
+const AboutPage = lazyLoad(() => import("../pages/AboutPage"), "AboutPage");
+
+const TermsAndConditionsPage = lazyLoad(
+  () => import("../pages/TermsAndConditionsPage"),
+  "TermsAndConditionsPage",
+);
+
+const PrivacyPolicyPage = lazyLoad(
+  () => import("../pages/PrivacyPolicyPage"),
+  "PrivacyPolicyPage",
+);
+
+const CookiePolicyPage = lazyLoad(
+  () => import("../pages/CookiePolicyPage"),
+  "CookiePolicyPage",
+);
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -96,6 +113,38 @@ export const router = createBrowserRouter([
         element: (
           <LazyLoadBoundary>
             <OwnershipToolkitPage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "about",
+        element: (
+          <LazyLoadBoundary>
+            <AboutPage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "terms-and-conditions",
+        element: (
+          <LazyLoadBoundary>
+            <TermsAndConditionsPage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "privacy-policy",
+        element: (
+          <LazyLoadBoundary>
+            <PrivacyPolicyPage />
+          </LazyLoadBoundary>
+        ),
+      },
+      {
+        path: "cookie-policy",
+        element: (
+          <LazyLoadBoundary>
+            <CookiePolicyPage />
           </LazyLoadBoundary>
         ),
       },

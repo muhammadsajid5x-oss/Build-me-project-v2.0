@@ -66,7 +66,11 @@ export type AnalyticsEventName =
   | "give.referrals.clicked"
   | "give.referrals.step.one.completed"
   | "give.referrals.step.two.completed"
-  | "give.referrals.completed";
+  | "give.referrals.completed"
+  | "about.cta.clicked"
+  | "about.terms.clicked"
+  | "about.privacy.clicked"
+  | "about.cookie.clicked";
 
 export const ANALYTICS_EVENTS = {
   WORK_WITH_ME_CLICKED: "work.with.me.clicked",
@@ -132,11 +136,17 @@ export const ANALYTICS_EVENTS = {
   SHARE_THIS_PAGE_EMAIL_CLICKED: "share.this.page.email.clicked",
   SHARE_THIS_PAGE_APP_CLICKED: "share.this.page.app.clicked",
   SHARE_THIS_PAGE_COPY_LINK_CLICKED: "share.this.page.copy.link.clicked",
+
   GIVE_REFERRALS_VIEWED: "give.referrals.viewed",
   GIVE_REFERRALS_CLICKED: "give.referrals.clicked",
   GIVE_REFERRALS_STEP_ONE_COMPLETED: "give.referrals.step.one.completed",
   GIVE_REFERRALS_STEP_TWO_COMPLETED: "give.referrals.step.two.completed",
   GIVE_REFERRALS_COMPLETED: "give.referrals.completed",
+
+  ABOUT_CTA_CLICKED: "about.cta.clicked",
+  ABOUT_TERMS_CLICKED: "about.terms.clicked",
+  ABOUT_PRIVACY_CLICKED: "about.privacy.clicked",
+  ABOUT_COOKIE_CLICKED: "about.cookie.clicked",
 } as const satisfies Record<string, AnalyticsEventName>;
 
 export function trackAnalyticsEvent(event: {

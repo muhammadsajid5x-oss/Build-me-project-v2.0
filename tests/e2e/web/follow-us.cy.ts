@@ -18,12 +18,6 @@ describe("Follow Us", () => {
       "https://web.facebook.com/rao.sajid.1232",
     );
 
-    cy.get('a[aria-label="Visit my YouTube channel"]').should(
-      "have.attr",
-      "href",
-      "https://www.youtube.com/channel/UCX80pgVBcXTgawdM3hAQzBg",
-    );
-
     cy.get('a[aria-label="Contact me on WhatsApp"]').should(
       "have.attr",
       "href",

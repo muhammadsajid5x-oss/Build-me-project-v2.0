@@ -9,14 +9,13 @@ test.describe("Follow Us Security", () => {
     const links = page.locator(
       'a[aria-label="Connect with me on LinkedIn"],' +
         'a[aria-label="Connect with me on Facebook"],' +
-        'a[aria-label="Visit my YouTube channel"],' +
         'a[aria-label="Contact me on WhatsApp"],' +
         'a[aria-label="Contact me on Telegram"]',
     );
 
-    await expect(links).toHaveCount(5);
+    await expect(links).toHaveCount(4);
 
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < 4; i += 1) {
       await expect(links.nth(i)).toHaveAttribute("target", "_blank");
       await expect(links.nth(i)).toHaveAttribute("rel", "noopener noreferrer");
     }
