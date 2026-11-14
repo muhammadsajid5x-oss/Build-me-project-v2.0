@@ -190,30 +190,6 @@ describe("Follow Us analytics events", () => {
     });
   });
 
-  it("stores the follow.us.youtube.clicked event", async () => {
-    const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
-      method: "POST",
-      body: new URLSearchParams({
-        name: "follow.us.youtube.clicked",
-        eventType: "click",
-        path: "/",
-      }),
-    });
-
-    expect(response.status).toBe(202);
-
-    expect(valuesMock).toHaveBeenCalledWith({
-      name: "follow.us.youtube.clicked",
-      eventType: "click",
-      properties: {
-        feature: "follow-us",
-        data: {
-          action: "youtube-clicked",
-        },
-      },
-    });
-  });
-
   it("rejects follow.us.viewed with the wrong event type", async () => {
     const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
       method: "POST",

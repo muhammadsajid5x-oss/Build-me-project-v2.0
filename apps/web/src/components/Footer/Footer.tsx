@@ -44,7 +44,7 @@ export default function Footer() {
               lg:pl-0 lg:pr-0 lg:py-1
             "
           >
-            <div className="origin-left scale-[0.85] lg:ml-0 py-2 whitespace-nowrap sm:scale-90 md:scale-95 lg:scale-90">
+            <div className="origin-left scale-[0.85] -ml-6 -mt-6 lg:ml-0 py-2 whitespace-nowrap sm:scale-90 md:scale-95 lg:scale-90">
               <GiveReferrals />
             </div>
           </div>

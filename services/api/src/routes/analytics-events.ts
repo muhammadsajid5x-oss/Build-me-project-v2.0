@@ -442,11 +442,6 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
     buildProperties: () => followUsPlatformClickProperties("facebook"),
   },
 
-  "follow.us.youtube.clicked": {
-    eventType: "click",
-    buildProperties: () => followUsPlatformClickProperties("youtube"),
-  },
-
   "share.this.page.viewed": {
     eventType: "view",
     buildProperties: shareThisPageViewProperties,
