@@ -41,7 +41,7 @@ export default function Footer() {
             className="
               min-w-0 overflow-hidden whitespace-nowrap py-4
               sm:py-5
-              lg:pl-0 lg:pr-0 lg:py-1
+              lg:pl-0 lg:pr-0 lg:py-1 lg:mt-6
             "
           >
             <div className="origin-left scale-[0.85] -ml-6 -mt-6 lg:ml-0 py-2 whitespace-nowrap sm:scale-90 md:scale-95 lg:scale-90">

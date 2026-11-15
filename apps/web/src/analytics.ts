@@ -67,6 +67,11 @@ export type AnalyticsEventName =
   | "give.referrals.step.one.completed"
   | "give.referrals.step.two.completed"
   | "give.referrals.completed"
+  | "give.feedback.viewed"
+  | "give.feedback.clicked"
+  | "give.feedback.step.one.completed"
+  | "give.feedback.step.two.completed"
+  | "give.feedback.completed"
   | "about.cta.clicked"
   | "about.terms.clicked"
   | "about.privacy.clicked"
@@ -142,6 +147,12 @@ export const ANALYTICS_EVENTS = {
   GIVE_REFERRALS_STEP_ONE_COMPLETED: "give.referrals.step.one.completed",
   GIVE_REFERRALS_STEP_TWO_COMPLETED: "give.referrals.step.two.completed",
   GIVE_REFERRALS_COMPLETED: "give.referrals.completed",
+
+  GIVE_FEEDBACK_VIEWED: "give.feedback.viewed",
+  GIVE_FEEDBACK_CLICKED: "give.feedback.clicked",
+  GIVE_FEEDBACK_STEP_ONE_COMPLETED: "give.feedback.step.one.completed",
+  GIVE_FEEDBACK_STEP_TWO_COMPLETED: "give.feedback.step.two.completed",
+  GIVE_FEEDBACK_COMPLETED: "give.feedback.completed",
 
   ABOUT_CTA_CLICKED: "about.cta.clicked",
   ABOUT_TERMS_CLICKED: "about.terms.clicked",

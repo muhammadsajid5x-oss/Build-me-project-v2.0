@@ -22,6 +22,7 @@ import {
 import servicePlansRoutes from "./routes/service-plans.js";
 import bookingRoutes from "./routes/bookings.js";
 import invoiceRoutes from "./routes/invoices.js";
+import feedbackRoutes from "./routes/feedback.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -64,6 +65,7 @@ app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/service-plans", servicePlansRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/invoices", invoiceRoutes);
+app.use("/api/v1/feedback", feedbackRoutes);
 
 app.use((_request, _response, next) => {
   next(new Error("NOT_FOUND"));
