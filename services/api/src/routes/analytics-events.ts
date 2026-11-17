@@ -584,6 +584,56 @@ const eventDefinitions: Record<string, AnalyticsEventDefinition> = {
       },
     }),
   },
+  "give.feedback.viewed": {
+    eventType: "view",
+    buildProperties: (path?: string) => ({
+      feature: "give-feedback",
+      data: {
+        action: "viewed",
+        path,
+      },
+    }),
+  },
+
+  "give.feedback.clicked": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "give-feedback",
+      data: {
+        action: "clicked",
+      },
+    }),
+  },
+
+  "give.feedback.step.one.completed": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "give-feedback",
+      data: {
+        action: "step-one-completed",
+      },
+    }),
+  },
+
+  "give.feedback.step.two.completed": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "give-feedback",
+      data: {
+        action: "step-two-completed",
+      },
+    }),
+  },
+
+  "give.feedback.completed": {
+    eventType: "click",
+    buildProperties: () => ({
+      feature: "give-feedback",
+      data: {
+        action: "completed",
+      },
+    }),
+  },
 };
 
 router.use(

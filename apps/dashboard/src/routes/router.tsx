@@ -5,6 +5,7 @@ import AppLayout from "../layouts/AppLayout";
 import AnalyticsPage from "../pages/AnalyticsPage";
 import BookingsPage from "../pages/BookingsPage";
 import DashboardPage from "../pages/DashboardPage";
+import FeedbackPage from "../pages/FeedbackPage";
 import InvoicesPage from "../pages/InvoicesPage";
 import LoginPage from "../pages/LoginPage";
 import NotFoundPage from "../pages/NotFoundPage";
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
           {
             path: "requests",
             element: <RequestsPage />,
+          },
+          {
+            path: "feedback",
+            element: <FeedbackPage />,
           },
           {
             path: "bookings",

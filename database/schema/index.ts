@@ -11,3 +11,4 @@ export * from "./case-studies.js";
 export * from "./service-plans.js";
 export * from "./bookings.js";
 export * from "./invoices.js";
+export * from "./feedback.js";

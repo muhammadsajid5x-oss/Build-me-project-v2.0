@@ -3,9 +3,9 @@ const facts = ["No Stress", "No Confusion", "No Jargons", "Just simple"];
 export default function HeroBottom() {
   return (
     <div className="w-full text-left">
-      <h2 className="text-xl font-bold leading-tight text-slate-900 sm:text-2xl">
+      <h3 className="text-x2 font-bold leading-tight text-blue-700 sm:text-2xl">
         Reliable solutions that help you grow.
-      </h2>
+      </h3>
 
       <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-3">
         {facts.map((fact) => (

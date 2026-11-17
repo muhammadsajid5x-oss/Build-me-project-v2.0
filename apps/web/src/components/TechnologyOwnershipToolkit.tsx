@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
@@ -13,7 +13,7 @@ type VisitorDetails = {
   visitorEmail: string;
 };
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 const primaryButtonClass =
   "w-full rounded-lg bg-[#0052FF] px-5 py-3 font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-[#0052FF] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
@@ -31,7 +31,18 @@ export default function TechnologyOwnershipToolkit() {
   const [downloadError, setDownloadError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const stepNumber = step === "intro" ? 1 : step === "details" ? 2 : 3;
+  const stepNumberByStep: Record<ToolkitStep, number> = {
+    intro: 1,
+    details: 2,
+    content: 3,
+  };
+  const stepNumber = stepNumberByStep[step];
+  const progressPercentageByStep: Record<ToolkitStep, number> = {
+    intro: 33.33,
+    details: 66.66,
+    content: 100,
+  };
+  const progressPercentage = progressPercentageByStep[step];
 
   const handleContinue = () => {
     setError("");
@@ -39,7 +50,7 @@ export default function TechnologyOwnershipToolkit() {
   };
 
   const handleVisitorDetailsSubmit = async (
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
     setError("");
@@ -63,7 +74,7 @@ export default function TechnologyOwnershipToolkit() {
 
     try {
       const response = await fetch(
-        `${getApiBaseUrl()}/api/v1/ownership-toolkit-accesses`,
+        `${getApiBaseUrl(import.meta.env.VITE_API_URL)}/api/v1/ownership-toolkit-accesses`,
         {
           method: "POST",
           headers: {
@@ -126,25 +137,22 @@ export default function TechnologyOwnershipToolkit() {
       </div>
 
       <div
+        aria-hidden="true"
         className="h-2 w-full overflow-hidden rounded-full bg-[#EBF3FE]"
-        role="progressbar"
-        aria-label="Toolkit journey progress"
-        aria-valuemin={1}
-        aria-valuemax={3}
-        aria-valuenow={stepNumber}
       >
         <div
           className="h-full rounded-full bg-[#0052FF] transition-all"
-          style={{
-            width:
-              step === "intro"
-                ? "33.33%"
-                : step === "details"
-                  ? "66.66%"
-                  : "100%",
-          }}
+          style={{ width: `${progressPercentage}%` }}
         />
       </div>
+      <progress
+        className="sr-only"
+        aria-label="Toolkit journey progress"
+        max={3}
+        value={stepNumber}
+      >
+        {progressPercentage}%
+      </progress>
 
       {step === "intro" && (
         <section className="space-y-4 rounded-2xl bg-[#EBF3FE] p-5 sm:p-6">

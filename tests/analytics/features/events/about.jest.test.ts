@@ -1,6 +1,40 @@
+/**
+ * @jest-environment node
+ */
+
 import request from "supertest";
 
-const API_URL = process.env.API_URL || "http://localhost:3000";
+import app from "../../../../services/api/src/app.js";
+
+const { insertMock, valuesMock } = (() => {
+  const im = jest.fn();
+  const vm = jest.fn();
+
+  return {
+    insertMock: im,
+    valuesMock: vm,
+  };
+})();
+
+jest.mock("../../../../database/dist/drizzle/client.js", () => ({
+  db: {
+    insert: insertMock,
+  },
+}));
+
+jest.mock("../../../../database/dist/schema/analytics-events.js", () => ({
+  analyticsEvents: {
+    name: "analytics_events",
+  },
+}));
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  valuesMock.mockResolvedValue(undefined);
+  insertMock.mockReturnValue({
+    values: valuesMock,
+  });
+});
 
 describe("About analytics", () => {
   it("accepts About analytics events", async () => {
@@ -12,7 +46,7 @@ describe("About analytics", () => {
     ];
 
     for (const name of events) {
-      const response = await request(API_URL)
+      const response = await request(app)
         .post("/api/v1/analytics/events")
         .type("form")
         .send({

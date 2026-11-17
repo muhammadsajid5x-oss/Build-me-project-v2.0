@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 
 import { trackAnalyticsEvent } from "../analytics";
 import Footer from "../components/Footer/Footer";
+import GiveFeedback from "../components/GiveFeedback/GiveFeedback";
 import Navbar from "../components/Navbar/Navbar";
 
 export default function AppLayout() {
@@ -32,6 +33,8 @@ export default function AppLayout() {
       </main>
 
       <Footer />
+
+      <GiveFeedback />
     </div>
   );
 }

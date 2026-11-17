@@ -4,12 +4,13 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: "grid" },
   { to: "/analytics", label: "Analytics", icon: "chart" },
   { to: "/requests", label: "Requests", icon: "inbox" },
+  { to: "/feedback", label: "Feedback", icon: "feedback" },
   { to: "/bookings", label: "Bookings", icon: "calendar" },
   { to: "/invoices", label: "Invoices", icon: "invoice" },
   { to: "/settings", label: "Settings", icon: "gear" },
 ] as const;
 
-function NavIcon({ name }: { name: string }) {
+function NavIcon({ name }: { readonly name: string }) {
   switch (name) {
     case "grid":
       return (
@@ -48,6 +49,20 @@ function NavIcon({ name }: { name: string }) {
         >
           <path d="M3 4h14v12H3V4zm2 2v8h10V6H5z" />
           <path d="M5 7h10l-5 4-5-4z" />
+        </svg>
+      );
+
+    case "feedback":
+      return (
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M3 4.5A2.5 2.5 0 015.5 2h9A2.5 2.5 0 0117 4.5v6A2.5 2.5 0 0114.5 13H9l-4.5 4v-4.7A2.5 2.5 0 013 10.5v-6z" />
+          <path d="M6 6h8v1.5H6V6zm0 3h5v1.5H6V9z" />
         </svg>
       );
 
