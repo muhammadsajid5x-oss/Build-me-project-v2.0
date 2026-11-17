@@ -126,8 +126,8 @@ export default function HomePage() {
         <div
           className="
     relative z-10 min-w-0
-    translate-y-58
-    sm:translate-y-43
+    translate-y-28
+    sm:translate-y-23
     lg:translate-y-0
   "
         >
@@ -137,9 +137,9 @@ export default function HomePage() {
         {/* Hero Bottom */}
         <div
           className="
-    relative z-40 col-span-full
-    -mt-96 translate-x-4 sm:-mt-116 sm:translate-x-5 lg:translate-x-0
-    lg:-mt-56
+    relative z-40 col-span-center
+    mt-20 -size-1 translate-x-4 sm:mt-16 sm:translate-x-40 lg:translate-x-103 
+    lg:-mt-32
   "
         >
           <HeroBottom />
@@ -149,9 +149,10 @@ export default function HomePage() {
         <div
           className="
     relative z-40 col-span-full
-    -mt-58
-    sm:-mt-91
-    lg:-mt-30
+    -mt-156
+    sm:-mt-146
+    sm:translate-x-5
+    lg:-mt-55
     flex flex-wrap items-center gap-3
   "
         >
@@ -445,7 +446,7 @@ export default function HomePage() {
         </dialog>
       )}
 
-      <div className="mt-41 sm:mt-28.5 lg:mt-6">
+      <div className="mt-7 sm:mt-10 lg:mt-15">
         <Testimonials />
       </div>
 

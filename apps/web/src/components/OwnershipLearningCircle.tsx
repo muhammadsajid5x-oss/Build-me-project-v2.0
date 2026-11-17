@@ -50,7 +50,7 @@ export default function OwnershipLearningCircle() {
 
     try {
       const response = await fetch(
-        `${getApiBaseUrl()}/api/v1/ownership-learning-circle-requests`,
+        `${getApiBaseUrl(import.meta.env.VITE_API_URL)}/api/v1/ownership-learning-circle-requests`,
         {
           method: "POST",
           headers: {
