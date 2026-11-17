@@ -191,7 +191,7 @@ export default function GiveReferrals() {
           className="group flex w-full items-center gap-4 px-6 py-4 text-left transition focus:outline-none"
         >
           <svg
-            className="h-9 w-9 shrink-0 text-[#22C55E] transition-transform duration-200 group-hover:scale-105"
+            className="h-9 w-9 shrink-0 text-blue-600 transition-transform duration-200 group-hover:scale-105"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -210,7 +210,7 @@ export default function GiveReferrals() {
           <div className="min-w-0">
             <h2
               id="give-referrals-heading"
-              className="text-base font-bold text-[#22C55E] group-hover:underline"
+              className="text-base font-bold text-blue-600 group-hover:underline"
             >
               Give Referrals
             </h2>
@@ -234,9 +234,9 @@ export default function GiveReferrals() {
         >
           {submitted ? (
             <div className="text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
                 <svg
-                  className="h-7 w-7 text-[#22C55E]"
+                  className="h-7 w-7 text-blue-600"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -264,7 +264,7 @@ export default function GiveReferrals() {
               <button
                 type="button"
                 onClick={closeModal}
-                className="mt-6 w-full rounded-md bg-[#22C55E] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16A34A] focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:ring-offset-2"
+                className="mt-6 w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
               >
                 Done
               </button>
@@ -274,7 +274,7 @@ export default function GiveReferrals() {
               <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                 <div className="flex items-center gap-3">
                   <svg
-                    className="h-7 w-7 text-[#22C55E]"
+                    className="h-7 w-7 text-blue-600"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -302,7 +302,7 @@ export default function GiveReferrals() {
                   type="button"
                   onClick={closeModal}
                   aria-label="Close referral dialog"
-                  className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >
                   <svg
                     className="h-5 w-5"
@@ -324,7 +324,7 @@ export default function GiveReferrals() {
                   <div
                     key={item}
                     className={`h-1.5 flex-1 rounded-full ${
-                      item <= step ? "bg-[#22C55E]" : "bg-gray-200"
+                      item <= step ? "bg-blue-600" : "bg-gray-200"
                     }`}
                   />
                 ))}
@@ -351,7 +351,7 @@ export default function GiveReferrals() {
                       onChange={(event) =>
                         updateField("referrerName", event.target.value)
                       }
-                      className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-[#22C55E] focus:ring-2 focus:ring-green-100"
+                      className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                       placeholder="Your name"
                     />
                   </label>
@@ -366,7 +366,7 @@ export default function GiveReferrals() {
                       onChange={(event) =>
                         updateField("referrerEmail", event.target.value)
                       }
-                      className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-[#22C55E] focus:ring-2 focus:ring-green-100"
+                      className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                       placeholder="you@example.com"
                     />
                   </label>
@@ -380,7 +380,7 @@ export default function GiveReferrals() {
                   <button
                     type="button"
                     onClick={continueToStepTwo}
-                    className="w-full rounded-md bg-[#22C55E] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16A34A] focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:ring-offset-2"
+                    className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
                   >
                     Continue
                   </button>
@@ -408,7 +408,7 @@ export default function GiveReferrals() {
                       onChange={(event) =>
                         updateField("contactName", event.target.value)
                       }
-                      className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-[#22C55E] focus:ring-2 focus:ring-green-100"
+                      className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                       placeholder="Their name"
                     />
                   </label>
@@ -423,7 +423,7 @@ export default function GiveReferrals() {
                       onChange={(event) =>
                         updateField("contactEmail", event.target.value)
                       }
-                      className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-[#22C55E] focus:ring-2 focus:ring-green-100"
+                      className="mt-1.5 w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                       placeholder="their@example.com"
                     />
                   </label>
@@ -440,7 +440,7 @@ export default function GiveReferrals() {
                           event.target.value as Relationship,
                         )
                       }
-                      className="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#22C55E] focus:ring-2 focus:ring-green-100"
+                      className="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                     >
                       <option value="">Select relationship</option>
                       <option value="friend">Friend</option>
@@ -467,7 +467,7 @@ export default function GiveReferrals() {
                     <button
                       type="button"
                       onClick={continueToStepThree}
-                      className="w-2/3 rounded-md bg-[#22C55E] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16A34A] focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:ring-offset-2"
+                      className="w-2/3 rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
                     >
                       Continue
                     </button>
@@ -487,16 +487,13 @@ export default function GiveReferrals() {
                   </div>
 
                   <label className="block">
-                    <span className="text-sm font-medium text-gray-700">
-                      Why are you making this referral?
-                    </span>
                     <textarea
                       value={form.reason}
                       onChange={(event) =>
                         updateField("reason", event.target.value)
                       }
                       rows={4}
-                      className="mt-1.5 w-full resize-none rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-[#22C55E] focus:ring-2 focus:ring-green-100"
+                      className="mt-1 w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600"
                       placeholder="Tell us how we can help..."
                     />
                   </label>
@@ -534,7 +531,7 @@ export default function GiveReferrals() {
                     <button
                       type="button"
                       onClick={submitReferral}
-                      className="w-2/3 rounded-md bg-[#22C55E] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16A34A] focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:ring-offset-2"
+                      className="w-2/3 rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
                     >
                       Submit Referral
                     </button>

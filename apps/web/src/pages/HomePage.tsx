@@ -138,7 +138,7 @@ export default function HomePage() {
         <div
           className="
     relative z-40 col-span-center
-    mt-20 -size-1 translate-x-4 sm:mt-16 sm:translate-x-40 lg:translate-x-103 
+    mt-20 -size-1 translate-x-4 sm:mt-16 sm:translate-x-40 lg:translate-x-80 
     lg:-mt-32
   "
         >

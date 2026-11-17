@@ -370,7 +370,7 @@ export default function Testimonials() {
               <div>
                 <div
                   aria-label={`${summary.averageRating.toFixed(1)} out of 5 stars`}
-                  className="text-sm tracking-[0.12em] text-amber-500"
+                  className="text-sm tracking-[0.12em] text-blue-700"
                 >
                   ★★★★★
                 </div>
@@ -406,7 +406,7 @@ export default function Testimonials() {
                     aria-hidden="true"
                   >
                     <div
-                      className="h-full rounded-full bg-amber-500"
+                      className="h-full rounded-full bg-blue-700"
                       style={{ width: `${summary.averageRating * 20}%` }}
                     />
                   </div>
@@ -530,7 +530,7 @@ export default function Testimonials() {
 
                   <div
                     aria-label={`${testimonial.rating} out of 5 stars`}
-                    className="mt-3 text-sm tracking-wide text-amber-500"
+                    className="mt-3 text-sm tracking-wide text-blue-700"
                   >
                     {stars(testimonial.rating)}
                   </div>
@@ -696,7 +696,7 @@ export default function Testimonials() {
             </button>
           </div>
 
-          <div className="mt-4 text-amber-500">
+          <div className="mt-4 text-blue-700">
             {stars(selectedTestimonial.rating)}
           </div>
 
