@@ -1,4 +1,5 @@
-import { SyntheticEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent } from "react";
+import { Link } from "react-router-dom";
 
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import { getApiBaseUrl } from "../api-url";
@@ -54,8 +55,23 @@ const initialFormData: FormData = {
   availability: "",
 };
 
+const FORMAT_OPTIONS = [
+  { value: "Video call", label: "Video call" },
+  { value: "Phone call", label: "Phone call" },
+  { value: "Async chat", label: "Async chat" },
+  { value: "Not sure yet", label: "Not sure yet" },
+];
+
+const AVAILABILITY_OPTIONS = [
+  { value: "Weekday mornings", label: "Weekday mornings" },
+  { value: "Weekday afternoons", label: "Weekday afternoons" },
+  { value: "Weekday evenings", label: "Weekday evenings" },
+  { value: "Weekend", label: "Weekend" },
+  { value: "Flexible", label: "Flexible" },
+];
+
 const GENERIC_SUBMIT_ERROR =
-  "We could not submit your request right now. Please try again in a moment.";
+  "We could not submit your request right now. Please try again.";
 
 function formatPrice(plan: ServicePlan): string {
   const amount = new Intl.NumberFormat("en-US", {
@@ -76,21 +92,30 @@ function validateForm(formData: FormData): FormErrors {
 
   if (!formData.email.trim()) {
     errors.email = "Email is required.";
-  } else if (
-    formData.email.trim().length > 254 ||
-    !/^[^\s@]+@[^\s@.]+\.[^\s@]+$/.test(formData.email.trim())
-  ) {
-    errors.email = "Please enter a valid email address.";
+  } else if (formData.email.trim().length > 254) {
+    errors.email = "Email must not exceed 254 characters.";
+  } else {
+    const emailValue = formData.email.trim();
+    const atIndex = emailValue.indexOf("@");
+    const dotIndex = emailValue.lastIndexOf(".");
+
+    if (
+      atIndex <= 0 ||
+      dotIndex <= atIndex + 1 ||
+      dotIndex >= emailValue.length - 1
+    ) {
+      errors.email = "Please enter a valid email address.";
+    }
   }
 
   if (!formData.topic.trim()) {
-    errors.topic = "Please tell us what you would like to discuss.";
+    errors.topic = "Please add a topic.";
   } else if (formData.topic.trim().length > 2000) {
-    errors.topic = "This field must not exceed 2000 characters.";
+    errors.topic = "Topic must not exceed 2000 characters.";
   }
 
   if (formData.preferredFormat.trim().length > 100) {
-    errors.preferredFormat = "Preferred format must not exceed 100 characters.";
+    errors.preferredFormat = "Format must not exceed 100 characters.";
   }
 
   if (formData.availability.trim().length > 100) {
@@ -237,7 +262,7 @@ export default function CoffeeWithMePage() {
       } catch {
         if (!cancelled) {
           setPlansError(
-            "We could not load the coffee plans right now. Please refresh and try again.",
+            "Coffee plans are unavailable right now. Please refresh and try again.",
           );
         }
       } finally {
@@ -269,6 +294,7 @@ export default function CoffeeWithMePage() {
 
       const next = { ...current };
       delete next[field];
+
       return next;
     });
 
@@ -294,7 +320,7 @@ export default function CoffeeWithMePage() {
     }
 
     if (!selectedPlanId) {
-      setSubmitError("Please select a coffee plan before continuing.");
+      setSubmitError("Select a plan before continuing.");
       return;
     }
 
@@ -303,10 +329,6 @@ export default function CoffeeWithMePage() {
     setIsSubmitting(true);
 
     try {
-      /*
-       * Step 1:
-       * Create the Coffee With Me request / lead.
-       */
       const leadResponse = await fetch(
         `${apiBaseUrl}/api/v1/coffee-with-me-requests`,
         {
@@ -359,13 +381,6 @@ export default function CoffeeWithMePage() {
         return;
       }
 
-      /*
-       * Step 2:
-       * Create the booking.
-       *
-       * Only leadId + planId are sent.
-       * The backend owns the actual price.
-       */
       const bookingResponse = await fetch(`${apiBaseUrl}/api/v1/bookings`, {
         method: "POST",
         headers: {
@@ -383,7 +398,7 @@ export default function CoffeeWithMePage() {
 
       if (!bookingResponse.ok) {
         setSubmitError(
-          "Your coffee request was received, but we could not create the booking. Please try again.",
+          "Your request was received, but the booking could not be created.",
         );
         return;
       }
@@ -404,10 +419,6 @@ export default function CoffeeWithMePage() {
         status: bookingData.status as Booking["status"],
       };
 
-      /*
-       * Step 3:
-       * Create the invoice from the booking.
-       */
       const invoiceResponse = await fetch(`${apiBaseUrl}/api/v1/invoices`, {
         method: "POST",
         headers: {
@@ -424,7 +435,7 @@ export default function CoffeeWithMePage() {
 
       if (!invoiceResponse.ok) {
         setSubmitError(
-          "Your booking was created, but we could not create the invoice. Please try again.",
+          "Your booking was created, but the invoice could not be created.",
         );
         return;
       }
@@ -468,72 +479,103 @@ export default function CoffeeWithMePage() {
 
   if (submitted && createdBooking && createdInvoice) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        <nav
+          aria-label="Breadcrumb"
+          className="mb-6 flex flex-wrap items-center gap-2 text-sm font-semibold"
+        >
+          <Link
+            to="/"
+            className="text-blue-700 underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-700"
+          >
+            Home
+          </Link>
+
+          <span aria-hidden="true" className="text-black">
+            /
+          </span>
+
+          <Link
+            to="/#work-with-me"
+            className="text-blue-700 underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-700"
+          >
+            Work With Me
+          </Link>
+
+          <span aria-hidden="true" className="text-black">
+            /
+          </span>
+
+          <span className="text-black">Coffee With Me</span>
+        </nav>
+
         <section
           aria-labelledby="coffee-success-title"
-          className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm sm:p-8"
+          className="rounded-2xl border-2 border-blue-700 bg-white p-6 sm:p-8"
         >
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-            Coffee With Me
-          </p>
+          <div className="rounded-xl bg-blue-100 p-5 sm:p-6">
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-700">
+              Coffee With Me
+            </p>
 
-          <h1
-            id="coffee-success-title"
-            className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-          >
-            Your coffee booking is confirmed.
-          </h1>
+            <h1
+              id="coffee-success-title"
+              className="mt-3 text-3xl font-bold tracking-tight text-black sm:text-4xl"
+            >
+              Booking received.
+            </h1>
 
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">
-            Your booking has been created successfully. An invoice has been
-            generated and your payment is currently pending.
-          </p>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-black">
+              Your booking and invoice are ready.
+            </p>
+          </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl bg-[#EBF3FE] p-5">
-              <p className="text-sm font-medium text-slate-600">Plan</p>
-
-              <p className="mt-1 text-lg font-bold text-slate-900">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border-2 border-blue-100 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                Plan
+              </p>
+              <p className="mt-1 text-lg font-bold text-black">
                 {createdBooking.planName}
               </p>
             </div>
 
-            <div className="rounded-xl bg-[#EBF3FE] p-5">
-              <p className="text-sm font-medium text-slate-600">Price</p>
-
-              <p className="mt-1 text-lg font-bold text-slate-900">
+            <div className="rounded-xl border-2 border-blue-100 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                Price
+              </p>
+              <p className="mt-1 text-lg font-bold text-black">
                 {createdBooking.currency} $
                 {createdBooking.price.toLocaleString("en-US")}
               </p>
             </div>
 
-            <div className="rounded-xl bg-[#EBF3FE] p-5">
-              <p className="text-sm font-medium text-slate-600">Invoice</p>
-
-              <p className="mt-1 text-lg font-bold text-slate-900">
+            <div className="rounded-xl border-2 border-blue-100 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                Invoice
+              </p>
+              <p className="mt-1 text-lg font-bold text-black">
                 {createdInvoice.invoiceNumber}
               </p>
             </div>
 
-            <div className="rounded-xl bg-[#EBF3FE] p-5">
-              <p className="text-sm font-medium text-slate-600">
-                Payment Status
+            <div className="rounded-xl border-2 border-blue-100 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                Status
               </p>
-
-              <p className="mt-1 text-lg font-bold text-blue-700">
+              <p className="mt-1 text-lg font-bold text-black">
                 Payment Pending
               </p>
             </div>
           </div>
 
-          <div className="mt-8 rounded-xl border border-blue-100 bg-blue-50 p-5">
-            <p className="text-sm leading-6 text-slate-700">
-              Your invoice has been created for{" "}
+          <div className="mt-5 rounded-xl bg-blue-100 p-4">
+            <p className="text-sm font-semibold leading-6 text-black">
+              Invoice total:{" "}
               <strong>
                 {createdInvoice.currency} $
                 {createdInvoice.amount.toLocaleString("en-US")}
               </strong>
-              . Payment processing will be connected separately.
             </p>
           </div>
         </section>
@@ -542,52 +584,88 @@ export default function CoffeeWithMePage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <main className="mx-auto w-full max-w-5xl px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
       <section aria-labelledby="coffee-page-title">
-        <div className="mb-10">
+        <nav
+          aria-label="Breadcrumb"
+          className="mb-5 flex flex-wrap items-center gap-2 text-sm font-semibold"
+        >
+          <Link
+            to="/"
+            className="text-blue-700 underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-700"
+          >
+            Home
+          </Link>
+
+          <span aria-hidden="true" className="text-black">
+            /
+          </span>
+
+          <Link
+            to="/#work-with-me"
+            className="text-blue-700 underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-700"
+          >
+            Work With Me
+          </Link>
+
+          <span aria-hidden="true" className="text-black">
+            /
+          </span>
+
+          <span className="text-black">Coffee With Me</span>
+        </nav>
+
+        <div className="rounded-2xl bg-blue-100 p-6 sm:p-8">
           <p className="text-sm font-bold uppercase tracking-[0.15em] text-blue-700">
-            Coffee With Me
+            Work With Me
           </p>
 
           <h1
             id="coffee-page-title"
-            className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+            className="mt-4 text-3xl font-bold tracking-tight text-black sm:text-4xl"
           >
-            Grab a virtual coffee
+            Coffee With Me
           </h1>
 
-          <p className="mt-4 max-w-3xl text-base leading-7 text-slate-700 sm:text-lg">
-            Choose the conversation that fits what you need, then tell me a
-            little about what you would like to discuss.
+          <p className="mt-2 max-w-xl text-sm font-medium text-black sm:text-base">
+            Choose a plan. Share the essentials. Start the conversation.
           </p>
         </div>
 
-        <section aria-labelledby="coffee-plans-title">
-          <div className="mb-5">
-            <h2
-              id="coffee-plans-title"
-              className="text-2xl font-bold text-blue-700"
-            >
-              Price Plans
-            </h2>
+        <section aria-labelledby="coffee-plans-title" className="mt-7">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">
+                01
+              </p>
 
-            <p className="mt-2 text-sm text-slate-600">
-              Choose the conversation format that works best for you.
-            </p>
+              <h2
+                id="coffee-plans-title"
+                className="mt-1 text-2xl font-bold text-black"
+              >
+                Choose a plan
+              </h2>
+            </div>
+
+            {selectedPlan && (
+              <span className="hidden rounded-full bg-blue-700 px-3 py-1.5 text-xs font-bold text-white sm:inline-flex">
+                {selectedPlan.planName}
+              </span>
+            )}
           </div>
 
           {isLoadingPlans && (
             <div
-              className="rounded-xl border border-blue-100 bg-[#EBF3FE] p-5 text-sm text-slate-700"
+              className="rounded-xl border-2 border-blue-100 bg-blue-100 p-5 text-sm font-semibold text-black"
               role="status"
             >
-              Loading coffee plans...
+              Loading plans...
             </div>
           )}
 
           {plansError && !isLoadingPlans && (
             <div
-              className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700"
+              className="rounded-xl border-2 border-blue-700 bg-blue-100 p-5 text-sm font-semibold text-black"
               role="alert"
             >
               {plansError}
@@ -595,13 +673,13 @@ export default function CoffeeWithMePage() {
           )}
 
           {!isLoadingPlans && !plansError && plans.length === 0 && (
-            <div className="rounded-xl border border-blue-100 bg-[#EBF3FE] p-5 text-sm text-slate-700">
-              No coffee plans are currently available.
+            <div className="rounded-xl border-2 border-blue-100 bg-blue-100 p-5 text-sm font-semibold text-black">
+              No plans are currently available.
             </div>
           )}
 
           {!isLoadingPlans && plans.length > 0 && (
-            <div className="grid gap-5 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-3">
               {plans.map((plan) => {
                 const isSelected = selectedPlanId === plan.id;
 
@@ -612,42 +690,69 @@ export default function CoffeeWithMePage() {
                     onClick={() => handlePlanSelect(plan.id)}
                     aria-pressed={isSelected}
                     className={[
-                      "rounded-2xl border-2 p-6 text-left transition",
+                      "group rounded-2xl border-2 p-5 text-left transition",
+                      "focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2",
                       isSelected
-                        ? "border-blue-600 bg-blue-50 shadow-md"
-                        : "border-blue-100 bg-[#EBF3FE] hover:border-blue-400",
+                        ? "border-blue-700 bg-blue-700 text-white"
+                        : "border-blue-100 bg-white text-black hover:border-blue-700 hover:bg-blue-100",
                     ].join(" ")}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <h3 className="text-xl font-bold text-slate-900">
-                        {plan.planName}
-                      </h3>
+                    <div className="flex items-start justify-between gap-3">
+                      <span
+                        className={[
+                          "text-xs font-bold uppercase tracking-[0.12em]",
+                          isSelected ? "text-white" : "text-blue-700",
+                        ].join(" ")}
+                      >
+                        Plan
+                      </span>
 
                       {isSelected && (
-                        <span className="rounded-full bg-blue-600 px-2.5 py-1 text-xs font-bold text-white">
+                        <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-blue-700">
                           Selected
                         </span>
                       )}
                     </div>
 
-                    <p className="mt-5 text-3xl font-bold text-blue-700">
-                      {formatPrice(plan)}
-                    </p>
+                    <h3
+                      className={[
+                        "mt-3 text-xl font-bold",
+                        isSelected ? "text-white" : "text-black",
+                      ].join(" ")}
+                    >
+                      {plan.planName}
+                    </h3>
 
-                    <p className="mt-4 text-sm leading-6 text-slate-700">
+                    <p
+                      className={[
+                        "mt-3 min-h-10 text-sm leading-5",
+                        isSelected ? "text-white" : "text-black",
+                      ].join(" ")}
+                    >
                       {plan.description}
                     </p>
 
-                    <span
-                      className={[
-                        "mt-6 inline-flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-semibold",
-                        isSelected
-                          ? "bg-blue-600 text-white"
-                          : "border-2 border-blue-700 bg-white text-blue-700",
-                      ].join(" ")}
-                    >
-                      {isSelected ? "Plan Selected" : "Choose This Plan"}
-                    </span>
+                    <div className="mt-5 flex items-end justify-between gap-3">
+                      <span
+                        className={[
+                          "text-2xl font-bold",
+                          isSelected ? "text-white" : "text-blue-700",
+                        ].join(" ")}
+                      >
+                        {formatPrice(plan)}
+                      </span>
+
+                      <span
+                        className={[
+                          "rounded-lg px-3 py-2 text-xs font-bold",
+                          isSelected
+                            ? "bg-white text-blue-700"
+                            : "bg-blue-100 text-blue-700",
+                        ].join(" ")}
+                      >
+                        {isSelected ? "Selected" : "Choose"}
+                      </span>
+                    </div>
                   </button>
                 );
               })}
@@ -658,84 +763,103 @@ export default function CoffeeWithMePage() {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="mt-10 space-y-6 rounded-2xl border border-blue-100 bg-white p-6 shadow-sm sm:p-8"
+          className="mt-7 rounded-2xl border-2 border-blue-100 bg-white p-5 sm:p-6"
         >
-          <div>
-            <h2 className="text-2xl font-bold text-blue-700">
-              Booking Details
-            </h2>
-
-            <p className="mt-2 text-sm text-slate-600">
-              {selectedPlan
-                ? `Selected plan: ${selectedPlan.planName} — ${formatPrice(
-                    selectedPlan,
-                  )}`
-                : "Select a plan above before submitting your booking."}
-            </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor="coffee-name"
-              className="mb-2 block text-sm font-semibold text-slate-900"
-            >
-              Name
-            </label>
-
-            <input
-              id="coffee-name"
-              name="name"
-              type="text"
-              value={formData.name}
-              maxLength={100}
-              autoComplete="name"
-              onChange={(event) => updateField("name", event.target.value)}
-              aria-invalid={Boolean(errors.name)}
-              aria-describedby={errors.name ? "coffee-name-error" : undefined}
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-            />
-
-            {errors.name && (
-              <p id="coffee-name-error" className="mt-2 text-sm text-red-600">
-                {errors.name}
+          <div className="mb-6 flex flex-col gap-3 border-b-2 border-blue-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">
+                02
               </p>
+
+              <h2 className="mt-1 text-2xl font-bold text-black">
+                Booking details
+              </h2>
+            </div>
+
+            {selectedPlan && (
+              <div className="rounded-xl bg-blue-100 px-4 py-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Selected
+                </p>
+                <p className="mt-0.5 text-sm font-bold text-black">
+                  {selectedPlan.planName} · {formatPrice(selectedPlan)}
+                </p>
+              </div>
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="coffee-email"
-              className="mb-2 block text-sm font-semibold text-slate-900"
-            >
-              Email
-            </label>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="coffee-name"
+                className="block text-sm font-bold text-black"
+              >
+                Name
+              </label>
 
-            <input
-              id="coffee-email"
-              name="email"
-              type="email"
-              value={formData.email}
-              maxLength={254}
-              autoComplete="email"
-              onChange={(event) => updateField("email", event.target.value)}
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? "coffee-email-error" : undefined}
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-            />
+              <input
+                id="coffee-name"
+                name="name"
+                type="text"
+                value={formData.name}
+                maxLength={100}
+                autoComplete="name"
+                onChange={(event) => updateField("name", event.target.value)}
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? "coffee-name-error" : undefined}
+                className="mt-2 w-full rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              />
 
-            {errors.email && (
-              <p id="coffee-email-error" className="mt-2 text-sm text-red-600">
-                {errors.email}
-              </p>
-            )}
+              {errors.name && (
+                <p
+                  id="coffee-name-error"
+                  className="mt-1.5 text-xs font-semibold text-blue-700"
+                >
+                  {errors.name}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="coffee-email"
+                className="block text-sm font-bold text-black"
+              >
+                Email
+              </label>
+
+              <input
+                id="coffee-email"
+                name="email"
+                type="email"
+                value={formData.email}
+                maxLength={254}
+                autoComplete="email"
+                onChange={(event) => updateField("email", event.target.value)}
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={
+                  errors.email ? "coffee-email-error" : undefined
+                }
+                className="mt-2 w-full rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              />
+
+              {errors.email && (
+                <p
+                  id="coffee-email-error"
+                  className="mt-1.5 text-xs font-semibold text-blue-700"
+                >
+                  {errors.email}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div>
+          <div className="mt-5">
             <label
               htmlFor="coffee-topic"
-              className="mb-2 block text-sm font-semibold text-slate-900"
+              className="block text-sm font-bold text-black"
             >
-              What would you like to discuss?
+              Topic
             </label>
 
             <textarea
@@ -743,110 +867,135 @@ export default function CoffeeWithMePage() {
               name="topic"
               value={formData.topic}
               maxLength={2000}
-              rows={5}
-              placeholder="e.g. Career transition, product feedback, project idea..."
+              rows={4}
+              placeholder="What would you like to discuss?"
               onChange={(event) => updateField("topic", event.target.value)}
               aria-invalid={Boolean(errors.topic)}
               aria-describedby={errors.topic ? "coffee-topic-error" : undefined}
-              className="w-full resize-y rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              className="mt-2 w-full resize-y rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
             />
 
             {errors.topic && (
-              <p id="coffee-topic-error" className="mt-2 text-sm text-red-600">
+              <p
+                id="coffee-topic-error"
+                className="mt-1.5 text-xs font-semibold text-blue-700"
+              >
                 {errors.topic}
               </p>
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="coffee-format"
-              className="mb-2 block text-sm font-semibold text-slate-900"
-            >
-              Preferred Format{" "}
-              <span className="font-normal text-slate-500">(optional)</span>
-            </label>
-
-            <input
-              id="coffee-format"
-              name="preferredFormat"
-              type="text"
-              value={formData.preferredFormat}
-              maxLength={100}
-              placeholder="e.g. Video call, phone, async chat"
-              onChange={(event) =>
-                updateField("preferredFormat", event.target.value)
-              }
-              aria-invalid={Boolean(errors.preferredFormat)}
-              aria-describedby={
-                errors.preferredFormat ? "coffee-format-error" : undefined
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-            />
-
-            {errors.preferredFormat && (
-              <p id="coffee-format-error" className="mt-2 text-sm text-red-600">
-                {errors.preferredFormat}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="coffee-availability"
-              className="mb-2 block text-sm font-semibold text-slate-900"
-            >
-              Availability / Preferred Time{" "}
-              <span className="font-normal text-slate-500">(optional)</span>
-            </label>
-
-            <input
-              id="coffee-availability"
-              name="availability"
-              type="text"
-              value={formData.availability}
-              maxLength={100}
-              placeholder="e.g. Weekday mornings, Thursday afternoons"
-              onChange={(event) =>
-                updateField("availability", event.target.value)
-              }
-              aria-invalid={Boolean(errors.availability)}
-              aria-describedby={
-                errors.availability ? "coffee-availability-error" : undefined
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-            />
-
-            {errors.availability && (
-              <p
-                id="coffee-availability-error"
-                className="mt-2 text-sm text-red-600"
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="coffee-format"
+                className="block text-sm font-bold text-black"
               >
-                {errors.availability}
-              </p>
-            )}
+                Format
+              </label>
+
+              <select
+                id="coffee-format"
+                name="preferredFormat"
+                value={formData.preferredFormat}
+                onChange={(event) =>
+                  updateField("preferredFormat", event.target.value)
+                }
+                aria-invalid={Boolean(errors.preferredFormat)}
+                aria-describedby={
+                  errors.preferredFormat ? "coffee-format-error" : undefined
+                }
+                className="mt-2 w-full appearance-none rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">Select format</option>
+
+                {FORMAT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              {errors.preferredFormat && (
+                <p
+                  id="coffee-format-error"
+                  className="mt-1.5 text-xs font-semibold text-blue-700"
+                >
+                  {errors.preferredFormat}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="coffee-availability"
+                className="block text-sm font-bold text-black"
+              >
+                Availability
+              </label>
+
+              <select
+                id="coffee-availability"
+                name="availability"
+                value={formData.availability}
+                onChange={(event) =>
+                  updateField("availability", event.target.value)
+                }
+                aria-invalid={Boolean(errors.availability)}
+                aria-describedby={
+                  errors.availability ? "coffee-availability-error" : undefined
+                }
+                className="mt-2 w-full appearance-none rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">Select availability</option>
+
+                {AVAILABILITY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              {errors.availability && (
+                <p
+                  id="coffee-availability-error"
+                  className="mt-1.5 text-xs font-semibold text-blue-700"
+                >
+                  {errors.availability}
+                </p>
+              )}
+            </div>
           </div>
 
           {submitError && (
             <div
               role="alert"
-              className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              className="mt-5 rounded-xl border-2 border-blue-700 bg-blue-100 px-4 py-3 text-sm font-semibold text-black"
             >
               {submitError}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting || isLoadingPlans || !selectedPlanId}
-            className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-5 py-3 text-base font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting
-              ? "Creating Booking..."
-              : selectedPlan
-                ? `Book ${selectedPlan.planName} — ${formatPrice(selectedPlan)}`
-                : "Select a Plan to Continue"}
-          </button>
+          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Link
+              to="/#work-with-me"
+              className="inline-flex items-center justify-center rounded-xl border-2 border-blue-700 bg-white px-5 py-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-700"
+            >
+              Back to Work With Me
+            </Link>
+
+            <button
+              type="submit"
+              disabled={isSubmitting || isLoadingPlans || !selectedPlanId}
+              className="inline-flex items-center justify-center rounded-xl bg-blue-700 px-6 py-3 text-sm font-bold text-white transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting
+                ? "Creating booking..."
+                : selectedPlan
+                  ? `Book ${selectedPlan.planName}`
+                  : "Select a plan"}
+            </button>
+          </div>
         </form>
       </section>
     </main>
