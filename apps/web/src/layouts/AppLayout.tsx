@@ -2,7 +2,10 @@ import { useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
 import { trackAnalyticsEvent } from "../analytics";
+import Footer from "../components/Footer/Footer";
+import GiveFeedback from "../components/GiveFeedback/GiveFeedback";
 import Navbar from "../components/Navbar/Navbar";
+import { FEATURE_FLAGS } from "../config/featureFlags";
 
 export default function AppLayout() {
   const location = useLocation();
@@ -14,6 +17,7 @@ export default function AppLayout() {
     }
 
     lastTrackedLocationKey.current = location.key;
+
     trackAnalyticsEvent({
       name: "page.viewed",
       eventType: "view",
@@ -28,6 +32,10 @@ export default function AppLayout() {
       <main className="block w-full p-0">
         <Outlet />
       </main>
+
+      {FEATURE_FLAGS.showFooter && <Footer />}
+
+      {FEATURE_FLAGS.showGiveFeedback && <GiveFeedback />}
     </div>
   );
 }

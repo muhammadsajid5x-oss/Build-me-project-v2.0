@@ -27,3 +27,26 @@ Security Validation
     ↓
 CI Quality Gates
 ```
+
+## Local Integration Tests
+
+Integration tests persist data, so run them only against a disposable test
+database. Set `TEST_DATABASE_URL` to that database's PostgreSQL connection
+string in the environment or in the ignored root `.env.test.local` file; local
+test runs will not reuse an existing development API.
+
+In PowerShell:
+
+```powershell
+$env:TEST_DATABASE_URL = "<disposable localhost PostgreSQL connection string>"
+$env:DATABASE_URL = $env:TEST_DATABASE_URL
+$env:NODE_ENV = "test"
+pnpm --dir database db:migrate
+pnpm --filter @build-me/database... build
+$env:DATABASE_SEED_CONFIRM = "1"
+pnpm --dir database exec tsx seeds/seed-testimonials.ts
+pnpm test:integration
+```
+
+In CI, `DATABASE_URL` is provided by the test job, which starts the API before
+Playwright runs.

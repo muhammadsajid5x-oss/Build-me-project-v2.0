@@ -8,12 +8,14 @@ import {
   type DeliveryProjectRequest,
   type MentorMeRequest,
   type OwnershipAuditRequest,
+  type OwnershipLearningCircleRequest,
   type OwnershipToolkitAccess,
   fetchOwnershipToolkitAccesses,
   fetchCoffeeWithMeRequests,
   fetchDeliveryProjectRequests,
   fetchMentorMeRequests,
   fetchOwnershipAuditRequests,
+  fetchOwnershipLearningCircleRequests,
   formatCreatedAt,
 } from "../services/requests";
 
@@ -22,7 +24,8 @@ type Tab =
   | "mentor"
   | "coffee"
   | "ownership-audit"
-  | "ownership-toolkit";
+  | "ownership-toolkit"
+  | "ownership-learning-circle";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "deliver", label: "Deliver My Project" },
@@ -30,6 +33,10 @@ const tabs: { id: Tab; label: string }[] = [
   { id: "coffee", label: "Coffee With Me" },
   { id: "ownership-audit", label: "Ownership Audit" },
   { id: "ownership-toolkit", label: "Ownership Toolkit" },
+  {
+    id: "ownership-learning-circle",
+    label: "Ownership Learning Circle",
+  },
 ];
 
 export default function RequestsPage() {
@@ -66,6 +73,13 @@ export default function RequestsPage() {
   const [ownershipToolkitError, setOwnershipToolkitError] = useState<
     string | null
   >(null);
+
+  const [ownershipLearningCircleRequests, setOwnershipLearningCircleRequests] =
+    useState<OwnershipLearningCircleRequest[]>([]);
+  const [ownershipLearningCircleLoading, setOwnershipLearningCircleLoading] =
+    useState(true);
+  const [ownershipLearningCircleError, setOwnershipLearningCircleError] =
+    useState<string | null>(null);
 
   const loadDeliveryRequests = useCallback(async () => {
     setDeliveryLoading(true);
@@ -122,6 +136,17 @@ export default function RequestsPage() {
     setOwnershipToolkitLoading(false);
   }, []);
 
+  const loadOwnershipLearningCircleRequests = useCallback(async () => {
+    setOwnershipLearningCircleLoading(true);
+    setOwnershipLearningCircleError(null);
+
+    const result = await fetchOwnershipLearningCircleRequests();
+
+    setOwnershipLearningCircleRequests(result.data);
+    setOwnershipLearningCircleError(result.error);
+    setOwnershipLearningCircleLoading(false);
+  }, []);
+
   useEffect(() => {
     void loadDeliveryRequests();
   }, [loadDeliveryRequests]);
@@ -150,6 +175,12 @@ export default function RequestsPage() {
     }
   }, [activeTab, loadOwnershipToolkitAccesses]);
 
+  useEffect(() => {
+    if (activeTab === "ownership-learning-circle") {
+      void loadOwnershipLearningCircleRequests();
+    }
+  }, [activeTab, loadOwnershipLearningCircleRequests]);
+
   return (
     <section aria-labelledby="requests-heading">
       <header className="mb-6">
@@ -157,8 +188,8 @@ export default function RequestsPage() {
           Requests
         </h1>
         <p className="mt-1 text-sm text-gray-400">
-          Manage project delivery, mentorship, coffee, ownership audit, and
-          toolkit access records.
+          Manage project delivery, mentorship, coffee, ownership audit, toolkit
+          access, and learning circle records.
         </p>
       </header>
 
@@ -253,6 +284,20 @@ export default function RequestsPage() {
           loading={ownershipToolkitLoading}
           error={ownershipToolkitError}
           onRetry={loadOwnershipToolkitAccesses}
+        />
+      </div>
+
+      <div
+        id="panel-ownership-learning-circle"
+        role="tabpanel"
+        aria-labelledby="tab-ownership-learning-circle"
+        hidden={activeTab !== "ownership-learning-circle"}
+      >
+        <OwnershipLearningCircleContent
+          requests={ownershipLearningCircleRequests}
+          loading={ownershipLearningCircleLoading}
+          error={ownershipLearningCircleError}
+          onRetry={loadOwnershipLearningCircleRequests}
         />
       </div>
     </section>
@@ -801,6 +846,77 @@ function OwnershipToolkitContent({
               <td className="border-b px-3 py-2">{access.visitorEmail}</td>
               <td className="border-b px-3 py-2 whitespace-nowrap">
                 {formatCreatedAt(access.createdAt)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function OwnershipLearningCircleContent({
+  requests,
+  loading,
+  error,
+  onRetry,
+}: {
+  requests: OwnershipLearningCircleRequest[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+}) {
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={onRetry} />;
+  }
+
+  if (requests.length === 0) {
+    return <EmptyState message="No Ownership Learning Circle requests yet." />;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-900/50">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-700">
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Name
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Email
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Status
+            </th>
+            <th
+              scope="col"
+              className="border-b px-3 py-2 text-left font-semibold"
+            >
+              Created
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map((request) => (
+            <tr key={request.id} className="align-top hover:bg-gray-800/50">
+              <td className="border-b px-3 py-2">{request.name}</td>
+              <td className="border-b px-3 py-2">{request.email}</td>
+              <td className="border-b px-3 py-2">{request.status}</td>
+              <td className="border-b px-3 py-2 whitespace-nowrap">
+                {formatCreatedAt(request.createdAt)}
               </td>
             </tr>
           ))}

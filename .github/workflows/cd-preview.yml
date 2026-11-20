@@ -70,7 +70,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          pnpm exec vercel deploy --target=preview --yes --token "$VERCEL_TOKEN" --meta githubDeployment=1 --meta githubCommitRef="$GITHUB_COMMIT_REF" 2>&1 | tee /tmp/vercel-api-deploy.log
+          pnpm exec vercel deploy --target=preview --no-wait --yes --token "$VERCEL_TOKEN" --meta githubDeployment=1 --meta githubCommitRef="$GITHUB_COMMIT_REF" 2>&1 | tee /tmp/vercel-api-deploy.log
           deployment_url=$(grep -Eo 'https://[^[:space:]]+\.vercel\.app' /tmp/vercel-api-deploy.log | tail -n 1)
 
           if [ -z "$deployment_url" ]; then

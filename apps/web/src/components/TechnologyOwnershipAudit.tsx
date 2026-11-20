@@ -1,11 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import { getApiBaseUrl } from "../api-url";
 
 type AuditOption = "A" | "B" | "C";
 
-type AuditStage = "intro" | "details" | "questions" | "results";
+type AuditStage =
+  | "intro"
+  | "details"
+  | "questions"
+  | "results"
+  | "next-steps"
+  | "help";
 
 type Question = {
   number: number;
@@ -21,7 +28,7 @@ type Answers = Record<number, AuditOption | null>;
 
 type AuditResult = {
   category: string;
-  diagnostic: string;
+  summary: string;
   cta: string;
   ctaEvent:
     | typeof ANALYTICS_EVENTS.DELIVER_MY_PROJECT_CLICKED
@@ -30,11 +37,16 @@ type AuditResult = {
   href: string;
 };
 
+type SwotItem = {
+  label: string;
+  text: string;
+};
+
 const apiBaseUrl = getApiBaseUrl(import.meta.env.VITE_API_URL);
 const OWNERSHIP_AUDIT_PATH = "/ownership-audits";
 
 const SCORE_MAP: Record<AuditOption, number> = {
-  A: 2,
+  A: 0,
   B: 5,
   C: 10,
 };
@@ -42,243 +54,230 @@ const SCORE_MAP: Record<AuditOption, number> = {
 const questions: Question[] = [
   {
     number: 1,
-    title: "Project Readiness & Timelines",
+    title: "Business & Technology Readiness",
     question:
-      "What is the current status and urgency of your technology project or platform?",
+      "How confident are you that your technology can support your business right now?",
     options: [
       {
         value: "A",
         label:
-          "Urgent rescue required—we have broken code, missed deadlines, or scaling bottlenecks.",
+          "Not confident — we regularly face technology problems, delays, or unexpected issues.",
       },
       {
         value: "B",
         label:
-          "Active build or refactor in progress, but we need architecture guidance and oversight.",
+          "Somewhat confident — things work, but we still depend heavily on people or manual work.",
       },
       {
         value: "C",
         label:
-          "Stable platform with clear internal ownership; looking for high-level strategy or expansion.",
+          "Very confident — our technology is organised and ready to support business growth.",
       },
     ],
   },
   {
     number: 2,
-    title: "Core Technology Stack & Infrastructure",
+    title: "Technology Setup",
     question:
-      "How would you describe your core software architecture and stack management?",
+      "How well do you understand and control the technology your business depends on?",
     options: [
       {
         value: "A",
         label:
-          "Legacy or fragmented tech stack with undocumented dependencies and ad-hoc hosting.",
+          "We are unsure what we have, where it is hosted, or who manages it.",
       },
       {
         value: "B",
         label:
-          "Modern stack (e.g., React, Node, Python, SQL) managed manually or via basic deployment scripts.",
+          "We know the main systems, but some areas depend on individual people or suppliers.",
       },
       {
         value: "C",
         label:
-          "Standardized monorepo/microservices with automated CI/CD pipelines and IaC setup.",
+          "We have a clear view of our important systems, accounts, and responsibilities.",
       },
     ],
   },
   {
     number: 3,
-    title: "Source Code & Repository Control",
+    title: "Ownership & Access",
     question:
-      "Where does your source code live, and who has administrative ownership over it?",
+      "Who controls the important technology accounts your business relies on?",
     options: [
       {
         value: "A",
         label:
-          "Code is stored on personal developer machines or managed entirely by third-party freelancers.",
+          "Important accounts may belong to individuals, former team members, or suppliers.",
       },
       {
         value: "B",
         label:
-          "Centrally stored on GitHub/GitLab, but access permissions and branches are managed manually.",
+          "Most accounts are controlled centrally, but access is still managed manually.",
       },
       {
         value: "C",
         label:
-          "Managed in an organization-owned repo with enforced branch rules, automated linting, and PR reviews.",
+          "The business owns the important accounts and access is clearly controlled.",
       },
     ],
   },
   {
     number: 4,
-    title: "Software Subscriptions & Infrastructure Accounts",
+    title: "People & Responsibility",
     question:
-      "Who holds the primary administrative credentials for your cloud servers, APIs, and SaaS tools?",
+      "If your main technology person became unavailable tomorrow, what would happen?",
     options: [
       {
         value: "A",
         label:
-          "Credentials are scattered across team members' personal emails or unknown accounts.",
+          "We would struggle to understand, maintain, or change important systems.",
       },
       {
         value: "B",
         label:
-          "Shared via a central password manager, but lacks role-based access control or audit logs.",
+          "Someone else could help, but they would need time to understand the setup.",
       },
       {
         value: "C",
         label:
-          "Managed under a centralized corporate identity with multi-factor authentication (MFA) and strict access roles.",
+          "Responsibilities and information are clear enough for someone else to take over.",
       },
     ],
   },
   {
     number: 5,
-    title: "Quality Assurance & Automated Testing",
+    title: "Quality & Reliability",
     question:
-      "How do you test and verify code quality before releasing updates to production?",
+      "How confident are you that changes to your technology will work as expected?",
     options: [
       {
         value: "A",
-        label:
-          "Manual testing directly in production or relying on end-users to report bugs.",
+        label: "Problems are often discovered after changes are released.",
       },
       {
         value: "B",
         label:
-          "Basic manual QA testing in a staging environment before manual deployments.",
+          "We check changes before release, but the process is mostly manual.",
       },
       {
         value: "C",
         label:
-          "Automated test suites (Unit/Integration) enforced through automated CI/CD deployment pipelines.",
+          "We have a repeatable way to check important changes before they go live.",
       },
     ],
   },
   {
     number: 6,
-    title: "Data Protection & Database Management",
+    title: "Data & Recovery",
     question:
-      "How are your application databases, state backups, and migrations handled?",
+      "If something important stopped working or data was lost, how prepared are you?",
     options: [
       {
         value: "A",
         label:
-          "Manual database changes run directly in production with irregular or missing backups.",
+          "We are not sure how quickly we could recover or whether everything is backed up.",
       },
       {
         value: "B",
-        label:
-          "Scheduled automated backups are active, but database migrations are run manually.",
+        label: "Backups exist, but recovery has not been regularly checked.",
       },
       {
         value: "C",
         label:
-          "Version-controlled ORM migrations with automated daily backups, point-in-time recovery, and encryption.",
+          "Backups and recovery responsibilities are clear and regularly checked.",
       },
     ],
   },
   {
     number: 7,
-    title: "Technical Documentation & Knowledge Base",
+    title: "Documentation & Knowledge",
     question:
-      "If your lead developer or key engineer stepped away today, how easily could a new developer take over?",
+      "How easy would it be for a new person to understand your technology?",
     options: [
       {
         value: "A",
-        label:
-          "Extremely difficult—most application logic and setup knowledge exist only in people's heads.",
+        label: "Most of the important knowledge is in people's heads.",
       },
       {
         value: "B",
         label:
-          "Moderately easy—we have a basic README and setup guide, but architectural decisions aren't documented.",
+          "We have some guides, but important information is still difficult to find.",
       },
       {
         value: "C",
         label:
-          "Seamless—we maintain clear API documentation, setup scripts, and architectural decisions (ADRs).",
+          "Important systems, processes, and responsibilities are documented clearly.",
       },
     ],
   },
   {
     number: 8,
-    title: "Offboarding & Off-Board Access Revocation",
+    title: "Change & Growth",
     question:
-      "What process is executed when a developer or vendor leaves your project?",
+      "How prepared is your technology for your next stage of business growth?",
     options: [
       {
         value: "A",
         label:
-          "Ad-hoc—we change main passwords only if we remember or if an issue arises.",
+          "Growth could expose major technology problems or create more manual work.",
       },
       {
         value: "B",
         label:
-          "Manual offboarding checklist to revoke GitHub, cloud, and database access.",
+          "We can grow, but some parts of the technology need attention first.",
       },
       {
         value: "C",
         label:
-          "Automated offboarding via Single Sign-On (SSO) with instant access revocation across all tools.",
+          "Our technology is structured to support the growth we are planning.",
       },
     ],
   },
   {
     number: 9,
-    title: "DevSecOps & Security Monitoring",
+    title: "Security & Protection",
     question:
-      "How do you monitor security vulnerabilities, dependency updates, and secrets in your codebase?",
+      "How confident are you that your business technology is protected?",
     options: [
       {
         value: "A",
-        label:
-          "We don't actively scan; API keys and secrets are occasionally hardcoded in source files.",
+        label: "We are unsure where our biggest technology risks are.",
       },
       {
         value: "B",
         label:
-          "Environment variables are isolated (.env), but dependency updates and security patches are done reactively.",
+          "We have basic protections, but security is mostly handled when problems appear.",
       },
       {
         value: "C",
         label:
-          "Automated secret scanning, automated dependency security alerts, and strict environment isolation.",
+          "Security responsibilities and basic protections are part of our normal process.",
       },
     ],
   },
   {
     number: 10,
-    title: "Engineering Budget & Scaling Capacity",
+    title: "Technology Direction",
     question:
-      "What is your primary constraint regarding engineering delivery right now?",
+      "How clear are you about what your technology needs to achieve for the business?",
     options: [
       {
         value: "A",
-        label:
-          "Lack of technical direction and execution power—we need end-to-end execution support.",
+        label: "We mainly react to problems and urgent requests.",
       },
       {
         value: "B",
         label:
-          "Lack of strategic coaching—we have developers but need high-level guidance to optimize workflows.",
+          "We have priorities, but technology decisions are not always connected to business goals.",
       },
       {
         value: "C",
         label:
-          "Budget and operations are fully optimized—we are simply networking or exploring elite advisory partnerships.",
+          "Technology decisions are clearly connected to business goals and priorities.",
       },
     ],
   },
 ];
-
-const questionPages: Record<number, [number, number]> = {
-  1: [1, 2],
-  2: [3, 4],
-  3: [5, 6],
-  4: [7, 8],
-  5: [9, 10],
-};
 
 function createInitialAnswers(): Answers {
   return Object.fromEntries(
@@ -289,9 +288,9 @@ function createInitialAnswers(): Answers {
 function getAuditResult(score: number): AuditResult {
   if (score <= 35) {
     return {
-      category: "High Risk",
-      diagnostic:
-        "High technical debt, unmanaged assets, critical execution gaps.",
+      category: "Needs Attention",
+      summary:
+        "Your business has important technology ownership gaps that could create delays, risk, or unnecessary dependency on individuals.",
       cta: "Deliver My Project",
       ctaEvent: ANALYTICS_EVENTS.DELIVER_MY_PROJECT_CLICKED,
       href: "/deliver-my-project",
@@ -300,9 +299,9 @@ function getAuditResult(score: number): AuditResult {
 
   if (score <= 69) {
     return {
-      category: "Moderate Control",
-      diagnostic:
-        "Functional foundation, but lacks automated governance and structure.",
+      category: "Growing Control",
+      summary:
+        "You have a useful foundation, but a few ownership gaps could make growth, change, and problem-solving harder than they need to be.",
       cta: "Mentor Me",
       ctaEvent: ANALYTICS_EVENTS.MENTOR_ME_CLICKED,
       href: "/mentor-me",
@@ -311,23 +310,110 @@ function getAuditResult(score: number): AuditResult {
 
   return {
     category: "Strong Ownership",
-    diagnostic: "Highly mature, automated, and secure architecture.",
+    summary:
+      "Your business shows strong technology ownership. The next opportunity is to keep improving and prepare your systems for future growth.",
     cta: "Coffee With Me",
     ctaEvent: ANALYTICS_EVENTS.COFFEE_WITH_ME_CLICKED,
     href: "/coffee-with-me",
   };
 }
 
+function getSwotItems(
+  currentAnswers: Answers,
+): Record<
+  "strengths" | "weaknesses" | "opportunities" | "threats",
+  SwotItem[]
+> {
+  const strengths: SwotItem[] = [];
+  const weaknesses: SwotItem[] = [];
+  const opportunities: SwotItem[] = [];
+  const threats: SwotItem[] = [];
+
+  questions.forEach((question) => {
+    const answer = currentAnswers[question.number];
+
+    if (answer === "C") {
+      strengths.push({
+        label: question.title,
+        text: "You have a strong foundation in this area.",
+      });
+    }
+
+    if (answer === "A") {
+      weaknesses.push({
+        label: question.title,
+        text: "This area needs clearer ownership or a more reliable process.",
+      });
+
+      threats.push({
+        label: question.title,
+        text: "Leaving this area unresolved could create avoidable business risk.",
+      });
+    }
+
+    if (answer === "B") {
+      opportunities.push({
+        label: question.title,
+        text: "A small improvement here could make your technology easier to manage.",
+      });
+    }
+  });
+
+  if (strengths.length === 0) {
+    strengths.push({
+      label: "Foundation",
+      text: "Your audit gives you a clear starting point for improvement.",
+    });
+  }
+
+  if (weaknesses.length === 0) {
+    weaknesses.push({
+      label: "No major gaps identified",
+      text: "Your answers did not highlight a major weakness.",
+    });
+  }
+
+  if (opportunities.length === 0) {
+    opportunities.push({
+      label: "Continuous improvement",
+      text: "Keep reviewing ownership as your business grows.",
+    });
+  }
+
+  if (threats.length === 0) {
+    threats.push({
+      label: "Maintain your standard",
+      text: "Continue protecting the strong ownership you already have.",
+    });
+  }
+
+  return {
+    strengths,
+    weaknesses,
+    opportunities,
+    threats,
+  };
+}
+
 export default function TechnologyOwnershipAudit() {
+  const navigate = useNavigate();
+  const auditRef = useRef<HTMLDivElement>(null);
+
   const [stage, setStage] = useState<AuditStage>("intro");
-  const [questionPage, setQuestionPage] = useState(1);
+  const [questionNumber, setQuestionNumber] = useState(1);
+
   const [fullName, setFullName] = useState("");
   const [visitorEmail, setVisitorEmail] = useState("");
+  const [organization, setOrganization] = useState("");
+  const [website, setWebsite] = useState("");
+
   const [answers, setAnswers] = useState<Answers>(createInitialAnswers);
   const [score, setScore] = useState<number | null>(null);
+
   const [validationError, setValidationError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showFullResults, setShowFullResults] = useState(false);
 
   useEffect(() => {
     trackAnalyticsEvent({
@@ -337,23 +423,19 @@ export default function TechnologyOwnershipAudit() {
     });
   }, []);
 
-  const currentQuestionNumbers = questionPages[questionPage];
+  const currentQuestion = questions[questionNumber - 1];
 
-  const currentQuestions = useMemo(
-    () => currentQuestionNumbers.map((number) => questions[number - 1]),
-    [currentQuestionNumbers],
+  const result = useMemo(
+    () => (score !== null ? getAuditResult(score) : null),
+    [score],
   );
 
-  const calculateScore = () =>
-    questions.reduce((total, question) => {
-      const answer = answers[question.number];
-      return total + (answer ? SCORE_MAP[answer] : 0);
-    }, 0);
+  const swot = useMemo(() => getSwotItems(answers), [answers]);
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
+    auditRef.current?.scrollIntoView({
       behavior: "smooth",
+      block: "start",
     });
   };
 
@@ -368,42 +450,29 @@ export default function TechnologyOwnershipAudit() {
       return false;
     }
 
+    if (website.trim() && !/^https?:\/\/.+/i.test(website.trim())) {
+      setValidationError(
+        "Please enter a website starting with http:// or https://.",
+      );
+      return false;
+    }
+
     return true;
   };
 
-  const handleAnswer = (questionNumber: number, value: AuditOption) => {
-    setAnswers((previous) => ({
-      ...previous,
-      [questionNumber]: value,
-    }));
+  const calculateScore = (currentAnswers: Answers) =>
+    questions.reduce((total, question) => {
+      const answer = currentAnswers[question.number];
 
-    setValidationError(null);
-    setSubmitError(null);
+      return total + (answer ? SCORE_MAP[answer] : 0);
+    }, 0);
 
-    if (questionNumber === 1) {
-      trackAnalyticsEvent({
-        name: ANALYTICS_EVENTS.OWNERSHIP_AUDIT_STARTED,
-        eventType: "click",
-        path: OWNERSHIP_AUDIT_PATH,
-      });
-    }
-  };
-
-  const handleComplete = async () => {
-    const selectedAnswers = questions.map(
-      (question) => answers[question.number],
-    );
-
-    if (selectedAnswers.some((answer) => answer === null)) {
-      setValidationError("Please answer all 10 questions before continuing.");
+  const submitAudit = async (finalAnswers: Answers) => {
+    if (isSubmitting) {
       return;
     }
 
-    if (!validateVisitorDetails()) {
-      return;
-    }
-
-    const calculatedScore = calculateScore();
+    const calculatedScore = calculateScore(finalAnswers);
 
     setValidationError(null);
     setSubmitError(null);
@@ -418,10 +487,12 @@ export default function TechnologyOwnershipAudit() {
         body: JSON.stringify({
           fullName: fullName.trim(),
           visitorEmail: visitorEmail.trim(),
+          organization: organization.trim(),
+          website: website.trim() || null,
           answers: Object.fromEntries(
             questions.map((question) => [
               `q${question.number}`,
-              answers[question.number],
+              finalAnswers[question.number],
             ]),
           ),
         }),
@@ -433,6 +504,7 @@ export default function TechnologyOwnershipAudit() {
 
       setScore(calculatedScore);
       setStage("results");
+      setShowFullResults(false);
       scrollToTop();
 
       trackAnalyticsEvent({
@@ -449,50 +521,69 @@ export default function TechnologyOwnershipAudit() {
     }
   };
 
-  const handleNext = async () => {
+  const handleStartAudit = () => {
+    setValidationError(null);
+    setSubmitError(null);
+    setStage("details");
+    scrollToTop();
+  };
+
+  const handleDetailsContinue = () => {
     setValidationError(null);
     setSubmitError(null);
 
-    if (stage === "intro") {
-      setStage("details");
-      scrollToTop();
+    if (!validateVisitorDetails()) {
       return;
     }
 
-    if (stage === "details") {
-      if (!validateVisitorDetails()) {
-        return;
-      }
+    setQuestionNumber(1);
+    setStage("questions");
+    scrollToTop();
+  };
 
-      setStage("questions");
-      setQuestionPage(1);
-      scrollToTop();
+  const handleAnswer = (value: AuditOption) => {
+    if (isSubmitting) {
       return;
     }
 
-    if (stage !== "questions") {
+    const updatedAnswers: Answers = {
+      ...answers,
+      [questionNumber]: value,
+    };
+
+    setAnswers(updatedAnswers);
+    setValidationError(null);
+    setSubmitError(null);
+
+    if (questionNumber === 1) {
+      trackAnalyticsEvent({
+        name: ANALYTICS_EVENTS.OWNERSHIP_AUDIT_STARTED,
+        eventType: "click",
+        path: OWNERSHIP_AUDIT_PATH,
+      });
+    }
+
+    if (questionNumber < questions.length) {
+      setQuestionNumber((previous) => previous + 1);
+      window.setTimeout(scrollToTop, 50);
+      return;
+    }
+  };
+
+  const handleSubmitFinalQuestion = () => {
+    if (answers[questions.length] === null || isSubmitting) {
+      setValidationError("Please select an answer before continuing.");
       return;
     }
 
-    const unanswered = currentQuestions.some(
-      (question) => !answers[question.number],
-    );
-
-    if (unanswered) {
-      setValidationError("Please answer both questions before continuing.");
-      return;
-    }
-
-    if (questionPage < 5) {
-      setQuestionPage((previous) => previous + 1);
-      scrollToTop();
-      return;
-    }
-
-    await handleComplete();
+    void submitAudit(answers);
   };
 
   const handlePrevious = () => {
+    if (isSubmitting) {
+      return;
+    }
+
     setValidationError(null);
     setSubmitError(null);
 
@@ -503,309 +594,727 @@ export default function TechnologyOwnershipAudit() {
     }
 
     if (stage === "questions") {
-      if (questionPage > 1) {
-        setQuestionPage((previous) => previous - 1);
+      if (questionNumber === 1) {
+        setStage("details");
         scrollToTop();
         return;
       }
 
-      setStage("details");
+      setQuestionNumber((previous) => previous - 1);
       scrollToTop();
       return;
     }
 
     if (stage === "results") {
       setStage("questions");
-      setQuestionPage(5);
+      setQuestionNumber(questions.length);
+      scrollToTop();
+      return;
+    }
+
+    if (stage === "next-steps") {
+      setStage("results");
+      scrollToTop();
+      return;
+    }
+
+    if (stage === "help") {
+      setStage("next-steps");
       scrollToTop();
     }
   };
 
-  const handleResultCta = () => {
-    if (score === null) {
+  const handleViewFullResults = () => {
+    setShowFullResults(true);
+    window.setTimeout(scrollToTop, 50);
+  };
+
+  const handleDownloadResults = () => {
+    if (score === null || !result) {
       return;
     }
 
-    const result = getAuditResult(score);
+    const sections = [
+      `Technology Ownership Audit Results`,
+      `Name: ${fullName}`,
+      `Organization: ${organization}`,
+      `Score: ${score}/100`,
+      `Category: ${result.category}`,
+      "",
+      "Summary",
+      result.summary,
+      "",
+      "Strengths",
+      ...swot.strengths.map((item) => `- ${item.label}: ${item.text}`),
+      "",
+      "Weaknesses",
+      ...swot.weaknesses.map((item) => `- ${item.label}: ${item.text}`),
+      "",
+      "Opportunities",
+      ...swot.opportunities.map((item) => `- ${item.label}: ${item.text}`),
+      "",
+      "Threats",
+      ...swot.threats.map((item) => `- ${item.label}: ${item.text}`),
+      "",
+      "Recommended Next Step",
+      result.cta,
+    ];
 
-    trackAnalyticsEvent({
-      name: result.ctaEvent,
-      eventType: "click",
-      path: OWNERSHIP_AUDIT_PATH,
+    const blob = new Blob([sections.join("\n")], {
+      type: "text/plain;charset=utf-8",
     });
 
-    window.location.href = result.href;
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+
+    anchor.href = url;
+    anchor.download = "technology-ownership-audit-results.txt";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+
+    URL.revokeObjectURL(url);
   };
 
   const handleRestart = () => {
     setStage("intro");
-    setQuestionPage(1);
+    setQuestionNumber(1);
     setFullName("");
     setVisitorEmail("");
+    setOrganization("");
+    setWebsite("");
     setAnswers(createInitialAnswers());
     setScore(null);
     setValidationError(null);
     setSubmitError(null);
     setIsSubmitting(false);
+    setShowFullResults(false);
     scrollToTop();
   };
 
-  const buttonClass =
-    "rounded-md bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const primaryButtonClass =
+    "inline-flex items-center justify-center rounded-lg bg-[#0052FF] px-5 py-3 font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-[#0052FF] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+  const secondaryButtonClass =
+    "inline-flex items-center justify-center rounded-lg border-2 border-[#0052FF] bg-white px-5 py-3 font-semibold text-[#0052FF] transition hover:bg-[#EBF3FE] focus:outline-none focus:ring-2 focus:ring-[#0052FF] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+  const tabClass = (active: boolean) =>
+    [
+      "rounded-lg px-3 py-2 text-sm font-semibold transition sm:px-5",
+      active ? "bg-[#0052FF] text-white" : "bg-white text-[#0052FF]",
+    ].join(" ");
 
   if (stage === "intro") {
     return (
-      <div className="space-y-6">
-        <div>
-          <p className="text-sm font-medium text-gray-500">Step 1 of 3</p>
-
-          <h3 className="mt-2 text-2xl font-bold text-gray-900">
+      <div
+        ref={auditRef}
+        className="w-full rounded-2xl bg-[#EBF3FE] p-6 sm:p-8"
+      >
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-sm font-bold uppercase tracking-wide text-[#0052FF]">
             Technology Ownership Audit
+          </p>
+
+          <h3 className="mt-3 text-3xl font-bold text-black sm:text-4xl">
+            Find out how well your technology supports your business.
           </h3>
 
-          <p className="mt-3 leading-7 text-gray-600">
-            Assess your technology ownership across architecture, source code,
-            infrastructure, testing, databases, documentation, offboarding,
-            security, and scaling.
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-black">
+            Answer 10 simple questions to understand where you are strong, where
+            you have gaps, and what you can improve next.
           </p>
 
-          <p className="mt-3 leading-7 text-gray-600">
-            Answer 10 questions to receive a score out of 100 and identify the
-            most appropriate next step.
-          </p>
+          <div className="mt-8 grid gap-4 text-left sm:grid-cols-3">
+            {[
+              ["01", "Answer", "Tell us how things work today."],
+              ["02", "Understand", "See your strengths and gaps."],
+              ["03", "Act", "Get practical next steps."],
+            ].map(([number, title, text]) => (
+              <div
+                key={number}
+                className="rounded-xl border-2 border-white bg-white p-5"
+              >
+                <span className="text-sm font-bold text-[#0052FF]">
+                  {number}
+                </span>
+
+                <h4 className="mt-2 font-bold text-black">{title}</h4>
+
+                <p className="mt-1 text-sm leading-6 text-black">{text}</p>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className={`mt-8 ${primaryButtonClass}`}
+            onClick={handleStartAudit}
+          >
+            Start the Audit
+          </button>
         </div>
-
-        <button type="button" className={buttonClass} onClick={handleNext}>
-          Start Ownership Audit
-        </button>
       </div>
     );
   }
 
   if (stage === "details") {
     return (
-      <div className="space-y-6">
-        <div>
-          <p className="text-sm font-medium text-gray-500">Step 1 of 3</p>
+      <div
+        ref={auditRef}
+        className="w-full rounded-2xl bg-[#EBF3FE] p-6 sm:p-8"
+      >
+        <div className="w-full">
+          <div className="flex flex-wrap gap-2 rounded-xl bg-white p-2">
+            <div className={tabClass(false)}>Part 1 · Intro</div>
+            <div className={tabClass(true)}>Part 2 · Details</div>
+            <div className={tabClass(false)}>Part 3 · Audit</div>
+          </div>
 
-          <h3 className="mt-2 text-2xl font-bold text-gray-900">
-            Visitor Details
-          </h3>
+          <div className="mt-8">
+            <p className="text-sm font-bold uppercase tracking-wide text-[#0052FF]">
+              Part 2 of 3
+            </p>
 
-          <p className="mt-2 text-gray-600">
-            Enter your name and email to continue the audit.
-          </p>
-        </div>
+            <h3 className="mt-2 text-2xl font-bold text-black sm:text-3xl">
+              Start the Audit
+            </h3>
 
-        <div className="space-y-4">
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-gray-900">
-              Full Name
-            </span>
+            <p className="mt-3 max-w-2xl leading-7 text-black">
+              These details help us show your audit results in the context of
+              your business and technology ownership.
+            </p>
+          </div>
 
-            <input
-              type="text"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              autoComplete="name"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-black">
+                Full Name
+              </span>
 
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-gray-900">
-              Email
-            </span>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(event) => {
+                  setFullName(event.target.value);
+                  setValidationError(null);
+                }}
+                autoComplete="name"
+                className="w-full rounded-lg border-2 border-white bg-white px-4 py-3 text-black outline-none transition focus:border-[#0052FF]"
+              />
+            </label>
 
-            <input
-              type="email"
-              value={visitorEmail}
-              onChange={(event) => setVisitorEmail(event.target.value)}
-              autoComplete="email"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-        </div>
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-black">
+                Email
+              </span>
 
-        {validationError && (
-          <p className="text-sm text-red-600" role="alert">
-            {validationError}
-          </p>
-        )}
+              <input
+                type="email"
+                value={visitorEmail}
+                onChange={(event) => {
+                  setVisitorEmail(event.target.value);
+                  setValidationError(null);
+                }}
+                autoComplete="email"
+                className="w-full rounded-lg border-2 border-white bg-white px-4 py-3 text-black outline-none transition focus:border-[#0052FF]"
+              />
+            </label>
 
-        <div className="flex justify-between border-t border-gray-200 pt-5">
-          <button
-            type="button"
-            className={buttonClass}
-            onClick={handlePrevious}
-          >
-            Back
-          </button>
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-black">
+                Organization <span className="font-normal">(optional)</span>
+              </span>
 
-          <button type="button" className={buttonClass} onClick={handleNext}>
-            Continue
-          </button>
+              <input
+                type="text"
+                value={organization}
+                onChange={(event) => {
+                  setOrganization(event.target.value);
+                  setValidationError(null);
+                }}
+                autoComplete="organization"
+                className="w-full rounded-lg border-2 border-white bg-white px-4 py-3 text-black outline-none transition focus:border-[#0052FF]"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-black">
+                Website <span className="font-normal">(optional)</span>
+              </span>
+
+              <input
+                type="url"
+                value={website}
+                onChange={(event) => {
+                  setWebsite(event.target.value);
+                  setValidationError(null);
+                }}
+                placeholder="https://example.com"
+                autoComplete="url"
+                className="w-full rounded-lg border-2 border-white bg-white px-4 py-3 text-black outline-none transition focus:border-[#0052FF]"
+              />
+            </label>
+          </div>
+
+          {validationError && (
+            <p className="mt-5 text-sm font-semibold text-black" role="alert">
+              {validationError}
+            </p>
+          )}
+
+          <div className="mt-8 flex flex-col gap-3 border-t-2 border-white pt-6 sm:flex-row sm:justify-between">
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              onClick={handlePrevious}
+            >
+              Back
+            </button>
+
+            <button
+              type="button"
+              className={primaryButtonClass}
+              onClick={handleDetailsContinue}
+            >
+              Start the Audit
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   if (stage === "questions") {
+    const progress = (questionNumber / questions.length) * 100;
+    const isLastQuestion = questionNumber === questions.length;
+
     return (
-      <div className="space-y-6">
-        <div>
-          <p className="text-sm font-medium text-gray-500">Step 2 of 3</p>
+      <div
+        ref={auditRef}
+        className="w-full rounded-2xl bg-[#EBF3FE] p-5 sm:p-8"
+      >
+        <div className="w-full">
+          <div className="flex flex-wrap gap-2 rounded-xl bg-white p-2">
+            <div className={tabClass(false)}>Part 1 · Intro</div>
+            <div className={tabClass(false)}>Part 2 · Details</div>
+            <div className={tabClass(true)}>Part 3 · Audit</div>
+          </div>
 
-          <p className="mt-2 text-sm font-medium text-gray-500">
-            Questions {currentQuestions[0]?.number}–
-            {currentQuestions[1]?.number}
-          </p>
-        </div>
+          <div className="mt-6">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-bold text-[#0052FF]">
+                Question {questionNumber} of {questions.length}
+              </p>
 
-        <div className="space-y-8">
-          {currentQuestions.map((question) => {
-            const selectedAnswer = answers[question.number];
+              <p className="text-sm font-semibold text-black">
+                {Math.round(progress)}%
+              </p>
+            </div>
 
-            return (
-              <fieldset key={question.number} className="space-y-3">
-                <legend className="w-full">
-                  <p className="text-sm font-semibold text-gray-500">
-                    Question {String(question.number).padStart(2, "0")}
-                  </p>
+            <div
+              className="mt-2 h-2 overflow-hidden rounded-full bg-white"
+              aria-hidden="true"
+            >
+              <div
+                className="h-full rounded-full bg-[#0052FF] transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
 
-                  <h3 className="mt-1 text-lg font-bold text-gray-900">
-                    {question.title}
-                  </h3>
+          <fieldset className="mt-6">
+            <legend className="w-full">
+              <p className="text-sm font-bold uppercase tracking-wide text-[#0052FF]">
+                {currentQuestion.title}
+              </p>
 
-                  <p className="mt-2 leading-6 text-gray-600">
-                    {question.question}
-                  </p>
-                </legend>
+              <h3 className="mt-2 max-w-4xl text-2xl font-bold leading-9 text-black sm:text-3xl">
+                {currentQuestion.question}
+              </h3>
+            </legend>
 
-                <div className="space-y-3">
-                  {question.options.map((option) => (
-                    <label
-                      key={option.value}
+            <div className="mt-5 grid gap-3">
+              {currentQuestion.options.map((option) => {
+                const selectedAnswer = answers[currentQuestion.number];
+                const isSelected = selectedAnswer === option.value;
+
+                return (
+                  <label
+                    key={option.value}
+                    className={[
+                      "flex cursor-pointer items-center rounded-xl border-2 bg-white px-4 py-3 transition",
+                      isSelected
+                        ? "border-[#0052FF] bg-[#EBF3FE]"
+                        : "border-white hover:border-[#0052FF]",
+                    ].join(" ")}
+                  >
+                    <input
+                      type="radio"
+                      name={`question-${currentQuestion.number}`}
+                      value={option.value}
+                      checked={isSelected}
+                      onChange={() => handleAnswer(option.value)}
+                      disabled={isSubmitting}
+                      className="sr-only"
+                    />
+
+                    <span
                       className={[
-                        "flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-colors",
-                        selectedAnswer === option.value
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
+                        "mr-3 h-4 w-4 shrink-0 rounded-full border-2",
+                        isSelected
+                          ? "border-[#0052FF] bg-[#0052FF]"
+                          : "border-[#0052FF] bg-white",
                       ].join(" ")}
-                    >
-                      <input
-                        type="radio"
-                        name={`question-${question.number}`}
-                        value={option.value}
-                        checked={selectedAnswer === option.value}
-                        onChange={() =>
-                          handleAnswer(question.number, option.value)
-                        }
-                        className="mt-1 h-4 w-4"
-                      />
+                      aria-hidden="true"
+                    />
 
-                      <span className="flex-1">
-                        <span className="block font-semibold text-gray-900">
-                          {option.value}
-                        </span>
+                    <span className="text-sm font-medium leading-6 text-black">
+                      {option.label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
 
-                        <span className="mt-1 block text-sm leading-6 text-gray-600">
-                          {option.label}
-                        </span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            );
-          })}
+          {validationError && (
+            <p className="mt-4 text-sm font-semibold text-black" role="alert">
+              {validationError}
+            </p>
+          )}
+
+          {submitError && (
+            <p className="mt-4 text-sm font-semibold text-black" role="alert">
+              {submitError}
+            </p>
+          )}
+
+          <div className="mt-6 flex flex-col gap-3 border-t-2 border-white pt-5 sm:flex-row sm:justify-between">
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              onClick={handlePrevious}
+              disabled={isSubmitting}
+            >
+              Back
+            </button>
+
+            {isLastQuestion && (
+              <button
+                type="button"
+                className={primaryButtonClass}
+                onClick={handleSubmitFinalQuestion}
+                disabled={isSubmitting || answers[questionNumber] === null}
+              >
+                {isSubmitting ? "Preparing Results..." : "See My Results"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (stage === "results") {
+    return (
+      <div
+        ref={auditRef}
+        className="w-full rounded-2xl bg-[#EBF3FE] p-5 sm:p-8"
+      >
+        <div className="mx-auto max-w-5xl">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-bold uppercase tracking-wide text-[#0052FF]">
+              Step 5 of 7 · Results
+            </p>
+
+            <button
+              type="button"
+              className="text-sm font-semibold text-[#0052FF] underline underline-offset-4"
+              onClick={handleRestart}
+            >
+              Start Again
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+            <div className="rounded-2xl bg-[#0052FF] p-7 text-white sm:p-8">
+              <p className="text-sm font-semibold">Your Score</p>
+
+              <p className="mt-2 text-6xl font-bold">{score}</p>
+
+              <p className="mt-1 text-sm font-semibold">out of 100</p>
+
+              <div className="mt-7 border-t border-white/30 pt-6">
+                <p className="text-sm font-semibold">Your Position</p>
+
+                <h3 className="mt-2 text-2xl font-bold">{result?.category}</h3>
+
+                <p className="mt-3 text-sm leading-6">{result?.summary}</p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white p-7 sm:p-8">
+              <p className="text-sm font-bold uppercase tracking-wide text-[#0052FF]">
+                What your score means
+              </p>
+
+              <p className="mt-3 text-lg font-bold text-black">
+                Your score is only the starting point.
+              </p>
+
+              <p className="mt-2 leading-7 text-black">
+                The useful part is understanding what is working, what needs
+                attention, and what you can improve next.
+              </p>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {[
+                  ["Strengths", swot.strengths.length],
+                  ["Weaknesses", swot.weaknesses.length],
+                  ["Opportunities", swot.opportunities.length],
+                  ["Threats", swot.threats.length],
+                ].map(([label, count]) => (
+                  <div key={label} className="rounded-xl bg-[#EBF3FE] p-4">
+                    <p className="text-sm font-bold text-[#0052FF]">{label}</p>
+                    <p className="mt-1 text-sm font-semibold text-black">
+                      {count} area{count === 1 ? "" : "s"} identified
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {showFullResults && (
+            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              {(
+                [
+                  ["Strengths", swot.strengths],
+                  ["Weaknesses", swot.weaknesses],
+                  ["Opportunities", swot.opportunities],
+                  ["Threats", swot.threats],
+                ] as const
+              ).map(([title, items]) => (
+                <section key={title} className="rounded-2xl bg-white p-6">
+                  <h4 className="text-xl font-bold text-[#0052FF]">{title}</h4>
+
+                  <div className="mt-4 space-y-3">
+                    {items.map((item) => (
+                      <div
+                        key={`${title}-${item.label}`}
+                        className="rounded-xl bg-[#EBF3FE] p-4"
+                      >
+                        <p className="font-bold text-black">{item.label}</p>
+                        <p className="mt-1 text-sm leading-6 text-black">
+                          {item.text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-7 flex flex-col gap-3 border-t-2 border-white pt-6 sm:flex-row sm:flex-wrap">
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              onClick={handleViewFullResults}
+            >
+              {showFullResults ? "Full Results Shown" : "View Full Results"}
+            </button>
+
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              onClick={handleDownloadResults}
+            >
+              Download Results
+            </button>
+
+            <button
+              type="button"
+              className={primaryButtonClass}
+              onClick={() => {
+                setStage("next-steps");
+                scrollToTop();
+              }}
+            >
+              Next Steps
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (stage === "next-steps") {
+    return (
+      <div
+        ref={auditRef}
+        className="w-full rounded-2xl bg-[#EBF3FE] p-5 sm:p-8"
+      >
+        <div className="mx-auto max-w-5xl">
+          <p className="text-sm font-bold uppercase tracking-wide text-[#0052FF]">
+            Step 6 of 7 · Next Steps
+          </p>
+
+          <h3 className="mt-2 text-3xl font-bold text-black">
+            Turn your audit into action.
+          </h3>
+
+          <p className="mt-3 max-w-3xl leading-7 text-black">
+            You do not need to fix everything at once. Start with the areas that
+            create the biggest business risk or opportunity.
+          </p>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            {[
+              [
+                "01",
+                "Clarify ownership",
+                "Make sure your business owns the important systems and accounts.",
+              ],
+              [
+                "02",
+                "Reduce dependency",
+                "Capture the information people need to keep your technology moving.",
+              ],
+              [
+                "03",
+                "Improve reliability",
+                "Create simple checks before important changes go live.",
+              ],
+              [
+                "04",
+                "Prepare for growth",
+                "Make technology decisions around where the business is going next.",
+              ],
+            ].map(([number, title, text]) => (
+              <div key={number} className="rounded-2xl bg-white p-6">
+                <span className="text-sm font-bold text-[#0052FF]">
+                  {number}
+                </span>
+
+                <h4 className="mt-3 text-lg font-bold text-black">{title}</h4>
+
+                <p className="mt-2 text-sm leading-6 text-black">{text}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-col gap-3 border-t-2 border-white pt-6 sm:flex-row sm:justify-between">
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              onClick={handlePrevious}
+            >
+              Back to Results
+            </button>
+
+            <button
+              type="button"
+              className={primaryButtonClass}
+              onClick={() => {
+                setStage("help");
+                scrollToTop();
+              }}
+            >
+              How I Can Help
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={auditRef} className="w-full rounded-2xl bg-[#EBF3FE] p-5 sm:p-8">
+      <div className="mx-auto max-w-5xl">
+        <p className="text-sm font-bold uppercase tracking-wide text-[#0052FF]">
+          Step 7 of 7 · How I Can Help
+        </p>
+
+        <h3 className="mt-2 text-3xl font-bold text-black">
+          Choose the kind of support that makes sense for you.
+        </h3>
+
+        <p className="mt-3 max-w-3xl leading-7 text-black">
+          Your audit is useful on its own. If you want help going further,
+          choose the option that fits your situation.
+        </p>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {[
+            {
+              title: "Deliver My Project",
+              description:
+                "Get practical help taking a technology project from idea to delivery.",
+              href: "/deliver-my-project",
+              event: ANALYTICS_EVENTS.DELIVER_MY_PROJECT_CLICKED,
+            },
+            {
+              title: "Mentor Me",
+              description:
+                "Get guidance to improve your technology decisions, processes, and ownership.",
+              href: "/mentor-me",
+              event: ANALYTICS_EVENTS.MENTOR_ME_CLICKED,
+            },
+            {
+              title: "Coffee With Me",
+              description:
+                "Have a focused conversation about your technology situation and next move.",
+              href: "/coffee-with-me",
+              event: ANALYTICS_EVENTS.COFFEE_WITH_ME_CLICKED,
+            },
+          ].map((option) => (
+            <div
+              key={option.title}
+              className="flex flex-col rounded-2xl bg-white p-6"
+            >
+              <h4 className="text-xl font-bold text-[#0052FF]">
+                {option.title}
+              </h4>
+
+              <p className="mt-3 flex-1 text-sm leading-6 text-black">
+                {option.description}
+              </p>
+
+              <button
+                type="button"
+                className={`mt-6 ${primaryButtonClass}`}
+                onClick={() => {
+                  trackAnalyticsEvent({
+                    name: option.event,
+                    eventType: "click",
+                    path: OWNERSHIP_AUDIT_PATH,
+                  });
+
+                  navigate(option.href);
+                }}
+              >
+                {option.title}
+              </button>
+            </div>
+          ))}
         </div>
 
-        {validationError && (
-          <p className="text-sm text-red-600" role="alert">
-            {validationError}
-          </p>
-        )}
-
-        {submitError && (
-          <p className="text-sm text-red-600" role="alert">
-            {submitError}
-          </p>
-        )}
-
-        <div className="flex justify-between border-t border-gray-200 pt-5">
+        <div className="mt-8 flex justify-between border-t-2 border-white pt-6">
           <button
             type="button"
-            className={buttonClass}
+            className={secondaryButtonClass}
             onClick={handlePrevious}
-            disabled={isSubmitting}
           >
             Back
           </button>
 
           <button
             type="button"
-            className={buttonClass}
-            onClick={() => void handleNext()}
-            disabled={isSubmitting}
+            className={secondaryButtonClass}
+            onClick={handleRestart}
           >
-            {questionPage === 5
-              ? isSubmitting
-                ? "Saving..."
-                : "Continue to Score"
-              : "Next"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const result = score !== null ? getAuditResult(score) : null;
-
-  return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <p className="text-sm font-medium text-gray-500">Step 3 of 3</p>
-
-        <h3 className="mt-2 text-2xl font-bold text-gray-900">
-          Your Ownership Audit Results
-        </h3>
-      </div>
-
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
-        <p className="text-sm text-gray-500">Your Score</p>
-
-        <p className="mt-1 text-6xl font-bold text-gray-900">{score}</p>
-
-        <p className="mt-2 text-gray-500">out of 100</p>
-      </div>
-
-      <div className="text-center">
-        <h4 className="text-xl font-bold text-gray-900">{result?.category}</h4>
-
-        <p className="mt-3 leading-7 text-gray-600">{result?.diagnostic}</p>
-      </div>
-
-      <div className="rounded-xl border border-gray-200 p-5">
-        <p className="text-sm font-medium text-gray-500">
-          Recommended Next Step
-        </p>
-
-        <p className="mt-1 text-lg font-bold text-gray-900">{result?.cta}</p>
-      </div>
-
-      <div className="border-t border-gray-200 pt-5">
-        <div className="flex items-center justify-between gap-4">
-          <button type="button" className={buttonClass} onClick={handleRestart}>
             Retake Audit
-          </button>
-
-          <button
-            type="button"
-            className={buttonClass}
-            onClick={handleResultCta}
-          >
-            {result?.cta}
           </button>
         </div>
       </div>

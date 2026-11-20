@@ -4,10 +4,13 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: "grid" },
   { to: "/analytics", label: "Analytics", icon: "chart" },
   { to: "/requests", label: "Requests", icon: "inbox" },
+  { to: "/feedback", label: "Feedback", icon: "feedback" },
+  { to: "/bookings", label: "Bookings", icon: "calendar" },
+  { to: "/invoices", label: "Invoices", icon: "invoice" },
   { to: "/settings", label: "Settings", icon: "gear" },
 ] as const;
 
-function NavIcon({ name }: { name: string }) {
+function NavIcon({ name }: { readonly name: string }) {
   switch (name) {
     case "grid":
       return (
@@ -21,6 +24,7 @@ function NavIcon({ name }: { name: string }) {
           <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" />
         </svg>
       );
+
     case "chart":
       return (
         <svg
@@ -33,6 +37,7 @@ function NavIcon({ name }: { name: string }) {
           <path d="M3 17V7h3v10H3zm5.5 0V3h3v14h-3zM14 17v-7h3v7h-3z" />
         </svg>
       );
+
     case "inbox":
       return (
         <svg
@@ -46,6 +51,47 @@ function NavIcon({ name }: { name: string }) {
           <path d="M5 7h10l-5 4-5-4z" />
         </svg>
       );
+
+    case "feedback":
+      return (
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M3 4.5A2.5 2.5 0 015.5 2h9A2.5 2.5 0 0117 4.5v6A2.5 2.5 0 0114.5 13H9l-4.5 4v-4.7A2.5 2.5 0 013 10.5v-6z" />
+          <path d="M6 6h8v1.5H6V6zm0 3h5v1.5H6V9z" />
+        </svg>
+      );
+
+    case "calendar":
+      return (
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M5 2h2v2h6V2h2v2h2v14H3V4h2V2zm0 6v8h10V8H5z" />
+        </svg>
+      );
+
+    case "invoice":
+      return (
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M5 2h10v16l-2-1-2 1-2-1-2 1-2-1-2 1V2h2zm2 4v2h6V6H7zm0 4v2h6v-2H7zm0 4v2h4v-2H7z" />
+        </svg>
+      );
+
     case "gear":
       return (
         <svg
@@ -58,6 +104,7 @@ function NavIcon({ name }: { name: string }) {
           <path d="M10 2l1.5 3h3l1.5 2-2 2.5 2 2.5-1.5 2h-3L10 17l-1.5-3h-3L4 12l2-2.5L4 7l1.5-2h3L10 2z" />
         </svg>
       );
+
     default:
       return null;
   }

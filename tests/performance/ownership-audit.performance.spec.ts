@@ -16,7 +16,7 @@ test.describe("Ownership Audit Performance", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "Technology Ownership Audit",
+        name: "Ownership Audit",
         exact: true,
       }),
     ).toBeVisible();

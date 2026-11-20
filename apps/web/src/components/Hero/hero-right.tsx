@@ -223,9 +223,9 @@ export default function HeroRight({
           sm:h-130
           sm:w-400
           lg:-top-30
-          lg:-right-65
-          lg:h-175
-          lg:w-250
+          lg:-right-190
+          lg:h-140
+          lg:w-350
         "
       />
 
@@ -246,7 +246,7 @@ export default function HeroRight({
           justify-center
           px-4
           sm:px-6
-          lg:min-h-142.5
+          lg:min-h-150
           lg:px-8
         "
       >
@@ -292,10 +292,10 @@ export default function HeroRight({
               sm:top-[45%]
               sm:h-100
               sm:w-127.5
-              lg:left-[25%]
-              lg:top-[35%]
-              lg:h-120
-              lg:w-120
+              lg:left-[45%]
+              lg:top-[25%]
+              lg:h-128
+              lg:w-lg130
             "
           />
 
@@ -330,9 +330,9 @@ export default function HeroRight({
                 sm:bottom-14
                 sm:right-4
                 sm:w-140
-                lg:bottom-30
-                lg:right-20
-                lg:w-197.5
+                lg:bottom-33
+                lg:-right-4
+                lg:w-176
               "
               loading="eager"
               decoding="async"
@@ -348,17 +348,21 @@ export default function HeroRight({
           className="
             relative
             z-30
-            mb-17.5
+            mb-42
             -ml-22.5
             flex
             w-75
             shrink-0
             flex-col
             items-end
+            -bottom-20
             sm:mb-20
-            sm:-ml-17.5
-            lg:mb-30
+            sm:-ml-60
+            sm:-bottom-7
+            lg:mb-54
             lg:-ml-56
+            lg:-translate-x-3
+            lg:-translate-y-20
           "
         >
           <style>{`
@@ -384,9 +388,9 @@ export default function HeroRight({
                 sm:text-[22px]
                 sm:-translate-y-12.5
                 sm:-translate-x-17.5
-                lg:text-[25px]
-                lg:-translate-y-8
-                lg:-translate-x-10
+                lg:text-[21px]
+                lg:-translate-y-1
+                lg:-translate-x-8
               "
             >
               {titleAnnotation}
@@ -408,9 +412,9 @@ export default function HeroRight({
                 sm:-translate-y-10
                 sm:-translate-x-17.5
                 lg:h-12
-                lg:w-16
-                lg:-translate-y-3
-                lg:-translate-x-10
+                lg:w-15
+                lg:translate-y-3
+                lg:-translate-x-8
               "
               viewBox="0 0 65 50"
               fill="none"
@@ -451,17 +455,18 @@ export default function HeroRight({
               border
               border-slate-100
               bg-white
-              px-[-10px]
+              px-0
               py-0
               shadow-[0_8px_25px_rgba(15,23,42,0.12)]
               sm:w-57.5
               sm:rounded-2xl
               sm:px-3.75
               sm:py-2.75
-              lg:w-62.5
-              lg:rounded-[18px]
-              lg:px-5
-              lg:py-4.5
+              lg:w-43
+              lg:h-66
+              lg:rounded-[14px]
+              lg:px-2
+              lg:py-1.5
             "
           >
             <div className="flex flex-col">
@@ -476,8 +481,8 @@ export default function HeroRight({
                     ${index !== metrics.length - 1 ? "border-b border-slate-200" : ""}
                     sm:min-h-17.5
                     sm:gap-3
-                    lg:min-h-22.25
-                    lg:gap-4
+                    lg:min-h-14.5
+                    lg:gap-2
                   `}
                 >
                   {/* Icon */}
@@ -496,12 +501,12 @@ export default function HeroRight({
                       sm:h-10
                       sm:w-10
                       sm:rounded-[11px]
-                      lg:h-13
-                      lg:w-13
-                      lg:rounded-[14px]
+                      lg:h-8
+                      lg:w-8
+                      lg:rounded-[7px]
                     "
                   >
-                    <div className="[&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6 lg:[&>svg]:h-7 lg:[&>svg]:w-7">
+                    <div className="[&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6 lg:[&>svg]:h-4.5 lg:[&>svg]:w-4.5">
                       <MetricIcon type={metric.icon} />
                     </div>
                   </div>
@@ -517,7 +522,7 @@ export default function HeroRight({
                         tracking-[-0.02em]
                         text-blue-800
                         sm:text-[21px]
-                        lg:text-[25px]
+                        lg:text-[17px]
                       "
                     >
                       {metric.value}
@@ -533,8 +538,8 @@ export default function HeroRight({
                         text-slate-800
                         sm:mt-1
                         sm:text-[12px]
-                        lg:mt-1.5
-                        lg:text-[14px]
+                        lg:mt-1
+                        lg:text-[9px]
                       "
                     >
                       {metric.label}

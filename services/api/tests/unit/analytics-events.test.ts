@@ -1,8 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { insertMock, valuesMock } = vi.hoisted(() => ({
+const { insertMock, valuesMock, loggerErrorMock } = vi.hoisted(() => ({
   insertMock: vi.fn(),
   valuesMock: vi.fn(),
+  loggerErrorMock: vi.fn(),
+}));
+
+vi.mock("@build-me/utils/logging", () => ({
+  logger: { error: loggerErrorMock },
 }));
 
 vi.mock("../../../../database/dist/drizzle/client.js", () => ({
@@ -130,7 +135,15 @@ describe("Navbar analytics event endpoint", () => {
   });
 
   it("returns a generic server error when persistence fails", async () => {
-    valuesMock.mockRejectedValueOnce(new Error("database secret"));
+    const postgresError = Object.assign(new Error("constraint failure"), {
+      code: "23514",
+      detail: "The row violates a check constraint.",
+      hint: "Check the event data.",
+      constraint: "analytics_events_check",
+    });
+    valuesMock.mockRejectedValueOnce(
+      Object.assign(new Error("query failed"), { cause: postgresError }),
+    );
 
     const response = await fetch(`${baseUrl}/api/v1/analytics/events`, {
       method: "POST",
@@ -148,6 +161,22 @@ describe("Navbar analytics event endpoint", () => {
         message: "An unexpected error occurred.",
       },
     });
+    expect(loggerErrorMock).toHaveBeenCalledWith(
+      "Analytics event insert failed.",
+      expect.objectContaining({
+        operation: "analytics_event_insert",
+        databaseError: expect.objectContaining({
+          message: "query failed",
+          cause: expect.objectContaining({
+            message: "constraint failure",
+            code: "23514",
+            detail: "The row violates a check constraint.",
+            hint: "Check the event data.",
+            constraint: "analytics_events_check",
+          }),
+        }),
+      }),
+    );
   });
 });
 

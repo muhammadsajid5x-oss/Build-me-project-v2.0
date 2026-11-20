@@ -30,6 +30,12 @@ function getSupabaseClient(): ReturnType<typeof createClient> {
 export async function authenticateAccessToken(
   accessToken: string,
 ): Promise<AuthenticatedUser | null> {
+  const tokenParts = accessToken.split(".");
+
+  if (tokenParts.length !== 3) {
+    return null;
+  }
+
   const { data, error } = await getSupabaseClient().auth.getUser(accessToken);
   if (error || !data.user) {
     return null;
@@ -52,7 +58,9 @@ export async function updatePassword(
   accessToken: string,
   newPassword: string,
 ): Promise<{ success: boolean }> {
-  const { error } = await getSupabaseClient().auth.updateUser({ password: newPassword });
+  const { error } = await getSupabaseClient().auth.updateUser({
+    password: newPassword,
+  });
 
   if (error) {
     throw new Error("Unable to update password.");
