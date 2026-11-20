@@ -50,27 +50,25 @@ export default function HeroLeft({
   return (
     <div
       ref={heroRef}
-      className="flex w-full flex-col justify-center text-left px-4 sm:px-6 lg:px-0"
+      className="flex w-full flex-col justify-center px-4 text-left sm:px-6 lg:px-0"
     >
       <h1
         id="technology-ownership-heading"
-        className="mt-4 sm:mt-6 text-3xl sm:text-6xl lg:text-[3.5xl] font-bold leading-[1.15] tracking-tight text-slate-900"
+        className="mt-2 text-4xl font-bold leading-[1.08] tracking-tight text-black sm:mt-6 sm:text-6xl lg:text-[3.5rem]"
       >
         <span className="block">{titlePrimary}</span>
-        <span className="mt-1 block text-blue-700">{titleSecondary}</span>
+        <span className="mt-2 block text-blue-700">{titleSecondary}</span>
       </h1>
 
-      <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl font-bold text-slate-900">
-        Simple, fast, and beautiful platforms that win and
-        <br className="hidden sm:inline" /> get real results
+      <p className="mt-2 max-w-2xl text-base font-bold leading-7 text-black sm:mt-6 sm:text-lg sm:leading-8 lg:text-xl">
+        Simple, fast, and beautiful platforms that
+        <br />
+        win and get real results.
       </p>
 
-      <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-lg font-small text-slate-900">
-        Modern web applications built to perform, scale, and impress.
-        <br className="hidden sm:inline" />
-        Clean design, fast performance, and smooth user experience
-        <br className="hidden sm:inline" />
-        that helps businesses grow with ease.
+      <p className="mt-2 max-w-2xl text-base leading-7 text-black sm:mt-5 sm:text-lg sm:leading-8">
+        Get more customers with ease with websites and apps that are <br /> easy
+        to use, look great, and work fast.
       </p>
     </div>
   );

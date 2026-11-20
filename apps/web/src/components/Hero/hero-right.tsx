@@ -330,9 +330,9 @@ export default function HeroRight({
                 sm:bottom-14
                 sm:right-4
                 sm:w-140
-                lg:bottom-40
+                lg:bottom-33
                 lg:-right-4
-                lg:w-165
+                lg:w-176
               "
               loading="eager"
               decoding="async"

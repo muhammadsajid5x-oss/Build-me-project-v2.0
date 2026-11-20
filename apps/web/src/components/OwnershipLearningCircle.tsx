@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type SyntheticEvent } from "react";
 
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import { getApiBaseUrl } from "../api-url";
@@ -8,32 +8,74 @@ type LearningCircleStep = "intro" | "details" | "joined";
 type VisitorDetails = {
   name: string;
   email: string;
+  website: string;
+  organization: string;
 };
 
 const TELEGRAM_GROUP_URL = "https://t.me/+Q9KY1dL4c-BkMjg8";
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = (value: string): boolean => {
+  const atIndex = value.indexOf("@");
+
+  if (atIndex <= 0 || atIndex === value.length - 1) {
+    return false;
+  }
+
+  const domain = value.slice(atIndex + 1);
+  const dotIndex = domain.indexOf(".");
+
+  return dotIndex > 0 && dotIndex < domain.length - 1;
+};
+
+const isValidWebsite = (value: string): boolean => {
+  try {
+    const url = new URL(value);
+
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+const getCurrentPart = (step: LearningCircleStep): number => {
+  switch (step) {
+    case "intro":
+      return 1;
+    case "details":
+      return 2;
+    case "joined":
+      return 3;
+    default:
+      return 1;
+  }
+};
 
 export default function OwnershipLearningCircle() {
   const [step, setStep] = useState<LearningCircleStep>("intro");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
+  const [organization, setOrganization] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
+
+  const currentPart = getCurrentPart(step);
 
   const handleContinue = () => {
     setError("");
     setStep("details");
   };
 
-  const handleJoinSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleJoinSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
     const visitor: VisitorDetails = {
       name: name.trim(),
       email: email.trim().toLowerCase(),
+      website: website.trim(),
+      organization: organization.trim(),
     };
 
     if (visitor.name.length < 2) {
@@ -41,8 +83,15 @@ export default function OwnershipLearningCircle() {
       return;
     }
 
-    if (!emailPattern.test(visitor.email)) {
+    if (!isValidEmail(visitor.email)) {
       setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (visitor.website && !isValidWebsite(visitor.website)) {
+      setError(
+        "Please enter a valid website starting with http:// or https://.",
+      );
       return;
     }
 
@@ -50,7 +99,9 @@ export default function OwnershipLearningCircle() {
 
     try {
       const response = await fetch(
-        `${getApiBaseUrl(import.meta.env.VITE_API_URL)}/api/v1/ownership-learning-circle-requests`,
+        `${getApiBaseUrl(
+          import.meta.env.VITE_API_URL,
+        )}/api/v1/ownership-learning-circle-requests`,
         {
           method: "POST",
           headers: {
@@ -71,6 +122,8 @@ export default function OwnershipLearningCircle() {
       });
 
       setStep("joined");
+
+      window.open(TELEGRAM_GROUP_URL, "_blank", "noopener,noreferrer");
     } catch {
       setError("We could not save your details. Please try again.");
     } finally {
@@ -103,217 +156,305 @@ export default function OwnershipLearningCircle() {
   };
 
   return (
-    <div className="w-full space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-gray-600">
-          Ownership Learning Circle
-        </p>
+    <div className="w-full">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
+            Ownership Learning Circle
+          </p>
 
-        <p className="text-sm text-gray-500">
-          {step === "intro" && "Step 1 of 3"}
-          {step === "details" && "Step 2 of 3"}
-          {step === "joined" && "Step 3 of 3"}
-        </p>
+          <h2 className="mt-1 text-2xl font-bold tracking-tight text-black sm:text-3xl">
+            Learn. Practise. Own.
+          </h2>
+        </div>
+
+        <span className="shrink-0 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700">
+          Part {currentPart} of 3
+        </span>
       </div>
 
+      {/* Progress */}
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-gray-200"
-        role="progressbar"
-        aria-label="Learning Circle journey progress"
-        aria-valuemin={1}
-        aria-valuemax={3}
-        aria-valuenow={step === "intro" ? 1 : step === "details" ? 2 : 3}
+        className="mb-6 grid grid-cols-3 gap-2"
+        role="tablist"
+        aria-label="Ownership Learning Circle parts"
       >
-        <div
-          className="h-full rounded-full bg-blue-600 transition-all"
-          style={{
-            width:
-              step === "intro"
-                ? "33.33%"
-                : step === "details"
-                  ? "66.66%"
-                  : "100%",
-          }}
-        />
+        {[
+          { number: 1, label: "Quick Win" },
+          { number: 2, label: "Join" },
+          { number: 3, label: "Start Learning" },
+        ].map((part) => {
+          const isActive = currentPart === part.number;
+
+          return (
+            <div
+              key={part.number}
+              role="tab"
+              aria-selected={isActive}
+              className={`rounded-xl border-2 px-3 py-3 text-center transition ${
+                isActive
+                  ? "border-blue-700 bg-blue-700 text-white"
+                  : "border-blue-100 bg-blue-100 text-blue-700"
+              }`}
+            >
+              <span className="block text-xs font-bold uppercase tracking-wide">
+                Part {part.number}
+              </span>
+
+              <span className="mt-1 block text-sm font-semibold">
+                {part.label}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
+      {/* Part 1 */}
       {step === "intro" && (
-        <section className="space-y-5">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-blue-600">
-              Join the Ownership Learning Circle
-            </h2>
+        <section
+          aria-labelledby="learning-circle-part-one"
+          className="space-y-6"
+        >
+          <div className="rounded-2xl border-2 border-blue-100 bg-blue-100 p-6 sm:p-8">
+            <h3
+              id="learning-circle-part-one"
+              className="text-2xl font-bold text-black sm:text-3xl"
+            >
+              Get a Quick Win
+            </h3>
 
-            <p className="leading-7 text-gray-600">
-              A free community for people who want to understand, practise, and
-              grow Technology Ownership together.
+            <p className="mt-3 max-w-2xl text-base leading-7 text-black/70">
+              A practical space to build stronger Technology Ownership, one
+              small improvement at a time.
             </p>
           </div>
 
-          <div className="space-y-4">
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <h3 className="font-semibold text-blue-600">
-                What is the Learning Circle?
-              </h3>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border-2 border-blue-100 bg-white p-5">
+              <h4 className="font-bold text-black">Learn</h4>
 
-              <p className="mt-2 leading-7 text-gray-700">
-                It is a community learning space where people can share
-                experiences, discuss Technology Ownership, learn from each
-                other, and build stronger ownership practices.
+              <p className="mt-2 text-sm leading-6 text-black/70">
+                Understand practical ownership principles.
               </p>
             </div>
 
-            <div>
-              <h3 className="font-semibold text-blue-600">Who is it for?</h3>
+            <div className="rounded-2xl border-2 border-blue-100 bg-white p-5">
+              <h4 className="font-bold text-black">Practise</h4>
 
-              <p className="mt-2 leading-7 text-gray-600">
-                Developers, engineers, technology leaders, and anyone who wants
-                to take greater ownership of technology outcomes.
+              <p className="mt-2 text-sm leading-6 text-black/70">
+                Turn ideas into better technology habits.
               </p>
             </div>
 
-            <div>
-              <h3 className="font-semibold text-blue-600">
-                What do members get?
-              </h3>
+            <div className="rounded-2xl border-2 border-blue-100 bg-white p-5">
+              <h4 className="font-bold text-black">Share</h4>
 
-              <ul className="mt-2 list-disc space-y-2 pl-5 text-gray-600">
-                <li>Peer learning and practical discussions.</li>
-                <li>Technology Ownership conversations.</li>
-                <li>Shared experiences, questions, and insights.</li>
-                <li>A free community for continuous learning.</li>
-              </ul>
+              <p className="mt-2 text-sm leading-6 text-black/70">
+                Learn with people facing similar challenges.
+              </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleContinue}
-            className="w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Continue
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={handleContinue}
+              className="w-full rounded-xl bg-blue-700 px-6 py-3.5 font-bold text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 sm:w-auto"
+            >
+              Continue
+            </button>
+          </div>
         </section>
       )}
 
+      {/* Part 2 */}
       {step === "details" && (
-        <section className="space-y-5">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-blue-600">
-              Join the Learning Circle
-            </h2>
+        <section
+          aria-labelledby="learning-circle-part-two"
+          className="space-y-6"
+        >
+          <div className="rounded-2xl border-2 border-blue-100 bg-blue-100 p-6 sm:p-8">
+            <h3
+              id="learning-circle-part-two"
+              className="text-2xl font-bold text-black sm:text-3xl"
+            >
+              Join the Circle
+            </h3>
 
-            <p className="leading-7 text-gray-600">
-              Share your basic details before joining the community.
+            <p className="mt-2 text-sm text-black/70">
+              Just the basics. We will take you straight to Telegram.
             </p>
           </div>
 
-          <form onSubmit={handleJoinSubmit} className="space-y-4" noValidate>
-            <div className="space-y-2">
-              <label
-                htmlFor="learning-circle-name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Name
-              </label>
+          <form onSubmit={handleJoinSubmit} className="space-y-5" noValidate>
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-2">
+                <label
+                  htmlFor="learning-circle-name"
+                  className="block text-sm font-bold text-black"
+                >
+                  <span>Name</span>
+                  <span className="ml-1 text-blue-700" aria-hidden="true">
+                    *
+                  </span>
+                </label>
 
-              <input
-                id="learning-circle-name"
-                name="name"
-                type="text"
-                autoComplete="name"
-                required
-                minLength={2}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Enter your name"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-              />
-            </div>
+                <input
+                  id="learning-circle-name"
+                  name="name"
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  autoComplete="name"
+                  required
+                  className="w-full rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                  placeholder="Your name"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label
-                htmlFor="learning-circle-email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email address
-              </label>
+              <div className="space-y-2">
+                <label
+                  htmlFor="learning-circle-email"
+                  className="block text-sm font-bold text-black"
+                >
+                  <span>Email</span>
+                  <span className="ml-1 text-blue-700" aria-hidden="true">
+                    *
+                  </span>
+                </label>
 
-              <input
-                id="learning-circle-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Enter your email address"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-              />
+                <input
+                  id="learning-circle-email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  autoComplete="email"
+                  required
+                  className="w-full rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="learning-circle-website"
+                  className="block text-sm font-bold text-black"
+                >
+                  <span>Website</span>
+                  <span className="ml-1 text-xs font-normal text-black/50">
+                    (Optional)
+                  </span>
+                </label>
+
+                <input
+                  id="learning-circle-website"
+                  name="website"
+                  type="url"
+                  value={website}
+                  onChange={(event) => setWebsite(event.target.value)}
+                  autoComplete="url"
+                  className="w-full rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                  placeholder="https://example.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="learning-circle-organization"
+                  className="block text-sm font-bold text-black"
+                >
+                  <span>Organization</span>
+                  <span className="ml-1 text-xs font-normal text-black/50">
+                    (Optional)
+                  </span>
+                </label>
+
+                <input
+                  id="learning-circle-organization"
+                  name="organization"
+                  type="text"
+                  value={organization}
+                  onChange={(event) => setOrganization(event.target.value)}
+                  autoComplete="organization"
+                  className="w-full rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                  placeholder="Your organization"
+                />
+              </div>
             </div>
 
             {error && (
-              <p
-                id="learning-circle-form-error"
+              <div
                 role="alert"
-                className="text-sm font-medium text-red-600"
+                className="rounded-xl border-2 border-blue-700 bg-blue-100 px-4 py-3 text-sm font-semibold text-black"
               >
                 {error}
-              </p>
+              </div>
             )}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              {isSubmitting ? "Joining..." : "Join the Learning Circle"}
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full rounded-xl bg-blue-700 px-6 py-3.5 font-bold text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              >
+                {isSubmitting ? "Joining..." : "Join & Open Telegram"}
+              </button>
+            </div>
           </form>
         </section>
       )}
 
+      {/* Part 3 */}
       {step === "joined" && (
-        <section className="space-y-5">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">
-              You're ready to join
-            </h2>
-
-            <p className="leading-7 text-gray-600">
-              Your details have been received. Continue to Telegram to join the
-              Ownership Learning Circle community.
+        <section
+          aria-labelledby="learning-circle-part-three"
+          className="space-y-6"
+        >
+          <div className="rounded-2xl border-2 border-blue-700 bg-blue-700 p-6 text-white sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/80">
+              You are ready
             </p>
-          </div>
 
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-            <p className="text-sm leading-6 text-green-800">
-              The Telegram group will open in a new tab. If the browser blocks
-              the new tab, copy the invite link below and open it in Telegram.
+            <h3
+              id="learning-circle-part-three"
+              className="mt-2 text-2xl font-bold sm:text-3xl"
+            >
+              Start Learning
+            </h3>
+
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80">
+              Join the Telegram circle to continue.
             </p>
           </div>
 
           {error && (
-            <p role="alert" className="text-sm font-medium text-red-600">
+            <div
+              role="alert"
+              className="rounded-xl border-2 border-blue-700 bg-blue-100 px-4 py-3 text-sm font-semibold text-black"
+            >
               {error}
-            </p>
+            </div>
           )}
 
-          <button
-            type="button"
-            onClick={handleTelegramRedirect}
-            className="w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Join on Telegram
-          </button>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handleTelegramRedirect}
+              className="rounded-xl bg-blue-700 px-6 py-3.5 font-bold text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
+            >
+              Join Telegram
+            </button>
 
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className="w-full rounded-lg border border-gray-300 px-5 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            {isLinkCopied ? "Telegram Link Copied" : "Copy Telegram Link"}
-          </button>
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="rounded-xl border-2 border-blue-700 bg-white px-6 py-3.5 font-bold text-blue-700 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
+            >
+              {isLinkCopied ? "Link Copied" : "Copy Telegram Link"}
+            </button>
+          </div>
         </section>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { SyntheticEvent, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import { getApiBaseUrl } from "../api-url";
@@ -54,6 +55,24 @@ type Invoice = {
   dueAt: string | null;
   paidAt: string | null;
 };
+
+const timelineOptions = [
+  "As soon as possible",
+  "2–4 weeks",
+  "1–2 months",
+  "2–3 months",
+  "3+ months",
+  "Not sure yet",
+];
+
+const budgetOptions = [
+  "Under $500",
+  "$500–$1,000",
+  "$1,000–$2,500",
+  "$2,500–$5,000",
+  "$5,000+",
+  "Not sure yet",
+];
 
 const initialFormData: FormData = {
   name: "",
@@ -154,27 +173,27 @@ function validateForm(formData: FormData): FormErrors {
   }
 
   if (!formData.projectDescription.trim()) {
-    errors.projectDescription = "Project description is required.";
+    errors.projectDescription = "Tell us what you want to build.";
   } else if (
     formData.projectDescription.trim().length > maxLengths.projectDescription
   ) {
-    errors.projectDescription = `Project description must be ${maxLengths.projectDescription} characters or fewer.`;
+    errors.projectDescription = `Use ${maxLengths.projectDescription} characters or fewer.`;
   }
 
   if (!formData.expectedOutcome.trim()) {
-    errors.expectedOutcome = "Expected outcome is required.";
+    errors.expectedOutcome = "Tell us the outcome you want.";
   } else if (
     formData.expectedOutcome.trim().length > maxLengths.expectedOutcome
   ) {
-    errors.expectedOutcome = `Expected outcome must be ${maxLengths.expectedOutcome} characters or fewer.`;
+    errors.expectedOutcome = `Use ${maxLengths.expectedOutcome} characters or fewer.`;
   }
 
   if (formData.timeline.trim().length > maxLengths.timeline) {
-    errors.timeline = `Timeline must be ${maxLengths.timeline} characters or fewer.`;
+    errors.timeline = `Use ${maxLengths.timeline} characters or fewer.`;
   }
 
   if (formData.budget.trim().length > maxLengths.budget) {
-    errors.budget = `Budget must be ${maxLengths.budget} characters or fewer.`;
+    errors.budget = `Use ${maxLengths.budget} characters or fewer.`;
   }
 
   return errors;
@@ -238,9 +257,7 @@ export default function DeliverMyProjectPage() {
         }
       } catch {
         if (!cancelled) {
-          setPlansError(
-            "Unable to load pricing plans. Please refresh the page and try again.",
-          );
+          setPlansError("Unable to load plans. Please refresh and try again.");
         }
       } finally {
         if (!cancelled) {
@@ -272,11 +289,16 @@ export default function DeliverMyProjectPage() {
     setSubmitError(null);
   };
 
+  const handlePlanSelect = (planId: string) => {
+    setSelectedPlanId(planId);
+    setSubmitError(null);
+  };
+
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!selectedPlan) {
-      setSubmitError("Please choose a price plan before submitting.");
+      setSubmitError("Choose a delivery plan first.");
       return;
     }
 
@@ -293,13 +315,6 @@ export default function DeliverMyProjectPage() {
     setSubmitError(null);
 
     try {
-      /*
-       * Step 1:
-       * Create the visitor's project request.
-       *
-       * The API returns the lead ID. We use that server-created ID for
-       * the booking instead of trusting the browser with a fabricated ID.
-       */
       const leadResponse = await fetch(
         `${apiBaseUrl}/api/v1/delivery-project-requests`,
         {
@@ -333,7 +348,7 @@ export default function DeliverMyProjectPage() {
 
         if (leadResponse.status === 400 && Object.keys(fieldErrors).length) {
           setErrors(fieldErrors);
-          setSubmitError("Please review the highlighted fields and try again.");
+          setSubmitError("Please review the highlighted fields.");
           return;
         }
 
@@ -342,13 +357,6 @@ export default function DeliverMyProjectPage() {
 
       const leadId = leadBody.data.id;
 
-      /*
-       * Step 2:
-       * Create the booking.
-       *
-       * The backend looks up the selected plan and its price from the
-       * database. The frontend never sends a price.
-       */
       const bookingResponse = await fetch(`${apiBaseUrl}/api/v1/bookings`, {
         method: "POST",
         headers: {
@@ -369,15 +377,9 @@ export default function DeliverMyProjectPage() {
       }
 
       const createdBooking = bookingBody.data;
+
       setBooking(createdBooking);
 
-      /*
-       * Step 3:
-       * Create the invoice from the booking.
-       *
-       * The backend uses the booking amount, so the invoice amount is also
-       * controlled by the database-backed plan price.
-       */
       const invoiceResponse = await fetch(`${apiBaseUrl}/api/v1/invoices`, {
         method: "POST",
         headers: {
@@ -412,31 +414,35 @@ export default function DeliverMyProjectPage() {
 
   if (booking && invoice && selectedPlan) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
+      <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
         <section
           aria-labelledby="delivery-project-success-heading"
-          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+          className="rounded-2xl border-2 border-blue-700 bg-white p-5 sm:p-8"
         >
-          <p className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-700">
-            Deliver My Project
-          </p>
+          <div className="rounded-2xl bg-blue-100 p-6 sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
+              Work With Me
+            </p>
 
-          <h1
-            id="delivery-project-success-heading"
-            className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
-          >
-            Booking received
-          </h1>
+            <h1
+              id="delivery-project-success-heading"
+              className="mt-2 text-3xl font-bold tracking-tight text-black sm:text-4xl"
+            >
+              Booking received
+            </h1>
 
-          <p className="mt-4 text-gray-600">
-            Your project request and booking have been created successfully.
-          </p>
+            <p className="mt-2 text-sm font-medium text-black/70">
+              Your project request is ready.
+            </p>
+          </div>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-2">
-            <div className="rounded-xl bg-[#EBF3FE] p-5">
-              <p className="text-sm font-medium text-gray-600">Selected Plan</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border-2 border-blue-100 bg-white p-5">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                Plan
+              </p>
 
-              <p className="mt-2 text-xl font-bold text-gray-900">
+              <p className="mt-2 text-xl font-bold text-black">
                 {selectedPlan.planName}
               </p>
 
@@ -445,28 +451,38 @@ export default function DeliverMyProjectPage() {
               </p>
             </div>
 
-            <div className="rounded-xl bg-[#EBF3FE] p-5">
-              <p className="text-sm font-medium text-gray-600">Invoice</p>
+            <div className="rounded-xl border-2 border-blue-100 bg-white p-5">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                Invoice
+              </p>
 
-              <p className="mt-2 text-xl font-bold text-gray-900">
+              <p className="mt-2 text-xl font-bold text-black">
                 {invoice.invoiceNumber}
               </p>
 
-              <p className="mt-2 text-lg font-semibold text-blue-700">
+              <p className="mt-2 text-lg font-bold text-blue-700">
                 {invoice.currency} {invoice.amount}
               </p>
 
-              <p className="mt-1 text-sm font-medium text-gray-600">
-                Payment: Pending
+              <p className="mt-1 text-sm font-medium text-black/60">
+                Payment pending
               </p>
             </div>
           </div>
 
-          <div className="mt-8 rounded-xl border border-gray-200 bg-white p-5">
-            <p className="text-sm leading-6 text-gray-600">
-              Your booking is currently pending payment. Payment processing will
-              be connected separately.
+          <div className="mt-6 rounded-xl bg-blue-100 px-5 py-4">
+            <p className="text-sm font-medium leading-6 text-black">
+              Booking created successfully.
             </p>
+          </div>
+
+          <div className="mt-6">
+            <Link
+              to="/#work-with-me"
+              className="inline-flex items-center rounded-xl border-2 border-blue-700 bg-white px-5 py-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
+            >
+              Back to Work With Me
+            </Link>
           </div>
         </section>
       </main>
@@ -474,348 +490,470 @@ export default function DeliverMyProjectPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6">
-      <section aria-labelledby="delivery-project-heading">
-        <p className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-700">
+    <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+      {/* Breadcrumb */}
+      <nav
+        aria-label="Breadcrumb"
+        className="mb-6 rounded-xl bg-blue-100 px-4 py-3 sm:px-5"
+      >
+        <ol className="flex flex-wrap items-center gap-2 text-sm">
+          <li>
+            <Link
+              to="/"
+              className="font-semibold text-blue-700 transition hover:underline focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
+            >
+              Home
+            </Link>
+          </li>
+
+          <li aria-hidden="true" className="font-bold text-black/40">
+            /
+          </li>
+
+          <li>
+            <Link
+              to="/#work-with-me"
+              className="font-semibold text-blue-700 transition hover:underline focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
+            >
+              Work With Me
+            </Link>
+          </li>
+
+          <li aria-hidden="true" className="font-bold text-black/40">
+            /
+          </li>
+
+          <li aria-current="page" className="font-bold text-black">
+            Deliver My Project
+          </li>
+        </ol>
+      </nav>
+
+      {/* Header */}
+      <section
+        aria-labelledby="delivery-project-heading"
+        className="rounded-2xl bg-blue-100 p-6 sm:p-8"
+      >
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
           Work With Me
         </p>
 
-        <h1
-          id="delivery-project-heading"
-          className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
-        >
-          Deliver My Project
-        </h1>
+        <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1
+              id="delivery-project-heading"
+              className="text-3xl font-bold tracking-tight text-black sm:text-4xl"
+            >
+              Deliver My Project
+            </h1>
 
-        <p className="mt-4 max-w-2xl text-gray-600">
-          Choose the delivery plan that fits your project, then tell me about
-          what you want to build and the outcome you want to achieve.
-        </p>
+            <p className="mt-2 text-sm font-medium text-black/70">
+              Choose a plan and share the essentials.
+            </p>
+          </div>
+
+          <div className="shrink-0 self-start rounded-full border-2 border-blue-700 bg-white px-4 py-2 text-xs font-bold text-blue-700 sm:self-auto">
+            01 / 02
+          </div>
+        </div>
       </section>
 
-      <section aria-labelledby="delivery-price-plans-heading" className="mt-10">
-        <div className="mb-6">
+      {/* Plans */}
+      <section aria-labelledby="delivery-price-plans-heading" className="mt-8">
+        <div className="mb-4">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
+            Step 01
+          </p>
+
           <h2
             id="delivery-price-plans-heading"
-            className="text-2xl font-bold text-blue-700 sm:text-3xl"
+            className="mt-1 text-2xl font-bold tracking-tight text-black"
           >
-            Price Plans
+            Choose a plan
           </h2>
-
-          <p className="mt-2 text-gray-600">
-            Choose the right level of delivery support for your project.
-          </p>
         </div>
 
         {isLoadingPlans && (
-          <div className="rounded-xl bg-[#EBF3FE] px-6 py-8 text-center">
-            <p className="text-sm font-medium text-gray-700">
-              Loading price plans...
-            </p>
+          <div className="rounded-2xl border-2 border-blue-100 bg-blue-100 px-6 py-8 text-center">
+            <p className="text-sm font-semibold text-black">Loading plans...</p>
           </div>
         )}
 
         {plansError && (
           <div
             role="alert"
-            className="rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-700"
+            className="rounded-2xl border-2 border-blue-700 bg-blue-100 px-6 py-4 text-sm font-semibold text-black"
           >
             {plansError}
           </div>
         )}
 
         {!isLoadingPlans && !plansError && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             {plans.map((plan) => {
               const isSelected = selectedPlanId === plan.id;
 
               return (
-                <article
+                <button
                   key={plan.id}
-                  className={`flex h-full flex-col rounded-xl border-2 bg-[#EBF3FE] p-6 transition ${
+                  type="button"
+                  onClick={() => handlePlanSelect(plan.id)}
+                  aria-pressed={isSelected}
+                  className={`group flex min-h-52 flex-col rounded-2xl border-2 p-5 text-left transition focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 ${
                     isSelected
-                      ? "border-blue-600 shadow-md"
-                      : "border-transparent"
+                      ? "border-blue-700 bg-blue-700 text-white"
+                      : "border-blue-100 bg-white text-black hover:border-blue-700 hover:bg-blue-100"
                   }`}
                 >
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {plan.planName}
-                  </h3>
+                  <div className="flex items-start justify-between gap-3">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${
+                        isSelected
+                          ? "bg-white text-blue-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {plan.billingPeriod === "monthly" ? "Monthly" : "Project"}
+                    </span>
 
-                  <p className="mt-3 min-h-12 text-sm leading-6 text-gray-600">
+                    {isSelected && (
+                      <span className="text-sm font-bold" aria-hidden="true">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="mt-5 text-xl font-bold">{plan.planName}</h3>
+
+                  <p
+                    className={`mt-2 line-clamp-2 text-sm leading-5 ${
+                      isSelected ? "text-white/80" : "text-black/60"
+                    }`}
+                  >
                     {plan.description}
                   </p>
 
-                  <p className="mt-6 text-3xl font-bold text-blue-700">
-                    {formatPrice(plan)}
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedPlanId(plan.id);
-                      setSubmitError(null);
-                    }}
-                    className={`mt-6 inline-flex items-center justify-center rounded-lg px-5 py-3 text-base font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 ${
-                      isSelected
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "border-2 border-blue-600 bg-white text-gray-900 hover:bg-blue-50"
-                    }`}
-                  >
-                    {isSelected ? "Selected" : "Choose Plan"}
-                  </button>
-                </article>
+                  <div className="mt-auto pt-5">
+                    <p
+                      className={`text-2xl font-bold ${
+                        isSelected ? "text-white" : "text-blue-700"
+                      }`}
+                    >
+                      {formatPrice(plan)}
+                    </p>
+                  </div>
+                </button>
               );
             })}
           </div>
         )}
       </section>
 
+      {/* Form */}
       <form
         onSubmit={handleSubmit}
         noValidate
         aria-busy={isSubmitting}
-        className="mt-10 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+        className="mt-8 rounded-2xl border-2 border-blue-100 bg-white p-5 sm:p-7"
       >
-        {selectedPlan && (
-          <div className="rounded-xl bg-[#EBF3FE] p-5">
-            <p className="text-sm font-medium text-gray-600">Selected Plan</p>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
+              Step 02
+            </p>
 
-            <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xl font-bold text-gray-900">
-                {selectedPlan.planName}
-              </p>
-
-              <p className="text-xl font-bold text-blue-700">
-                {formatPrice(selectedPlan)}
-              </p>
-            </div>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-black">
+              Project details
+            </h2>
           </div>
-        )}
+
+          {selectedPlan && (
+            <div className="rounded-xl bg-blue-100 px-4 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">
+                Selected plan
+              </p>
+
+              <div className="mt-1 flex items-center justify-between gap-4">
+                <span className="text-sm font-bold text-black">
+                  {selectedPlan.planName}
+                </span>
+
+                <span className="text-sm font-bold text-blue-700">
+                  {formatPrice(selectedPlan)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {!selectedPlan && (
-          <div className="rounded-xl border border-blue-200 bg-[#EBF3FE] px-5 py-4">
-            <p className="text-sm font-medium text-gray-700">
-              Please choose a price plan above before submitting your project.
+          <div className="mb-6 rounded-xl bg-blue-100 px-4 py-3">
+            <p className="text-sm font-semibold text-black">
+              Choose a plan above to continue.
             </p>
           </div>
         )}
 
         {submitError && (
-          <p
+          <div
             role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="mb-6 rounded-xl border-2 border-blue-700 bg-blue-100 px-4 py-3 text-sm font-semibold text-black"
           >
             {submitError}
-          </p>
+          </div>
         )}
 
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-900"
-          >
-            Name
-          </label>
-
-          <input
-            id="name"
-            name="name"
-            type="text"
-            value={formData.name}
-            onChange={(event) => updateField("name", event.target.value)}
-            maxLength={maxLengths.name}
-            autoComplete="name"
-            aria-invalid={Boolean(errors.name)}
-            aria-describedby={errors.name ? "name-error" : undefined}
-            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
-          />
-
-          {errors.name && (
-            <p id="name-error" className="mt-2 text-sm text-red-600">
-              {errors.name}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-900"
-          >
-            Email
-          </label>
-
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={(event) => updateField("email", event.target.value)}
-            maxLength={maxLengths.email}
-            autoComplete="email"
-            aria-invalid={Boolean(errors.email)}
-            aria-describedby={errors.email ? "email-error" : undefined}
-            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
-          />
-
-          {errors.email && (
-            <p id="email-error" className="mt-2 text-sm text-red-600">
-              {errors.email}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label
-            htmlFor="projectDescription"
-            className="block text-sm font-medium text-gray-900"
-          >
-            What do you want to build?
-          </label>
-
-          <textarea
-            id="projectDescription"
-            name="projectDescription"
-            rows={5}
-            value={formData.projectDescription}
-            onChange={(event) =>
-              updateField("projectDescription", event.target.value)
-            }
-            maxLength={maxLengths.projectDescription}
-            aria-invalid={Boolean(errors.projectDescription)}
-            aria-describedby={
-              errors.projectDescription
-                ? "project-description-error"
-                : undefined
-            }
-            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
-          />
-
-          {errors.projectDescription && (
-            <p
-              id="project-description-error"
-              className="mt-2 text-sm text-red-600"
+        <div className="grid gap-5 sm:grid-cols-2">
+          {/* Name */}
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-bold text-black"
             >
-              {errors.projectDescription}
-            </p>
-          )}
-        </div>
+              Name
+            </label>
 
-        <div>
-          <label
-            htmlFor="expectedOutcome"
-            className="block text-sm font-medium text-gray-900"
-          >
-            What outcome are you looking for?
-          </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={(event) => updateField("name", event.target.value)}
+              maxLength={maxLengths.name}
+              autoComplete="name"
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? "name-error" : undefined}
+              className="mt-2 w-full rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition placeholder:text-black/40 focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              placeholder="Your name"
+            />
 
-          <textarea
-            id="expectedOutcome"
-            name="expectedOutcome"
-            rows={4}
-            value={formData.expectedOutcome}
-            onChange={(event) =>
-              updateField("expectedOutcome", event.target.value)
-            }
-            maxLength={maxLengths.expectedOutcome}
-            aria-invalid={Boolean(errors.expectedOutcome)}
-            aria-describedby={
-              errors.expectedOutcome ? "expected-outcome-error" : undefined
-            }
-            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
-          />
+            {errors.name && (
+              <p
+                id="name-error"
+                className="mt-1.5 text-xs font-semibold text-blue-700"
+              >
+                {errors.name}
+              </p>
+            )}
+          </div>
 
-          {errors.expectedOutcome && (
-            <p
-              id="expected-outcome-error"
-              className="mt-2 text-sm text-red-600"
+          {/* Email */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-bold text-black"
             >
-              {errors.expectedOutcome}
-            </p>
-          )}
-        </div>
+              Email
+            </label>
 
-        <div className="grid gap-6 sm:grid-cols-2">
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={(event) => updateField("email", event.target.value)}
+              maxLength={maxLengths.email}
+              autoComplete="email"
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? "email-error" : undefined}
+              className="mt-2 w-full rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition placeholder:text-black/40 focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              placeholder="you@example.com"
+            />
+
+            {errors.email && (
+              <p
+                id="email-error"
+                className="mt-1.5 text-xs font-semibold text-blue-700"
+              >
+                {errors.email}
+              </p>
+            )}
+          </div>
+
+          {/* Project */}
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="projectDescription"
+              className="block text-sm font-bold text-black"
+            >
+              What are you building?
+            </label>
+
+            <textarea
+              id="projectDescription"
+              name="projectDescription"
+              rows={4}
+              value={formData.projectDescription}
+              onChange={(event) =>
+                updateField("projectDescription", event.target.value)
+              }
+              maxLength={maxLengths.projectDescription}
+              aria-invalid={Boolean(errors.projectDescription)}
+              aria-describedby={
+                errors.projectDescription
+                  ? "project-description-error"
+                  : undefined
+              }
+              className="mt-2 w-full resize-y rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition placeholder:text-black/40 focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              placeholder="A short description of the project..."
+            />
+
+            {errors.projectDescription && (
+              <p
+                id="project-description-error"
+                className="mt-1.5 text-xs font-semibold text-blue-700"
+              >
+                {errors.projectDescription}
+              </p>
+            )}
+          </div>
+
+          {/* Outcome */}
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="expectedOutcome"
+              className="block text-sm font-bold text-black"
+            >
+              What does success look like?
+            </label>
+
+            <textarea
+              id="expectedOutcome"
+              name="expectedOutcome"
+              rows={3}
+              value={formData.expectedOutcome}
+              onChange={(event) =>
+                updateField("expectedOutcome", event.target.value)
+              }
+              maxLength={maxLengths.expectedOutcome}
+              aria-invalid={Boolean(errors.expectedOutcome)}
+              aria-describedby={
+                errors.expectedOutcome ? "expected-outcome-error" : undefined
+              }
+              className="mt-2 w-full resize-y rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition placeholder:text-black/40 focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              placeholder="The outcome you want to achieve..."
+            />
+
+            {errors.expectedOutcome && (
+              <p
+                id="expected-outcome-error"
+                className="mt-1.5 text-xs font-semibold text-blue-700"
+              >
+                {errors.expectedOutcome}
+              </p>
+            )}
+          </div>
+
+          {/* Timeline */}
           <div>
             <label
               htmlFor="timeline"
-              className="block text-sm font-medium text-gray-900"
+              className="block text-sm font-bold text-black"
             >
               Timeline
             </label>
 
-            <input
+            <select
               id="timeline"
               name="timeline"
-              type="text"
               value={formData.timeline}
               onChange={(event) => updateField("timeline", event.target.value)}
-              maxLength={maxLengths.timeline}
               aria-invalid={Boolean(errors.timeline)}
               aria-describedby={errors.timeline ? "timeline-error" : undefined}
-              placeholder="e.g. 6 weeks"
-              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
-            />
+              className="mt-2 w-full appearance-none rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="">Select timeline</option>
+
+              {timelineOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
 
             {errors.timeline && (
-              <p id="timeline-error" className="mt-2 text-sm text-red-600">
+              <p
+                id="timeline-error"
+                className="mt-1.5 text-xs font-semibold text-blue-700"
+              >
                 {errors.timeline}
               </p>
             )}
           </div>
 
+          {/* Budget */}
           <div>
             <label
               htmlFor="budget"
-              className="block text-sm font-medium text-gray-900"
+              className="block text-sm font-bold text-black"
             >
-              Budget
+              Estimated budget
             </label>
 
-            <input
+            <select
               id="budget"
               name="budget"
-              type="text"
               value={formData.budget}
               onChange={(event) => updateField("budget", event.target.value)}
-              maxLength={maxLengths.budget}
               aria-invalid={Boolean(errors.budget)}
               aria-describedby={errors.budget ? "budget-error" : undefined}
-              placeholder="e.g. $1,000–$2,000"
-              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-600"
-            />
+              className="mt-2 w-full appearance-none rounded-xl border-2 border-blue-100 bg-white px-4 py-3 text-black outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="">Select budget</option>
+
+              {budgetOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
 
             {errors.budget && (
-              <p id="budget-error" className="mt-2 text-sm text-red-600">
+              <p
+                id="budget-error"
+                className="mt-1.5 text-xs font-semibold text-blue-700"
+              >
                 {errors.budget}
               </p>
             )}
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting || !selectedPlan}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <span>{isSubmitting ? "Creating Booking..." : "Book This Plan"}</span>
+        {/* Submit */}
+        <div className="mt-7 flex flex-col gap-4 border-t-2 border-blue-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-bold text-black">Ready to start?</p>
 
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
+            <p className="mt-1 text-xs font-medium text-black/50">
+              Your request will be saved for review.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting || !selectedPlan}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-6 py-3.5 font-bold text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M14 5l7 7m0 0l-7 7m7-7H3"
-            />
-          </svg>
-        </button>
+            <span>
+              {isSubmitting ? "Creating Booking..." : "Submit Project Request"}
+            </span>
+
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
+          </button>
+        </div>
       </form>
     </main>
   );
