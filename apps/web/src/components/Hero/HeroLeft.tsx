@@ -50,25 +50,25 @@ export default function HeroLeft({
   return (
     <div
       ref={heroRef}
-      className="flex w-full flex-col justify-center mt-2 px-4 text-left sm:px-6 lg:px-0"
+      className="flex w-full flex-col justify-center px-4 text-left sm:px-6 lg:px-0"
     >
       <h1
         id="technology-ownership-heading"
-        className="mt-6 text-4xl font-bold leading-[1.08] tracking-tight text-black sm:mt-6 sm:text-6xl lg:text-[3.5rem]"
+        className="mt-2 text-4xl font-bold leading-[1.08] tracking-tight text-black sm:mt-6 sm:text-6xl lg:text-[3.5rem]"
       >
         <span className="block">{titlePrimary}</span>
-        <span className="mt-6 block text-blue-700">{titleSecondary}</span>
+        <span className="mt-2 block text-blue-700">{titleSecondary}</span>
       </h1>
 
-      <p className="mt-6 max-w-2xl text-base font-bold leading-7 text-black sm:mt-6 sm:text-lg sm:leading-8 lg:text-xl">
-        Simple, fast, and beautiful platforms that win and
+      <p className="mt-2 max-w-2xl text-base font-bold leading-7 text-black sm:mt-6 sm:text-lg sm:leading-8 lg:text-xl">
+        Simple, fast, and beautiful platforms that
         <br />
-        get real results
+        win and get real results.
       </p>
 
-      <p className="mt-4 max-w-2xl text-base leading-7 text-black sm:mt-5 sm:text-lg sm:leading-8">
-        Get more customers with ease with websites and apps that <br /> are easy
-        to use, look great, and work fast.
+      <p className="mt-2 max-w-2xl text-base leading-7 text-black sm:mt-5 sm:text-lg sm:leading-8">
+        Get more customers with ease with websites and apps that are <br /> easy
+        to use, <br /> look great, and work fast.
       </p>
     </div>
   );

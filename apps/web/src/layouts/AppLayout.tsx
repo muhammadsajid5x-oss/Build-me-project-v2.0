@@ -5,6 +5,7 @@ import { trackAnalyticsEvent } from "../analytics";
 import Footer from "../components/Footer/Footer";
 import GiveFeedback from "../components/GiveFeedback/GiveFeedback";
 import Navbar from "../components/Navbar/Navbar";
+import { FEATURE_FLAGS } from "../config/featureFlags";
 
 export default function AppLayout() {
   const location = useLocation();
@@ -32,9 +33,9 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
-      <Footer />
+      {FEATURE_FLAGS.showFooter && <Footer />}
 
-      <GiveFeedback />
+      {FEATURE_FLAGS.showGiveFeedback && <GiveFeedback />}
     </div>
   );
 }

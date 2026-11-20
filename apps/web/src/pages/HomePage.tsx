@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-
+import { FEATURE_FLAGS } from "../config/featureFlags";
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import HeroTop from "../components/Hero/HeroTop";
 import TechnologyOwnershipHero from "../components/Hero/HeroLeft";
@@ -153,7 +153,7 @@ export default function HomePage() {
               bg-blue-700 px-6 py-3 text-base font-semibold text-white
               transition hover:bg-black lg:-translate-x-6
               focus:outline-none focus:ring-2 focus:ring-blue-700
-              focus:ring-offset-2 lg:mt-2 -mt-10
+              focus:ring-offset-2 lg:-mt-26 -mt-56
             "
           >
             Work With Me
@@ -166,9 +166,9 @@ export default function HomePage() {
               inline-flex items-center justify-center rounded-lg
               border-2 border-blue-700 bg-white px-6 py-3
               text-base font-semibold text-blue-700
-              transition hover:bg-blue-100 lg:-translate-x-6 lg:mt-2
+              transition hover:bg-blue-100 lg:-translate-x-6 lg:-mt-26
               focus:outline-none focus:ring-2 focus:ring-blue-700
-              focus:ring-offset-2 -mt-10
+              focus:ring-offset-2 -mt-56
             "
           >
             Get Quick Wins
@@ -422,9 +422,11 @@ export default function HomePage() {
         </dialog>
       )}
 
-      <div className="mt-7 sm:mt-10 lg:mt-28">
-        <Testimonials />
-      </div>
+      {FEATURE_FLAGS.showTestimonials && (
+        <div className="mt-7 sm:mt-10 lg:mt-28">
+          <Testimonials />
+        </div>
+      )}
 
       {isOwnershipAuditOpen && (
         <>

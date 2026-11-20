@@ -2,7 +2,7 @@ const facts = ["No Stress", "No Confusion", "No Jargons", "Just Simple"];
 
 export default function HeroBottom() {
   return (
-    <div className="w-full text-center">
+    <div className="w-full py-10 text-center">
       {/* Divider */}
       <div
         aria-hidden="true"
