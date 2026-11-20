@@ -68,7 +68,7 @@ export default function HeroLeft({
 
       <p className="mt-2 max-w-2xl text-base leading-7 text-black sm:mt-5 sm:text-lg sm:leading-8">
         Get more customers with ease with websites and apps that are <br /> easy
-        to use, <br /> look great, and work fast.
+        to use, look great, and work fast.
       </p>
     </div>
   );

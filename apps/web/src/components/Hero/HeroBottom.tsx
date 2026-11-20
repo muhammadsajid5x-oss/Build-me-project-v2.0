@@ -6,7 +6,7 @@ export default function HeroBottom() {
       {/* Divider */}
       <div
         aria-hidden="true"
-        className="mx-auto hidden h-0.5 w-full bg-blue-700 lg:block"
+        className="relative left-1/2 hidden h-0.5 w-screen -translate-x-1/2 bg-blue-700 lg:block"
       />
 
       {/* Heading */}
@@ -14,21 +14,21 @@ export default function HeroBottom() {
         Reliable solutions that help you grow.
       </h3>
 
-      {/* Fact cards */}
-      <div className="mt-5 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+      {/* Key Facts */}
+      <div className="mt-5 flex w-full flex-nowrap items-stretch justify-center gap-1.5 sm:gap-3 md:gap-4">
         {facts.map((fact) => (
           <div
             key={fact}
-            className="group flex items-center gap-2.5 border-2 border-blue-100 bg-white px-4 py-2.5 transition-colors duration-200 hover:border-blue-700 hover:bg-blue-700"
+            className="group flex min-w-0 flex-1 items-center justify-center gap-1 border-2 border-black bg-blue-100 px-1.5 py-2 transition-colors duration-200 hover:bg-blue-700 sm:gap-2 sm:px-3 sm:py-2.5 md:px-4"
           >
             <span
               aria-hidden="true"
-              className="flex h-5 w-5 shrink-0 items-center justify-center border-2 border-blue-700 bg-white text-xs font-bold text-blue-700 transition-colors duration-200 group-hover:border-white group-hover:text-blue-700"
+              className="flex h-4 w-4 shrink-0 items-center justify-center border-2 border-blue-700 bg-white text-[9px] font-bold text-blue-700 transition-colors duration-200 group-hover:border-white group-hover:text-blue-700 sm:h-5 sm:w-5 sm:text-xs"
             >
               ✓
             </span>
 
-            <span className="whitespace-nowrap text-sm font-semibold text-black transition-colors duration-200 group-hover:text-white">
+            <span className="whitespace-nowrap text-[10px] font-semibold text-black transition-colors duration-200 group-hover:text-white sm:text-sm">
               {fact}
             </span>
           </div>
