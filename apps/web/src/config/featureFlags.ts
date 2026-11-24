@@ -10,10 +10,10 @@ export const FEATURE_FLAGS = {
   showGiveFeedback: false,
 
   // Footer sections
-  showFooterFollowUs: false,
-  showFooterShareThisPage: false,
-  showFooterGiveReferrals: false,
-  showAboutMe: false,
+  showFooterFollowUs: true,
+  showFooterShareThisPage: true,
+  showFooterGiveReferrals: true,
+  showAboutMe: true,
   showLegalLinks: false,
 
   // Copyright remains visible
