@@ -5,7 +5,17 @@
  * without removing their implementation.
  */
 export const FEATURE_FLAGS = {
-  showFooter: false,
+  showFooter: true,
   showTestimonials: false,
   showGiveFeedback: false,
+
+  // Footer sections
+  showFooterFollowUs: false,
+  showFooterShareThisPage: false,
+  showFooterGiveReferrals: false,
+  showAboutMe: false,
+  showLegalLinks: false,
+
+  // Copyright remains visible
+  showCopyright: true,
 } as const;

@@ -40,7 +40,7 @@ export default function AboutMe() {
         </Link>
 
         {/* Non-clickable Subtitle */}
-        <span className="text-xs text-gray-900 font-medium">
+        <span className="text-xs text-gray-600 font-medium">
           Who we are and what we do.
         </span>
       </div>
