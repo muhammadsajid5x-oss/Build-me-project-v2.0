@@ -153,7 +153,7 @@ export default function HomePage() {
               bg-blue-700 px-6 py-3 text-base font-semibold text-white
               transition hover:bg-black lg:-translate-x-6
               focus:outline-none focus:ring-2 focus:ring-blue-700
-              focus:ring-offset-2 lg:-mt-44 -mt-35
+              focus:ring-offset-2 lg:-mt-44 -mt-25 sm:-mt-48
             "
           >
             Work With Me
@@ -168,7 +168,7 @@ export default function HomePage() {
               text-base font-semibold text-blue-700
               transition hover:bg-blue-100 lg:-translate-x-6 lg:-mt-44
               focus:outline-none focus:ring-2 focus:ring-blue-700
-              focus:ring-offset-2 -mt-35
+              focus:ring-offset-2 -mt-25 sm:-mt-48
             "
           >
             Get Quick Wins
