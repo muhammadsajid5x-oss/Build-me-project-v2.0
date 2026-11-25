@@ -30,6 +30,14 @@ export type PaginatedTestimonials = {
   };
 };
 
+export type PromoteFeedbackToTestimonialResult =
+  | { kind: "created"; data: Testimonial }
+  | { kind: "not_found" }
+  | { kind: "not_rate" }
+  | { kind: "not_approved" }
+  | { kind: "invalid_rating" }
+  | { kind: "already_promoted" };
+
 async function getDatabase() {
   const [{ db }, { testimonials }] = await Promise.all([
     import("../../../../database/dist/drizzle/client.js"),
@@ -37,6 +45,86 @@ async function getDatabase() {
   ]);
 
   return { db, testimonials };
+}
+
+export async function promoteApprovedFeedbackToTestimonial(
+  feedbackId: string,
+): Promise<PromoteFeedbackToTestimonialResult> {
+  const [{ db, testimonials }, { feedback }] = await Promise.all([
+    getDatabase(),
+    import("../../../../database/dist/schema/feedback.js"),
+  ]);
+
+  const [sourceFeedback] = await db
+    .select({
+      id: feedback.id,
+      type: feedback.type,
+      status: feedback.status,
+      name: feedback.name,
+      rating: feedback.rating,
+      content: feedback.content,
+    })
+    .from(feedback)
+    .where(eq(feedback.id, feedbackId))
+    .limit(1);
+
+  if (!sourceFeedback) {
+    return { kind: "not_found" };
+  }
+
+  if (sourceFeedback.type !== "rate") {
+    return { kind: "not_rate" };
+  }
+
+  if (sourceFeedback.status !== "approved") {
+    return { kind: "not_approved" };
+  }
+
+  if (sourceFeedback.rating === null) {
+    return { kind: "invalid_rating" };
+  }
+
+  const [created] = await db
+    .insert(testimonials)
+    .values({
+      sourceFeedbackId: sourceFeedback.id,
+      name: sourceFeedback.name,
+      role: null,
+      company: null,
+      avatar: null,
+      category: null,
+      content: sourceFeedback.content,
+      rating: sourceFeedback.rating,
+      published: false,
+    })
+    .onConflictDoNothing({ target: testimonials.sourceFeedbackId })
+    .returning({
+      id: testimonials.id,
+      name: testimonials.name,
+      role: testimonials.role,
+      company: testimonials.company,
+      avatar: testimonials.avatar,
+      category: testimonials.category,
+      content: testimonials.content,
+      rating: testimonials.rating,
+      helpfulCount: testimonials.helpfulCount,
+      storyUrl: testimonials.storyUrl,
+      verified: testimonials.verified,
+      published: testimonials.published,
+      createdAt: testimonials.createdAt,
+    });
+
+  if (!created) {
+    return { kind: "already_promoted" };
+  }
+
+  return {
+    kind: "created",
+    data: {
+      ...created,
+      createdAt: created.createdAt.toISOString(),
+    },
+  };
 }
 
 /**

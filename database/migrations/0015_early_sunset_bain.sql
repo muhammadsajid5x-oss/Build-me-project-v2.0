@@ -1,0 +1,3 @@
+ALTER TABLE "testimonials" ADD COLUMN "source_feedback_id" uuid;--> statement-breakpoint
+ALTER TABLE "testimonials" ADD CONSTRAINT "testimonials_source_feedback_id_feedback_id_fk" FOREIGN KEY ("source_feedback_id") REFERENCES "public"."feedback"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "testimonials" ADD CONSTRAINT "testimonials_source_feedback_id_unique" UNIQUE("source_feedback_id");

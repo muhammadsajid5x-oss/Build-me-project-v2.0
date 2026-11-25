@@ -1,4 +1,17 @@
-import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+export const feedbackStatusEnum = pgEnum("feedback_status", [
+  "pending",
+  "approved",
+  "rejected",
+]);
 
 export const feedback = pgTable("feedback", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -6,6 +19,8 @@ export const feedback = pgTable("feedback", {
   referenceId: text("reference_id").notNull().unique(),
 
   type: text("type").notNull(),
+
+  status: feedbackStatusEnum("status").default("pending").notNull(),
 
   name: text("name").notNull(),
 

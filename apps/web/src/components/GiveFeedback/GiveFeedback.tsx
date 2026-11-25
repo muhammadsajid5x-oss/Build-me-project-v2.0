@@ -371,7 +371,7 @@ export default function GiveFeedback() {
         type="button"
         onClick={handleOpen}
         aria-label="Give Feedback"
-        className="fixed right-0 top-1/2 z-900 -translate-y-1/2 rounded-l-md bg-blue-600 px-3 py-4 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="fixed right-0 top-1/2 z-900 -translate-y-1/2 rounded-l-md bg-blue-700 px-3 py-4 text-sm font-semibold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
       >
         <span className="block [writing-mode:vertical-rl]">Give Feedback</span>
       </button>
@@ -383,7 +383,7 @@ export default function GiveFeedback() {
         closeOnBackdrop={!submitting}
         closeOnEscape={!submitting}
         aria-label="Give Feedback"
-        className="text-gray-900"
+        className="text-black"
       >
         <div className="flex min-h-0 flex-col">
           <div
@@ -391,16 +391,16 @@ export default function GiveFeedback() {
             aria-label={`Feedback progress: ${progress}%`}
           >
             <div
-              className="h-full bg-blue-600 transition-all duration-300"
+              className="h-full bg-blue-700 transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
 
           <ModalHeader className="border-b-0! pb-2">
             <div className="pr-6">
-              <p className="text-sm font-medium text-blue-600">{stepLabel}</p>
+              <p className="text-sm font-semibold text-blue-700">{stepLabel}</p>
 
-              <h2 className="mt-1 text-2xl font-bold text-blue-600">
+              <h2 className="mt-1 text-2xl font-bold text-black">
                 Give Feedback
               </h2>
             </div>
@@ -408,13 +408,13 @@ export default function GiveFeedback() {
 
           <ModalBody className="pt-0!">
             {step === 1 && (
-              <div className="space-y-3 rounded-xl bg-blue-50 p-5">
+              <div className="space-y-3 rounded-xl bg-blue-100 p-5">
                 <div className="mb-5">
-                  <h3 className="text-lg font-semibold text-blue-700">
+                  <h3 className="text-lg font-semibold text-black">
                     Share Your Feedback
                   </h3>
 
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 text-sm text-black">
                     What would you like to share with us?
                   </p>
                 </div>
@@ -425,7 +425,7 @@ export default function GiveFeedback() {
                       key={option.type}
                       type="button"
                       onClick={() => handleTypeSelect(option.type)}
-                      className="group w-full rounded-lg border border-blue-100 bg-white p-4 text-left transition hover:border-blue-400 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="group w-full rounded-lg border border-blue-700 bg-white p-4 text-left transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-700"
                     >
                       <div className="flex items-center justify-between gap-4">
                         <div>
@@ -433,14 +433,14 @@ export default function GiveFeedback() {
                             {option.title}
                           </h3>
 
-                          <p className="mt-1 text-sm text-gray-600">
+                          <p className="mt-1 text-sm text-black">
                             {option.description}
                           </p>
                         </div>
 
                         <span
                           aria-hidden="true"
-                          className="text-xl text-blue-400 transition group-hover:translate-x-1 group-hover:text-blue-600"
+                          className="text-xl text-blue-700 transition group-hover:translate-x-1"
                         >
                           →
                         </span>
@@ -452,7 +452,7 @@ export default function GiveFeedback() {
             )}
 
             {step === 2 && feedbackType && (
-              <div className="space-y-5 rounded-xl bg-blue-50 p-5">
+              <div className="space-y-5 rounded-xl bg-blue-100 p-5">
                 <button
                   type="button"
                   onClick={() => {
@@ -461,17 +461,17 @@ export default function GiveFeedback() {
                     setServerError("");
                   }}
                   disabled={submitting}
-                  className="text-sm font-medium text-blue-600 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="text-sm font-semibold text-blue-700 hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   ← Back
                 </button>
 
                 <div>
-                  <h3 className="text-xl font-semibold text-blue-700">
+                  <h3 className="text-xl font-semibold text-black">
                     {feedbackTitles[feedbackType]}
                   </h3>
 
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 text-sm text-black">
                     Tell us a little about yourself and your feedback.
                   </p>
                 </div>
@@ -480,7 +480,7 @@ export default function GiveFeedback() {
                   <div>
                     <label
                       htmlFor="feedback-name"
-                      className="mb-1.5 block text-sm font-medium text-blue-700"
+                      className="mb-1.5 block text-sm font-semibold text-blue-700"
                     >
                       Name
                     </label>
@@ -493,7 +493,7 @@ export default function GiveFeedback() {
                         updateForm("name", event.target.value)
                       }
                       disabled={submitting}
-                      className="w-full rounded-md border border-blue-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+                      className="w-full rounded-md border border-blue-700 bg-white px-3 py-2.5 text-sm text-black outline-none transition placeholder:text-black/60 focus:ring-2 focus:ring-blue-700 disabled:bg-blue-100"
                       placeholder="Your name"
                     />
 
@@ -505,7 +505,7 @@ export default function GiveFeedback() {
                   <div>
                     <label
                       htmlFor="feedback-email"
-                      className="mb-1.5 block text-sm font-medium text-blue-700"
+                      className="mb-1.5 block text-sm font-semibold text-blue-700"
                     >
                       Email
                     </label>
@@ -518,7 +518,7 @@ export default function GiveFeedback() {
                         updateForm("email", event.target.value)
                       }
                       disabled={submitting}
-                      className="w-full rounded-md border border-blue-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+                      className="w-full rounded-md border border-blue-700 bg-white px-3 py-2.5 text-sm text-black outline-none transition placeholder:text-black/60 focus:ring-2 focus:ring-blue-700 disabled:bg-blue-100"
                       placeholder="you@example.com"
                     />
 
@@ -531,8 +531,8 @@ export default function GiveFeedback() {
                 </div>
 
                 {feedbackType === "score" && (
-                  <div className="rounded-lg border border-blue-100 bg-blue-100/60 p-4">
-                    <p className="mb-3 text-sm font-medium text-blue-700">
+                  <div className="rounded-lg border border-blue-700 bg-blue-100 p-4">
+                    <p className="mb-3 text-sm font-semibold text-blue-700">
                       How likely are you to recommend us?
                     </p>
 
@@ -550,10 +550,10 @@ export default function GiveFeedback() {
                             aria-label={`Score ${score}`}
                             aria-pressed={selected}
                             className={[
-                              "flex h-10 items-center justify-center rounded-md border text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500",
+                              "flex h-10 items-center justify-center rounded-md border text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-700",
                               selected
-                                ? "border-blue-600 bg-blue-600 text-white"
-                                : "border-blue-200 bg-white text-blue-700 hover:border-blue-500 hover:bg-blue-50",
+                                ? "border-blue-700 bg-blue-700 text-white"
+                                : "border-blue-700 bg-white text-blue-700 hover:bg-blue-100",
                             ].join(" ")}
                           >
                             {score}
@@ -562,7 +562,7 @@ export default function GiveFeedback() {
                       })}
                     </div>
 
-                    <div className="mt-2 flex justify-between text-xs text-blue-600">
+                    <div className="mt-2 flex justify-between text-xs font-medium text-blue-700">
                       <span>More Unlikely</span>
                       <span>More Likely</span>
                     </div>
@@ -576,8 +576,8 @@ export default function GiveFeedback() {
                 )}
 
                 {feedbackType === "rate" && (
-                  <div className="rounded-lg border border-blue-100 bg-blue-100/60 p-4">
-                    <p className="mb-2 text-sm font-medium text-blue-700">
+                  <div className="rounded-lg border border-blue-700 bg-blue-100 p-4">
+                    <p className="mb-2 text-sm font-semibold text-blue-700">
                       Your Rating
                     </p>
 
@@ -598,10 +598,10 @@ export default function GiveFeedback() {
                             aria-label={starLabel}
                             aria-pressed={form.rating === rating}
                             className={[
-                              "text-3xl leading-none transition focus:outline-none focus:ring-2 focus:ring-blue-500",
+                              "text-3xl leading-none transition focus:outline-none focus:ring-2 focus:ring-blue-700",
                               selected
-                                ? "text-blue-600"
-                                : "text-blue-200 hover:text-blue-400",
+                                ? "text-blue-700"
+                                : "text-white hover:text-blue-700",
                             ].join(" ")}
                           >
                             ★
@@ -620,10 +620,10 @@ export default function GiveFeedback() {
 
                 {(feedbackType === "complaint" ||
                   feedbackType === "suggestion") && (
-                  <div className="rounded-lg border border-blue-100 bg-blue-100/60 p-4">
+                  <div className="rounded-lg border border-blue-700 bg-blue-100 p-4">
                     <label
                       htmlFor="feedback-title"
-                      className="mb-1.5 block text-sm font-medium text-blue-700"
+                      className="mb-1.5 block text-sm font-semibold text-blue-700"
                     >
                       Title
                     </label>
@@ -636,7 +636,7 @@ export default function GiveFeedback() {
                         updateForm("title", event.target.value)
                       }
                       disabled={submitting}
-                      className="w-full rounded-md border border-blue-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+                      className="w-full rounded-md border border-blue-700 bg-white px-3 py-2.5 text-sm text-black outline-none transition placeholder:text-black/60 focus:ring-2 focus:ring-blue-700 disabled:bg-blue-100"
                       placeholder={
                         feedbackType === "complaint"
                           ? "Briefly describe the issue"
@@ -652,10 +652,10 @@ export default function GiveFeedback() {
                   </div>
                 )}
 
-                <div className="rounded-lg border border-blue-100 bg-blue-100/60 p-4">
+                <div className="rounded-lg border border-blue-700 bg-blue-100 p-4">
                   <label
                     htmlFor="feedback-content"
-                    className="mb-1.5 block text-sm font-medium text-blue-700"
+                    className="mb-1.5 block text-sm font-semibold text-blue-700"
                   >
                     {getContentLabel(feedbackType)}
                   </label>
@@ -668,7 +668,7 @@ export default function GiveFeedback() {
                     }
                     disabled={submitting}
                     rows={5}
-                    className="w-full resize-y rounded-md border border-blue-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+                    className="w-full resize-y rounded-md border border-blue-700 bg-white px-3 py-2.5 text-sm text-black outline-none transition placeholder:text-black/60 focus:ring-2 focus:ring-blue-700 disabled:bg-blue-100"
                     placeholder={getContentPlaceholder(feedbackType)}
                   />
 
@@ -691,25 +691,25 @@ export default function GiveFeedback() {
             )}
 
             {step === 3 && referenceId && (
-              <div className="flex min-h-80 flex-col items-center justify-center rounded-xl bg-blue-50 px-4 py-8 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-3xl text-blue-600">
+              <div className="flex min-h-80 flex-col items-center justify-center rounded-xl bg-blue-100 px-4 py-8 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl font-bold text-blue-700">
                   ✓
                 </div>
 
-                <h3 className="mt-5 text-2xl font-bold text-blue-700">
+                <h3 className="mt-5 text-2xl font-bold text-black">
                   Thank You!
                 </h3>
 
-                <p className="mt-2 max-w-md text-sm text-gray-600">
+                <p className="mt-2 max-w-md text-sm text-black">
                   Your feedback has been received successfully.
                 </p>
 
-                <div className="mt-5 rounded-lg border border-blue-100 bg-white px-5 py-3">
-                  <p className="text-xs font-medium uppercase tracking-wide text-blue-600">
+                <div className="mt-5 rounded-lg border border-blue-700 bg-white px-5 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
                     Reference Ticket
                   </p>
 
-                  <p className="mt-1 font-mono text-sm font-semibold text-blue-700">
+                  <p className="mt-1 font-mono text-sm font-semibold text-black">
                     {referenceId}
                   </p>
                 </div>
@@ -720,7 +720,7 @@ export default function GiveFeedback() {
           {step === 2 && (
             <ModalFooter>
               <ModalActions align="between">
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-black">
                   Your feedback helps us improve.
                 </p>
 
@@ -730,7 +730,7 @@ export default function GiveFeedback() {
                     void handleSubmit();
                   }}
                   disabled={submitting}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {submitting ? "Submitting..." : "Preview & Submit"}
                 </button>
@@ -744,7 +744,7 @@ export default function GiveFeedback() {
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
                 >
                   Done
                 </button>

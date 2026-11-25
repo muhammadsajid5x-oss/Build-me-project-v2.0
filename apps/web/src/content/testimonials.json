@@ -1,0 +1,78 @@
+{
+  "starterContent": true,
+  "overallRating": 5,
+  "reviewCount": 1,
+
+  "metrics": [
+    {
+      "label": "Project Delivery",
+      "rating": 5,
+      "starterContent": true
+    },
+    {
+      "label": "Value for Money",
+      "rating": 5,
+      "starterContent": true
+    },
+    {
+      "label": "Communication",
+      "rating": 5,
+      "starterContent": true
+    },
+    {
+      "label": "Business Value",
+      "rating": 5,
+      "starterContent": true
+    }
+  ],
+
+  "reviews": [
+    {
+      "id": "starter-review-001",
+      "starterContent": true,
+      "name": "Starter Review",
+      "role": "Client",
+      "company": "Cup&Commit",
+      "category": "Project Delivery",
+      "rating": 5,
+      "content": "There's an excellent software developer and he has always been a pleasure to work with.",
+      "verified": true
+    }
+  ],
+
+  "caseStudies": [
+    {
+      "id": "starter-case-study-001",
+      "starterContent": true,
+      "title": "Deliver My Project",
+      "category": "Project Delivery",
+      "summary": "A structured delivery path that helps turn a project requirement into a clear, actionable delivery request.",
+      "businessNeed": "Create a clear path for clients to explain what they need, what outcome they expect, their timeline, and budget.",
+      "outcome": "A clearer project intake process that improves communication and gives both sides a stronger starting point for delivery.",
+      "businessValue": "Better project clarity, stronger communication, and a more structured route from request to delivery.",
+      "storyUrl": "/deliver-my-project"
+    },
+    {
+      "id": "starter-case-study-002",
+      "starterContent": true,
+      "title": "Mentor Me",
+      "category": "Professional Growth",
+      "summary": "A focused mentoring path designed to help people make better technology and delivery decisions.",
+      "businessNeed": "Provide practical guidance when a technology, delivery, or ownership decision needs experienced input.",
+      "outcome": "A focused conversation that helps clarify priorities, identify next steps, and reduce uncertainty.",
+      "businessValue": "Faster decision-making, clearer priorities, and better use of time and resources.",
+      "storyUrl": "/mentor-me"
+    },
+    {
+      "id": "starter-case-study-003",
+      "starterContent": true,
+      "title": "Coffee With Me",
+      "category": "Business Conversation",
+      "summary": "A simple conversation path for exploring an opportunity, challenge, or next step.",
+      "businessNeed": "Create an easy way to start a useful conversation before committing to a larger engagement.",
+      "outcome": "A focused discussion that identifies the opportunity, challenge, and most useful next step.",
+      "businessValue": "Clearer expectations, stronger communication, and a better foundation for future collaboration.",
+      "storyUrl": "/coffee-with-me"
+    }
+  ]
+}

@@ -2,89 +2,45 @@
 import { Link } from "react-router-dom";
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 
-type Testimonial = {
+type Review = {
   id: string;
+  starterContent: boolean;
   name: string;
-  role: string | null;
-  company: string | null;
-  avatar: string | null;
-  category: string | null;
-  content: string;
+  role: string;
+  company: string;
+  category: string;
   rating: number;
-  helpfulCount: number;
-  storyUrl: string | null;
+  content: string;
   verified: boolean;
-  published: boolean;
-  createdAt: string;
 };
 
-type TestimonialsResponse = {
-  data: Testimonial[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-  summary: {
-    averageRating: number;
-    reviewCount: number;
-  };
+type Metric = {
+  label: string;
+  rating: number;
 };
 
 type CaseStudy = {
   id: string;
-  company: string;
-  location: string | null;
-  category: string | null;
+  starterContent: boolean;
   title: string;
+  category: string;
   summary: string;
+  businessNeed: string;
   outcome: string;
-  content: string;
-  image: string | null;
-  storyUrl: string | null;
-  published: boolean;
-  createdAt: string;
+  businessValue: string;
+  storyUrl: string;
 };
 
-type CaseStudiesResponse = {
-  data: CaseStudy[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+export type TestimonialsContent = {
+  starterContent: boolean;
+  overallRating: number;
+  reviewCount: number;
+  metrics: Metric[];
+  reviews: Review[];
+  caseStudies: CaseStudy[];
 };
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:3000";
-
-const PAGE_SIZE = 4;
-const MAX_CONTENT_LENGTH = 150;
-
-const JOURNEY_ROUTES: Record<string, string> = {
-  "Deliver My Project": "/deliver-my-project",
-  "Mentor Me": "/mentor-me",
-  "Coffee With Me": "/coffee-with-me",
-};
-
-function getInitials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-}
-
-function truncateContent(content: string) {
-  const value = content.trim();
-
-  return value.length <= MAX_CONTENT_LENGTH
-    ? value
-    : `${value.slice(0, MAX_CONTENT_LENGTH).trimEnd()}...`;
-}
+const REVIEWS_PER_PAGE = 4;
 
 function stars(rating: number) {
   return Array.from({ length: 5 }, (_, index) =>
@@ -92,46 +48,18 @@ function stars(rating: number) {
   ).join("");
 }
 
-function getJourneyRoute(study: CaseStudy) {
-  if (study.storyUrl && study.storyUrl.startsWith("/")) {
-    return study.storyUrl;
-  }
-
-  return JOURNEY_ROUTES[study.title] ?? "/";
-}
-
-export default function Testimonials() {
+export default function Testimonials({
+  content: testimonialsContent,
+}: {
+  content: TestimonialsContent;
+}) {
   const [mode, setMode] = useState<"testimonials" | "case-studies">(
     "testimonials",
   );
 
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
+  const [reviewPage, setReviewPage] = useState(1);
 
-  const [testimonialPage, setTestimonialPage] = useState(1);
-  const [caseStudyPage, setCaseStudyPage] = useState(1);
-
-  const [testimonialPagination, setTestimonialPagination] = useState({
-    total: 0,
-    totalPages: 0,
-  });
-
-  const [caseStudyPagination, setCaseStudyPagination] = useState({
-    total: 0,
-    totalPages: 0,
-  });
-
-  const [summary, setSummary] = useState({
-    averageRating: 0,
-    reviewCount: 0,
-  });
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [helpfulLoading, setHelpfulLoading] = useState<string | null>(null);
-
-  const [selectedTestimonial, setSelectedTestimonial] =
-    useState<Testimonial | null>(null);
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
 
   const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(
     null,
@@ -139,68 +67,6 @@ export default function Testimonials() {
 
   const sectionRef = useRef<HTMLElement | null>(null);
   const viewedRef = useRef(false);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function load() {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const endpoint =
-          mode === "testimonials"
-            ? `${API_BASE_URL}/api/v1/testimonials?page=${testimonialPage}&limit=${PAGE_SIZE}`
-            : `${API_BASE_URL}/api/v1/case-studies?page=${caseStudyPage}&limit=${PAGE_SIZE}`;
-
-        const response = await fetch(endpoint, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error("Request failed.");
-        }
-
-        if (mode === "testimonials") {
-          const result: TestimonialsResponse = await response.json();
-
-          setTestimonials(result.data);
-          setTestimonialPagination(result.pagination);
-
-          setSummary(
-            result.summary ?? {
-              averageRating: 0,
-              reviewCount: result.pagination.total,
-            },
-          );
-        } else {
-          const result: CaseStudiesResponse = await response.json();
-
-          setCaseStudies(result.data);
-          setCaseStudyPagination(result.pagination);
-        }
-      } catch (requestError) {
-        if (
-          requestError instanceof DOMException &&
-          requestError.name === "AbortError"
-        ) {
-          return;
-        }
-
-        setError(
-          mode === "testimonials"
-            ? "Testimonials are temporarily unavailable."
-            : "Case studies are temporarily unavailable.",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    void load();
-
-    return () => controller.abort();
-  }, [mode, testimonialPage, caseStudyPage]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -225,7 +91,9 @@ export default function Testimonials() {
 
         observer.disconnect();
       },
-      { threshold: 0.5 },
+      {
+        threshold: 0.5,
+      },
     );
 
     observer.observe(section);
@@ -233,9 +101,21 @@ export default function Testimonials() {
     return () => observer.disconnect();
   }, []);
 
-  const changeMode = (nextMode: "testimonials" | "case-studies") => {
+  const totalReviewPages = Math.ceil(
+    testimonialsContent.reviews.length / REVIEWS_PER_PAGE,
+  );
+
+  const paginatedReviews = testimonialsContent.reviews.slice(
+    (reviewPage - 1) * REVIEWS_PER_PAGE,
+    reviewPage * REVIEWS_PER_PAGE,
+  );
+
+  const handleModeChange = (nextMode: "testimonials" | "case-studies") => {
     setMode(nextMode);
-    setError(null);
+
+    if (nextMode === "testimonials") {
+      setReviewPage(1);
+    }
 
     if (nextMode === "case-studies") {
       trackAnalyticsEvent({
@@ -246,532 +126,513 @@ export default function Testimonials() {
     }
   };
 
-  const markHelpful = async (id: string) => {
-    if (helpfulLoading === id) {
+  const handleReviewPageChange = (page: number) => {
+    if (page < 1 || page > totalReviewPages || page === reviewPage) {
       return;
     }
 
-    try {
-      setHelpfulLoading(id);
+    setReviewPage(page);
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/testimonials/${id}/helpful`,
-        {
-          method: "POST",
-        },
-      );
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.TESTIMONIALS_PAGINATION_CLICKED,
+      eventType: "click",
+      path: window.location.pathname,
+    });
 
-      if (!response.ok) {
-        throw new Error("Unable to save.");
-      }
-
-      const result: {
-        data: {
-          testimonialId: string;
-          helpfulCount: number;
-        };
-      } = await response.json();
-
-      setTestimonials((items) =>
-        items.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                helpfulCount: result.data.helpfulCount,
-              }
-            : item,
-        ),
-      );
-
-      trackAnalyticsEvent({
-        name: ANALYTICS_EVENTS.TESTIMONIAL_HELPFUL_CLICKED,
-        eventType: "click",
-        path: window.location.pathname,
+    window.requestAnimationFrame(() => {
+      document.getElementById("testimonials-reviews")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
       });
-    } catch {
-      // Helpful voting is best effort.
-    } finally {
-      setHelpfulLoading(null);
-    }
+    });
   };
 
-  const paginate = (direction: "previous" | "next") => {
-    if (mode === "testimonials") {
-      setTestimonialPage((current) =>
-        direction === "next"
-          ? Math.min(testimonialPagination.totalPages, current + 1)
-          : Math.max(1, current - 1),
-      );
+  const openReview = (review: Review) => {
+    setSelectedReview(review);
 
-      trackAnalyticsEvent({
-        name: ANALYTICS_EVENTS.TESTIMONIALS_PAGINATION_CLICKED,
-        eventType: "click",
-        path: window.location.pathname,
-      });
-    } else {
-      setCaseStudyPage((current) =>
-        direction === "next"
-          ? Math.min(caseStudyPagination.totalPages, current + 1)
-          : Math.max(1, current - 1),
-      );
-
-      trackAnalyticsEvent({
-        name: ANALYTICS_EVENTS.CASE_STUDIES_PAGINATION_CLICKED,
-        eventType: "click",
-        path: window.location.pathname,
-      });
-    }
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.TESTIMONIAL_STORY_CLICKED,
+      eventType: "click",
+      path: window.location.pathname,
+    });
   };
 
-  const totalPages =
-    mode === "testimonials"
-      ? testimonialPagination.totalPages
-      : caseStudyPagination.totalPages;
+  const openCaseStudy = (caseStudy: CaseStudy) => {
+    setSelectedCaseStudy(caseStudy);
 
-  const currentPage = mode === "testimonials" ? testimonialPage : caseStudyPage;
-
-  const journeyRoute = selectedCaseStudy
-    ? getJourneyRoute(selectedCaseStudy)
-    : "/";
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.CASE_STUDY_DETAILS_CLICKED,
+      eventType: "click",
+      path: window.location.pathname,
+    });
+  };
 
   return (
-    <section
-      ref={sectionRef}
-      aria-labelledby="testimonials-heading"
-      className="relative z-40 -mt-4 w-full bg-[#EAF0F6] px-4 pb-1 pt-8 sm:px-6 lg:-mt-20 lg:px-8"
-    >
-      <div className="mx-auto w-full max-w-7xl">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-700">
-            🔵 Verified Business Impact
-          </p>
+    <>
+      <section
+        ref={sectionRef}
+        aria-labelledby="testimonials-heading"
+        className="relative w-full bg-white px-4 py-10 sm:px-6 lg:px-8"
+      >
+        <div className="mx-auto w-full max-w-7xl">
+          {/* Section heading */}
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="-mt-24 text-sm font-bold uppercase tracking-[0.18em] text-blue-700">
+              Verified Business Impact
+            </p>
 
-          <h2
-            id="testimonials-heading"
-            className="mt-3 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
-          >
-            What Our Community <span className="text-blue-700">Says</span>
-          </h2>
+            <h2
+              id="testimonials-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-black sm:text-4xl"
+            >
+              What People Say
+            </h2>
 
-          <p className="mx-auto mt-3 max-w-3xl text-sm leading-6 text-gray-600 sm:text-base">
-            Discover real stories, genuine experiences, and measurable outcomes
-            from software engineers, tech leads, and enterprise teams building
-            scalable systems with us.
-          </p>
-        </div>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-black sm:text-base">
+              Genuine feedback and experiences from the people and teams I've
+              had the pleasure of working with.
+            </p>
+          </div>
 
-        <div className="mx-auto mt-4 max-w-3xl rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <div className="flex items-center gap-3 sm:border-r sm:border-gray-200 sm:pr-5">
-              <div className="text-2xl font-bold tracking-tight text-gray-900">
-                {summary.averageRating.toFixed(1)}
-              </div>
+          {/* Overall Rating + Business Metrics */}
+          <div className="mx-auto mt-8 max-w-5xl rounded-2xl border-2 border-blue-700 bg-white p-5 shadow-sm sm:p-6">
+            <div className="grid grid-cols-1 items-center gap-7 md:grid-cols-[220px_1fr] md:gap-10">
+              {/* Overall Experience */}
+              <div className="text-center md:border-r-2 md:border-blue-100 md:pr-8">
+                <p className="text-5xl font-bold leading-none text-black sm:text-6xl">
+                  {testimonialsContent.overallRating.toFixed(1)}
+                </p>
 
-              <div>
                 <div
-                  aria-label={`${summary.averageRating.toFixed(1)} out of 5 stars`}
-                  className="text-sm tracking-[0.12em] text-blue-700"
+                  aria-label={`${testimonialsContent.overallRating} out of 5 stars`}
+                  className="mt-3 text-xl tracking-widest text-blue-700"
                 >
-                  ★★★★★
+                  {stars(testimonialsContent.overallRating)}
                 </div>
 
-                <p className="text-[10px] text-gray-500">
-                  Overall Experience ·{" "}
-                  {summary.reviewCount >= 10
-                    ? "9+ Reviews"
-                    : `${summary.reviewCount} Review${
-                        summary.reviewCount === 1 ? "" : "s"
-                      }`}
+                <p className="mt-2 text-sm font-bold text-black">
+                  Overall Experience
+                </p>
+
+                <p className="mt-2 text-xs font-semibold text-black">
+                  {testimonialsContent.reviewCount} Review
+                  {testimonialsContent.reviewCount === 1 ? "" : "s"}
                 </p>
               </div>
-            </div>
 
-            <div className="w-full max-w-xl space-y-2">
-              {[
-                "Communication",
-                "Delivery",
-                "Technical Expertise",
-                "Engineering Quality",
-              ].map((category) => (
-                <div
-                  key={category}
-                  className="grid grid-cols-[140px_1fr_32px] items-center gap-2"
-                >
-                  <span className="text-right text-[10px] font-semibold text-gray-600 sm:text-xs">
-                    {category}
-                  </span>
-
+              {/* Business Metrics */}
+              <div className="space-y-4">
+                {testimonialsContent.metrics.map((metric) => (
                   <div
-                    className="h-1.5 overflow-hidden rounded-full bg-gray-200"
-                    aria-hidden="true"
+                    key={metric.label}
+                    className="grid grid-cols-[120px_1fr_35px] items-center gap-3 sm:grid-cols-[150px_1fr_40px]"
                   >
-                    <div
-                      className="h-full rounded-full bg-blue-700"
-                      style={{ width: `${summary.averageRating * 20}%` }}
-                    />
-                  </div>
+                    <span className="text-xs font-semibold text-black sm:text-sm">
+                      {metric.label}
+                    </span>
 
-                  <span className="text-right text-[10px] font-semibold text-gray-700 sm:text-xs">
-                    {summary.averageRating.toFixed(1)}
-                  </span>
-                </div>
-              ))}
+                    <div
+                      className="h-2 overflow-hidden rounded-full bg-blue-100"
+                      aria-hidden="true"
+                    >
+                      <div
+                        className="h-full rounded-full bg-blue-700"
+                        style={{
+                          width: `${(metric.rating / 5) * 100}%`,
+                        }}
+                      />
+                    </div>
+
+                    <span className="text-right text-xs font-bold text-black sm:text-sm">
+                      {metric.rating.toFixed(1)}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div
-          className="mt-6 flex justify-center"
-          role="tablist"
-          aria-label="Testimonials and case studies"
-        >
-          <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === "testimonials"}
-              onClick={() => changeMode("testimonials")}
-              className={`rounded-lg px-5 py-2.5 text-sm font-semibold transition ${
-                mode === "testimonials"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              Testimonials
-            </button>
-
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === "case-studies"}
-              onClick={() => changeMode("case-studies")}
-              className={`rounded-lg px-5 py-2.5 text-sm font-semibold transition ${
-                mode === "case-studies"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              Case Studies
-            </button>
-          </div>
-        </div>
-
-        {isLoading && (
-          <div role="status" className="mt-8 text-center text-sm text-gray-600">
-            Loading {mode === "testimonials" ? "testimonials" : "case studies"}
-            ...
-          </div>
-        )}
-
-        {!isLoading && error && (
+          {/* Tabs */}
           <div
-            role="alert"
-            className="mx-auto mt-8 max-w-xl rounded-xl border border-gray-200 bg-white p-5 text-center text-sm text-gray-600"
+            className="mt-8 flex justify-center"
+            role="tablist"
+            aria-label="Testimonials and case studies"
           >
-            {error}
+            <div className="inline-flex rounded-xl border-2 border-blue-700 bg-white p-1">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "testimonials"}
+                onClick={() => handleModeChange("testimonials")}
+                className={[
+                  "rounded-lg px-5 py-2.5 text-sm font-semibold transition",
+                  mode === "testimonials"
+                    ? "bg-blue-700 text-white"
+                    : "text-black hover:bg-blue-100",
+                ].join(" ")}
+              >
+                Testimonials
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "case-studies"}
+                onClick={() => handleModeChange("case-studies")}
+                className={[
+                  "rounded-lg px-5 py-2.5 text-sm font-semibold transition",
+                  mode === "case-studies"
+                    ? "bg-blue-700 text-white"
+                    : "text-black hover:bg-blue-100",
+                ].join(" ")}
+              >
+                Case Studies
+              </button>
+            </div>
           </div>
-        )}
 
-        {!isLoading &&
-          !error &&
-          mode === "testimonials" &&
-          testimonials.length > 0 && (
-            <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-              {testimonials.map((testimonial) => (
-                <article
-                  key={testimonial.id}
-                  className="flex h-full min-h-70 flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
-                >
-                  <div className="flex items-start gap-3">
-                    {testimonial.avatar ? (
-                      <img
-                        src={testimonial.avatar}
-                        alt={`${testimonial.name} avatar`}
-                        className="h-10 w-10 shrink-0 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div
-                        aria-hidden="true"
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700"
-                      >
-                        {getInitials(testimonial.name)}
-                      </div>
-                    )}
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1">
-                        <p className="truncate text-sm font-bold text-gray-900">
-                          {testimonial.name}
+          {/* Testimonials */}
+          {mode === "testimonials" && (
+            <div id="testimonials-reviews" className="mt-8">
+              {/* Four testimonial cards per page */}
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {paginatedReviews.map((review) => (
+                  <article
+                    key={review.id}
+                    className="flex h-full min-h-70 flex-col rounded-2xl border-2 border-blue-700 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-base font-bold text-black">
+                          {review.name}
                         </p>
 
-                        {testimonial.verified && (
-                          <span
-                            aria-label="Verified testimonial"
-                            className="text-xs font-bold text-blue-600"
-                          >
-                            ✓
-                          </span>
-                        )}
+                        <p className="mt-1 text-xs text-black">
+                          {review.role} · {review.company}
+                        </p>
                       </div>
 
-                      <p className="truncate text-xs text-gray-500">
-                        {[testimonial.role, testimonial.company]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
+                      {review.verified && (
+                        <span
+                          aria-label="Verified review"
+                          className="shrink-0 text-sm font-bold text-blue-700"
+                        >
+                          ✓
+                        </span>
+                      )}
                     </div>
-                  </div>
 
-                  {testimonial.category && (
-                    <span className="mt-4 w-fit rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-700">
-                      {testimonial.category}
+                    <span className="mt-4 w-fit rounded-full bg-blue-100 px-3 py-1 text-[10px] font-bold text-blue-700">
+                      {review.category}
                     </span>
-                  )}
 
-                  <div
-                    aria-label={`${testimonial.rating} out of 5 stars`}
-                    className="mt-3 text-sm tracking-wide text-blue-700"
-                  >
-                    {stars(testimonial.rating)}
-                  </div>
-
-                  <blockquote className="mt-3 flex-1 text-sm leading-6 text-gray-700">
-                    "{truncateContent(testimonial.content)}"
-                  </blockquote>
-
-                  <footer className="mt-4 border-t border-gray-100 pt-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => void markHelpful(testimonial.id)}
-                        disabled={helpfulLoading === testimonial.id}
-                        className="text-xs font-medium text-gray-500 hover:text-blue-700 disabled:opacity-60"
+                    {/* Rating and review stay together */}
+                    <div className="mt-4">
+                      <div
+                        aria-label={`${review.rating} out of 5 stars`}
+                        className="text-lg tracking-[0.12em] text-blue-700"
                       >
-                        {helpfulLoading === testimonial.id
-                          ? "Saving..."
-                          : `♡ Helpful (${testimonial.helpfulCount})`}
-                      </button>
+                        {stars(review.rating)}
+                      </div>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTestimonial(testimonial);
-
-                          trackAnalyticsEvent({
-                            name: ANALYTICS_EVENTS.TESTIMONIAL_STORY_CLICKED,
-                            eventType: "click",
-                            path: window.location.pathname,
-                          });
-                        }}
-                        className="text-xs font-semibold text-blue-700 hover:text-blue-900"
-                      >
-                        Read Full Story →
-                      </button>
+                      <blockquote className="mt-3 text-sm leading-6 text-black">
+                        “{review.content}”
+                      </blockquote>
                     </div>
-                  </footer>
-                </article>
-              ))}
-            </div>
-          )}
 
-        {!isLoading &&
-          !error &&
-          mode === "case-studies" &&
-          caseStudies.length > 0 && (
-            <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-3">
-              {caseStudies.slice(0, 3).map((study) => (
-                <article
-                  key={study.id}
-                  className="flex h-full min-h-77.5 flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                    <button
+                      type="button"
+                      onClick={() => openReview(review)}
+                      className="mt-auto border-t-2 border-blue-100 pt-3 text-left text-sm font-semibold text-blue-700 hover:text-black"
+                    >
+                      Read Full Review →
+                    </button>
+                  </article>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalReviewPages > 1 && (
+                <nav
+                  aria-label="Testimonials pagination"
+                  className="mt-8 flex items-center justify-center gap-2"
                 >
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {study.title}
-                    </h3>
+                  <button
+                    type="button"
+                    disabled={reviewPage === 1}
+                    onClick={() => handleReviewPageChange(reviewPage - 1)}
+                    className="rounded-lg border-2 border-blue-700 px-3 py-2 text-sm font-semibold text-black transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    ←
+                  </button>
 
-                    <p className="mt-3 text-sm leading-6 text-gray-600">
-                      {study.summary}
-                    </p>
+                  {Array.from({ length: totalReviewPages }, (_, index) => {
+                    const page = index + 1;
 
-                    <div className="mt-5 rounded-xl bg-gray-50 p-4">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                        Outcome / Result
-                      </p>
-
-                      <p className="mt-1 text-sm leading-5 text-gray-700">
-                        {study.outcome}
-                      </p>
-                    </div>
-                  </div>
+                    return (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => handleReviewPageChange(page)}
+                        aria-current={reviewPage === page ? "page" : undefined}
+                        className={[
+                          "h-9 min-w-9 rounded-lg px-3 text-sm font-semibold transition",
+                          reviewPage === page
+                            ? "bg-blue-700 text-white"
+                            : "border-2 border-blue-700 bg-white text-black hover:bg-blue-100",
+                        ].join(" ")}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedCaseStudy(study);
-
-                      trackAnalyticsEvent({
-                        name: ANALYTICS_EVENTS.CASE_STUDY_DETAILS_CLICKED,
-                        eventType: "click",
-                        path: window.location.pathname,
-                      });
-                    }}
-                    className="mt-5 text-left text-sm font-semibold text-blue-700 hover:text-blue-900"
+                    disabled={reviewPage === totalReviewPages}
+                    onClick={() => handleReviewPageChange(reviewPage + 1)}
+                    className="rounded-lg border-2 border-blue-700 px-3 py-2 text-sm font-semibold text-black transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Read Full Story →
+                    →
                   </button>
-                </article>
-              ))}
+                </nav>
+              )}
+
+              {/* Empty state */}
+              {testimonialsContent.reviews.length === 0 && (
+                <div className="rounded-2xl border-2 border-blue-100 bg-white p-8 text-center">
+                  <p className="text-sm font-semibold text-black">
+                    No testimonials are available yet.
+                  </p>
+
+                  <p className="mt-2 text-xs text-black">
+                    New reviews will appear here when they are added.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
-        {!isLoading &&
-          !error &&
-          ((mode === "testimonials" && testimonials.length === 0) ||
-            (mode === "case-studies" && caseStudies.length === 0)) && (
-            <div className="mx-auto mt-8 max-w-xl rounded-xl border border-gray-200 bg-white p-5 text-center text-sm text-gray-600">
-              No {mode === "testimonials" ? "testimonials" : "case studies"} are
-              currently available.
+          {/* Case Studies */}
+          {mode === "case-studies" && (
+            <div className="mt-8">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                {testimonialsContent.caseStudies.map((caseStudy) => (
+                  <article
+                    key={caseStudy.id}
+                    className="flex h-full flex-col rounded-2xl border-2 border-blue-700 bg-white p-5 shadow-sm"
+                  >
+                    <div className="flex-1">
+                      <span className="inline-flex rounded-full bg-blue-100 px-3 py-1 text-[10px] font-bold text-blue-700">
+                        {caseStudy.category}
+                      </span>
+
+                      <h3 className="mt-4 text-xl font-bold text-black">
+                        {caseStudy.title}
+                      </h3>
+
+                      <p className="mt-3 text-sm leading-6 text-black">
+                        {caseStudy.summary}
+                      </p>
+
+                      <div className="mt-5 space-y-4">
+                        <div className="rounded-xl bg-blue-100 p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                            Business Need
+                          </p>
+
+                          <p className="mt-1 text-sm leading-5 text-black">
+                            {caseStudy.businessNeed}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl border-2 border-blue-100 p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                            Outcome
+                          </p>
+
+                          <p className="mt-1 text-sm leading-5 text-black">
+                            {caseStudy.outcome}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl border-2 border-blue-100 p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                            Business Value
+                          </p>
+
+                          <p className="mt-1 text-sm leading-5 text-black">
+                            {caseStudy.businessValue}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => openCaseStudy(caseStudy)}
+                      className="mt-5 text-left text-sm font-semibold text-blue-700 hover:text-black"
+                    >
+                      Read Full Story →
+                    </button>
+                  </article>
+                ))}
+              </div>
             </div>
           )}
 
-        {!isLoading && !error && totalPages > 1 && (
-          <nav
-            aria-label={`${mode} pagination`}
-            className="mt-8 flex items-center justify-center gap-3"
+          {/* Starter Content Indicator */}
+          {testimonialsContent.starterContent && (
+            <p className="mt-8 text-center text-xs text-black">
+              Starter content — reviews and case studies can be replaced or
+              expanded as real customer content becomes available.
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Review Dialog */}
+      {selectedReview && (
+        <>
+          <div
+            aria-hidden="true"
+            className="fixed inset-0 z-50 bg-black/70"
+            onClick={() => setSelectedReview(null)}
+          />
+
+          <dialog
+            open
+            aria-labelledby="review-dialog-heading"
+            className="fixed inset-0 z-50 m-auto w-[92vw] max-w-xl rounded-2xl border-2 border-blue-700 bg-white p-0 shadow-2xl"
           >
-            <button
-              type="button"
-              onClick={() => paginate("previous")}
-              disabled={currentPage === 1}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 disabled:opacity-50"
-            >
-              Previous
-            </button>
+            <div className="flex items-center justify-between border-b-2 border-blue-700 px-5 py-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Customer Review
+                </p>
 
-            <span className="text-sm text-gray-600">
-              Page {currentPage} of {totalPages}
-            </span>
+                <h2
+                  id="review-dialog-heading"
+                  className="mt-1 text-xl font-bold text-black"
+                >
+                  {selectedReview.name}
+                </h2>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => paginate("next")}
-              disabled={currentPage === totalPages}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </nav>
-        )}
-      </div>
+              <button
+                type="button"
+                onClick={() => setSelectedReview(null)}
+                aria-label="Close review"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-xl font-bold text-blue-700 hover:bg-blue-100"
+              >
+                ×
+              </button>
+            </div>
 
-      {selectedTestimonial && (
-        <dialog
-          open
-          aria-labelledby="testimonial-detail-heading"
-          className="fixed inset-0 z-50 m-auto max-h-[85vh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl sm:p-8"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold text-gray-500">
-                {[selectedTestimonial.role, selectedTestimonial.company]
-                  .filter(Boolean)
-                  .join(" · ")}
+            <div className="p-6">
+              <div
+                aria-label={`${selectedReview.rating} out of 5 stars`}
+                className="text-xl tracking-[0.12em] text-blue-700"
+              >
+                {stars(selectedReview.rating)}
+              </div>
+
+              <blockquote className="mt-5 text-base leading-7 text-black">
+                “{selectedReview.content}”
+              </blockquote>
+
+              <p className="mt-5 text-sm text-black">
+                {selectedReview.role} · {selectedReview.company}
+              </p>
+            </div>
+          </dialog>
+        </>
+      )}
+
+      {/* Case Study Dialog */}
+      {selectedCaseStudy && (
+        <>
+          <div
+            aria-hidden="true"
+            className="fixed inset-0 z-50 bg-black/70"
+            onClick={() => setSelectedCaseStudy(null)}
+          />
+
+          <dialog
+            open
+            aria-labelledby="case-study-dialog-heading"
+            className="fixed inset-0 z-50 m-auto max-h-[90vh] w-[92vw] max-w-2xl overflow-y-auto rounded-2xl border-2 border-blue-700 bg-white p-0 shadow-2xl"
+          >
+            <div className="sticky top-0 flex items-center justify-between border-b-2 border-blue-700 bg-white px-5 py-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Business Case Study
+                </p>
+
+                <h2
+                  id="case-study-dialog-heading"
+                  className="mt-1 text-xl font-bold text-black"
+                >
+                  {selectedCaseStudy.title}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedCaseStudy(null)}
+                aria-label="Close case study"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-xl font-bold text-blue-700 hover:bg-blue-100"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-5 p-6">
+              <p className="text-sm leading-6 text-black">
+                {selectedCaseStudy.summary}
               </p>
 
-              <h3
-                id="testimonial-detail-heading"
-                className="mt-1 text-xl font-bold text-gray-900"
+              <div className="rounded-xl bg-blue-100 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Business Need
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-black">
+                  {selectedCaseStudy.businessNeed}
+                </p>
+              </div>
+
+              <div className="rounded-xl border-2 border-blue-100 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Outcome
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-black">
+                  {selectedCaseStudy.outcome}
+                </p>
+              </div>
+
+              <div className="rounded-xl border-2 border-blue-100 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                  Business Value
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-black">
+                  {selectedCaseStudy.businessValue}
+                </p>
+              </div>
+
+              <Link
+                to={selectedCaseStudy.storyUrl}
+                onClick={() => setSelectedCaseStudy(null)}
+                className="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-black"
               >
-                {selectedTestimonial.name}
-              </h3>
+                Continue to {selectedCaseStudy.title} →
+              </Link>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setSelectedTestimonial(null)}
-              aria-label="Close testimonial details"
-              className="text-2xl text-gray-500 hover:text-gray-900"
-            >
-              ×
-            </button>
-          </div>
-
-          <div className="mt-4 text-blue-700">
-            {stars(selectedTestimonial.rating)}
-          </div>
-
-          <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-gray-700">
-            "{selectedTestimonial.content}"
-          </p>
-
-          {selectedTestimonial.storyUrl && (
-            <a
-              href={selectedTestimonial.storyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 inline-block text-sm font-semibold text-blue-700"
-            >
-              Open external story →
-            </a>
-          )}
-        </dialog>
+          </dialog>
+        </>
       )}
-
-      {selectedCaseStudy && (
-        <dialog
-          open
-          aria-labelledby="case-study-detail-heading"
-          className="fixed inset-0 z-50 m-auto max-h-[85vh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl sm:p-8"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h3
-                id="case-study-detail-heading"
-                className="text-2xl font-bold text-gray-900"
-              >
-                {selectedCaseStudy.title}
-              </h3>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setSelectedCaseStudy(null)}
-              aria-label="Close case study details"
-              className="text-2xl text-gray-500 hover:text-gray-900"
-            >
-              ×
-            </button>
-          </div>
-
-          <p className="mt-5 whitespace-pre-wrap text-sm leading-6 text-gray-700">
-            {selectedCaseStudy.content}
-          </p>
-
-          <div className="mt-6 rounded-xl bg-gray-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
-              Outcome / Result
-            </p>
-
-            <p className="mt-1 text-sm leading-6 text-gray-700">
-              {selectedCaseStudy.outcome}
-            </p>
-          </div>
-
-          <div className="mt-8 border-t border-gray-200 pt-6 text-center">
-            <p className="text-sm font-semibold text-gray-900">
-              Ready to take the next step?
-            </p>
-
-            <Link
-              to={journeyRoute}
-              onClick={() => setSelectedCaseStudy(null)}
-              className="mt-3 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-            >
-              {selectedCaseStudy.title}
-            </Link>
-          </div>
-        </dialog>
-      )}
-    </section>
+    </>
   );
 }

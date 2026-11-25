@@ -20,6 +20,38 @@ export type CreateFeedbackInput = {
   content: string;
 };
 
+export type FeedbackModerationStatus = "approved" | "rejected";
+
+export type UpdateFeedbackStatusInput = {
+  status: FeedbackModerationStatus;
+};
+
+export function validateUpdateFeedbackStatus(
+  input: unknown,
+): ValidationResult<UpdateFeedbackStatusInput> {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return validationFailure([
+      {
+        field: "body",
+        message: "Request body must be an object.",
+      },
+    ]);
+  }
+
+  const status = (input as Record<string, unknown>).status;
+
+  if (status !== "approved" && status !== "rejected") {
+    return validationFailure([
+      {
+        field: "status",
+        message: "Status must be approved or rejected.",
+      },
+    ]);
+  }
+
+  return validationSuccess({ status });
+}
+
 export function validateCreateFeedback(
   input: unknown,
 ): ValidationResult<CreateFeedbackInput> {

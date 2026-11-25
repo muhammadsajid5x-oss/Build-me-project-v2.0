@@ -6,8 +6,8 @@
  */
 export const FEATURE_FLAGS = {
   showFooter: true,
-  showTestimonials: false,
-  showGiveFeedback: false,
+  showTestimonials: true,
+  showGiveFeedback: true,
 
   // Footer sections
   showFooterFollowUs: true,

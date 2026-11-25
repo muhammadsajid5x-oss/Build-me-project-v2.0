@@ -7,8 +7,14 @@ import {
   boolean,
 } from "drizzle-orm/pg-core";
 
+import { feedback } from "./feedback.js";
+
 export const testimonials = pgTable("testimonials", {
   id: uuid("id").defaultRandom().primaryKey(),
+
+  sourceFeedbackId: uuid("source_feedback_id")
+    .references(() => feedback.id)
+    .unique(),
 
   name: text("name").notNull(),
 

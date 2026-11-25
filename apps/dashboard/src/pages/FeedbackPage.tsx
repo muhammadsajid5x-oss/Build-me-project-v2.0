@@ -7,7 +7,10 @@ import {
   fetchFeedback,
   formatFeedbackDate,
   getFeedbackTypeLabel,
+  updateFeedbackStatus,
   type FeedbackRecord,
+  type FeedbackModerationStatus,
+  type FeedbackStatus,
   type FeedbackType,
 } from "../services/feedback";
 
@@ -42,6 +45,10 @@ function getFeedbackValue(feedback: FeedbackRecord): string {
   }
 
   return "—";
+}
+
+function getFeedbackStatusLabel(status: FeedbackStatus): string {
+  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 function getTypeBadgeClass(type: FeedbackType): string {
@@ -87,7 +94,21 @@ function getEmptyMessage(activeFilter: FeedbackFilter): string {
   return `No ${activeFilterItem.label.toLowerCase()} feedback yet.`;
 }
 
-function FeedbackTable({ feedback }: { readonly feedback: FeedbackRecord[] }) {
+function FeedbackTable({
+  feedback,
+  updating,
+  onStatusChange,
+}: {
+  readonly feedback: FeedbackRecord[];
+  readonly updating: {
+    id: string;
+    status: FeedbackModerationStatus;
+  } | null;
+  readonly onStatusChange: (
+    feedbackId: string,
+    status: FeedbackModerationStatus,
+  ) => void;
+}) {
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-900/50">
       <table className="w-full">
@@ -148,6 +169,20 @@ function FeedbackTable({ feedback }: { readonly feedback: FeedbackRecord[] }) {
             >
               Created
             </th>
+
+            <th
+              scope="col"
+              className="px-3 py-3 text-left text-sm font-semibold"
+            >
+              Status
+            </th>
+
+            <th
+              scope="col"
+              className="px-3 py-3 text-left text-sm font-semibold"
+            >
+              Actions
+            </th>
           </tr>
         </thead>
 
@@ -189,6 +224,42 @@ function FeedbackTable({ feedback }: { readonly feedback: FeedbackRecord[] }) {
               <td className="whitespace-nowrap border-b px-3 py-3 text-sm">
                 {formatFeedbackDate(item.createdAt)}
               </td>
+
+              <td className="whitespace-nowrap border-b px-3 py-3 text-sm">
+                {getFeedbackStatusLabel(item.status)}
+              </td>
+
+              <td className="whitespace-nowrap border-b px-3 py-3 text-sm">
+                {item.status === "pending" ? (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onStatusChange(item.id, "approved")}
+                      disabled={updating !== null}
+                      className="rounded-md border border-green-700 px-2.5 py-1.5 text-xs font-medium text-green-300 hover:bg-green-900/30 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {updating?.id === item.id &&
+                      updating.status === "approved"
+                        ? "Approving..."
+                        : "Approve"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onStatusChange(item.id, "rejected")}
+                      disabled={updating !== null}
+                      className="rounded-md border border-red-700 px-2.5 py-1.5 text-xs font-medium text-red-300 hover:bg-red-900/30 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {updating?.id === item.id &&
+                      updating.status === "rejected"
+                        ? "Rejecting..."
+                        : "Reject"}
+                    </button>
+                  </div>
+                ) : (
+                  "—"
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -203,6 +274,11 @@ export default function FeedbackPage() {
   const [feedback, setFeedback] = useState<FeedbackRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<{
+    id: string;
+    status: FeedbackModerationStatus;
+  } | null>(null);
 
   const loadFeedback = useCallback(async () => {
     setLoading(true);
@@ -218,6 +294,39 @@ export default function FeedbackPage() {
   useEffect(() => {
     void loadFeedback();
   }, [loadFeedback]);
+
+  const handleStatusChange = async (
+    feedbackId: string,
+    status: FeedbackModerationStatus,
+  ) => {
+    setActionError(null);
+    setUpdating({ id: feedbackId, status });
+
+    const result = await updateFeedbackStatus(feedbackId, status);
+
+    if (result.error) {
+      setActionError(result.error);
+      setUpdating(null);
+      return;
+    }
+
+    const updatedFeedback = result.data;
+    if (updatedFeedback) {
+      setFeedback((current) =>
+        current.map((item) =>
+          item.id === feedbackId
+            ? {
+                ...item,
+                status: updatedFeedback.status,
+                updatedAt: updatedFeedback.updatedAt,
+              }
+            : item,
+        ),
+      );
+    }
+
+    setUpdating(null);
+  };
 
   const filteredFeedback = useMemo(() => {
     if (activeFilter === "all") {
@@ -257,7 +366,15 @@ export default function FeedbackPage() {
       return <EmptyState message={getEmptyMessage(activeFilter)} />;
     }
 
-    return <FeedbackTable feedback={filteredFeedback} />;
+    return (
+      <FeedbackTable
+        feedback={filteredFeedback}
+        updating={updating}
+        onStatusChange={(feedbackId, status) => {
+          void handleStatusChange(feedbackId, status);
+        }}
+      />
+    );
   };
 
   return (
@@ -321,6 +438,15 @@ export default function FeedbackPage() {
         role="tabpanel"
         aria-labelledby={`feedback-tab-${activeFilter}`}
       >
+        {actionError ? (
+          <p
+            role="alert"
+            className="mb-4 rounded-md border border-red-900 bg-red-950/30 px-3 py-2 text-sm text-red-300"
+          >
+            {actionError}
+          </p>
+        ) : null}
+
         {renderFeedbackContent()}
       </div>
     </section>

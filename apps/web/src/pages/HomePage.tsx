@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { FEATURE_FLAGS } from "../config/featureFlags";
 import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
+import testimonialsContent from "../content/testimonials.json";
 import HeroTop from "../components/Hero/HeroTop";
 import TechnologyOwnershipHero from "../components/Hero/HeroLeft";
 import HeroBottom from "../components/Hero/HeroBottom";
@@ -424,7 +425,7 @@ export default function HomePage() {
 
       {FEATURE_FLAGS.showTestimonials && (
         <div className="mt-7 sm:mt-10 lg:mt-28">
-          <Testimonials />
+          <Testimonials content={testimonialsContent} />
         </div>
       )}
 
