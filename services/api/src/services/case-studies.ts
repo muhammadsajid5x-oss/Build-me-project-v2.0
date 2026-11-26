@@ -1,15 +1,22 @@
 import { desc, eq } from "drizzle-orm";
 
+export type CaseStudyKeyResult = {
+  stat: string;
+  label: string;
+};
+
 export type CaseStudy = {
   id: string;
   company: string;
   location: string | null;
   category: string | null;
+  tags: string[];
   title: string;
   summary: string;
   outcome: string;
   content: string;
   image: string | null;
+  keyResults: CaseStudyKeyResult[];
   storyUrl: string | null;
   published: boolean;
   createdAt: string;
@@ -30,16 +37,18 @@ async function getDatabase() {
     import("../../../../database/dist/drizzle/client.js"),
     import("../../../../database/dist/schema/case-studies.js"),
   ]);
+
   return { db, caseStudies };
 }
 
 export async function listPublishedCaseStudies(
   page = 1,
-  limit = 4,
+  limit = 20,
 ): Promise<PaginatedCaseStudies> {
   const { db, caseStudies } = await getDatabase();
+
   const safePage = Math.max(1, Math.floor(page));
-  const safeLimit = Math.min(20, Math.max(1, Math.floor(limit)));
+  const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
   const offset = (safePage - 1) * safeLimit;
 
   const rows = await db
@@ -48,11 +57,13 @@ export async function listPublishedCaseStudies(
       company: caseStudies.company,
       location: caseStudies.location,
       category: caseStudies.category,
+      tags: caseStudies.tags,
       title: caseStudies.title,
       summary: caseStudies.summary,
       outcome: caseStudies.outcome,
       content: caseStudies.content,
       image: caseStudies.image,
+      keyResults: caseStudies.keyResults,
       storyUrl: caseStudies.storyUrl,
       published: caseStudies.published,
       createdAt: caseStudies.createdAt,
@@ -64,14 +75,19 @@ export async function listPublishedCaseStudies(
     .offset(offset);
 
   const countRows = await db
-    .select({ id: caseStudies.id })
+    .select({
+      id: caseStudies.id,
+    })
     .from(caseStudies)
     .where(eq(caseStudies.published, true));
+
   const total = countRows.length;
 
   return {
     data: rows.map((row) => ({
       ...row,
+      tags: row.tags ?? [],
+      keyResults: Array.isArray(row.keyResults) ? row.keyResults : [],
       createdAt: row.createdAt.toISOString(),
     })),
     pagination: {

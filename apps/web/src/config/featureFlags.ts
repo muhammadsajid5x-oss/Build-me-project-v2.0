@@ -14,7 +14,7 @@ export const FEATURE_FLAGS = {
   showFooterShareThisPage: true,
   showFooterGiveReferrals: true,
   showAboutMe: true,
-  showLegalLinks: false,
+  showLegalLinks: true,
 
   // Copyright remains visible
   showCopyright: true,

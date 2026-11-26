@@ -5,10 +5,18 @@ export type Testimonial = {
   name: string;
   role: string | null;
   company: string | null;
+  location: string | null;
+  source: string | null;
+  tags: string[];
   avatar: string | null;
   category: string | null;
   content: string;
   rating: number;
+  communications: number | null;
+  timelines: number | null;
+  knowledge: number | null;
+  value: number | null;
+  outcome: string | null;
   helpfulCount: number;
   storyUrl: string | null;
   verified: boolean;
@@ -33,9 +41,7 @@ export type PaginatedTestimonials = {
 export type PromoteFeedbackToTestimonialResult =
   | { kind: "created"; data: Testimonial }
   | { kind: "not_found" }
-  | { kind: "not_rate" }
-  | { kind: "not_approved" }
-  | { kind: "invalid_rating" }
+  | { kind: "not_publishable" }
   | { kind: "already_promoted" };
 
 async function getDatabase() {
@@ -58,11 +64,20 @@ export async function promoteApprovedFeedbackToTestimonial(
   const [sourceFeedback] = await db
     .select({
       id: feedback.id,
-      type: feedback.type,
       status: feedback.status,
       name: feedback.name,
+      role: feedback.role,
+      company: feedback.company,
+      location: feedback.location,
+      source: feedback.source,
+      tags: feedback.tags,
       rating: feedback.rating,
+      communications: feedback.communications,
+      timelines: feedback.timelines,
+      knowledge: feedback.knowledge,
+      value: feedback.value,
       content: feedback.content,
+      outcome: feedback.outcome,
     })
     .from(feedback)
     .where(eq(feedback.id, feedbackId))
@@ -72,16 +87,16 @@ export async function promoteApprovedFeedbackToTestimonial(
     return { kind: "not_found" };
   }
 
-  if (sourceFeedback.type !== "rate") {
-    return { kind: "not_rate" };
-  }
-
   if (sourceFeedback.status !== "approved") {
-    return { kind: "not_approved" };
+    return { kind: "not_publishable" };
   }
 
-  if (sourceFeedback.rating === null) {
-    return { kind: "invalid_rating" };
+  if (
+    sourceFeedback.rating === null ||
+    sourceFeedback.rating < 1 ||
+    sourceFeedback.rating > 5
+  ) {
+    return { kind: "not_publishable" };
   }
 
   const [created] = await db
@@ -89,24 +104,43 @@ export async function promoteApprovedFeedbackToTestimonial(
     .values({
       sourceFeedbackId: sourceFeedback.id,
       name: sourceFeedback.name,
-      role: null,
-      company: null,
+      role: sourceFeedback.role,
+      company: sourceFeedback.company,
+      location: sourceFeedback.location,
+      source: sourceFeedback.source,
+      tags: sourceFeedback.tags ?? [],
       avatar: null,
-      category: null,
+      category: sourceFeedback.source ?? "Customer Review",
       content: sourceFeedback.content,
       rating: sourceFeedback.rating,
-      published: false,
+      communications: sourceFeedback.communications,
+      timelines: sourceFeedback.timelines,
+      knowledge: sourceFeedback.knowledge,
+      value: sourceFeedback.value,
+      outcome: sourceFeedback.outcome,
+      published: true,
+      verified: true,
     })
-    .onConflictDoNothing({ target: testimonials.sourceFeedbackId })
+    .onConflictDoNothing({
+      target: testimonials.sourceFeedbackId,
+    })
     .returning({
       id: testimonials.id,
       name: testimonials.name,
       role: testimonials.role,
       company: testimonials.company,
+      location: testimonials.location,
+      source: testimonials.source,
+      tags: testimonials.tags,
       avatar: testimonials.avatar,
       category: testimonials.category,
       content: testimonials.content,
       rating: testimonials.rating,
+      communications: testimonials.communications,
+      timelines: testimonials.timelines,
+      knowledge: testimonials.knowledge,
+      value: testimonials.value,
+      outcome: testimonials.outcome,
       helpfulCount: testimonials.helpfulCount,
       storyUrl: testimonials.storyUrl,
       verified: testimonials.verified,
@@ -127,23 +161,14 @@ export async function promoteApprovedFeedbackToTestimonial(
   };
 }
 
-/**
- * Returns published testimonials for the public website.
- *
- * Pagination is server-side so the API remains the source of truth
- * regardless of how many testimonials exist.
- *
- * The rating summary is calculated from all published testimonials,
- * not only the testimonials on the current page.
- */
 export async function listPublishedTestimonials(
   page = 1,
-  limit = 4,
+  limit = 20,
 ): Promise<PaginatedTestimonials> {
   const { db, testimonials } = await getDatabase();
 
   const safePage = Math.max(1, Math.floor(page));
-  const safeLimit = Math.min(20, Math.max(1, Math.floor(limit)));
+  const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
   const offset = (safePage - 1) * safeLimit;
 
   const rows = await db
@@ -152,10 +177,18 @@ export async function listPublishedTestimonials(
       name: testimonials.name,
       role: testimonials.role,
       company: testimonials.company,
+      location: testimonials.location,
+      source: testimonials.source,
+      tags: testimonials.tags,
       avatar: testimonials.avatar,
       category: testimonials.category,
       content: testimonials.content,
       rating: testimonials.rating,
+      communications: testimonials.communications,
+      timelines: testimonials.timelines,
+      knowledge: testimonials.knowledge,
+      value: testimonials.value,
+      outcome: testimonials.outcome,
       helpfulCount: testimonials.helpfulCount,
       storyUrl: testimonials.storyUrl,
       verified: testimonials.verified,
@@ -189,18 +222,8 @@ export async function listPublishedTestimonials(
 
   return {
     data: rows.map((testimonial) => ({
-      id: testimonial.id,
-      name: testimonial.name,
-      role: testimonial.role,
-      company: testimonial.company,
-      avatar: testimonial.avatar,
-      category: testimonial.category,
-      content: testimonial.content,
-      rating: testimonial.rating,
-      helpfulCount: testimonial.helpfulCount,
-      storyUrl: testimonial.storyUrl,
-      verified: testimonial.verified,
-      published: testimonial.published,
+      ...testimonial,
+      tags: testimonial.tags ?? [],
       createdAt: testimonial.createdAt.toISOString(),
     })),
     pagination: {
@@ -216,12 +239,6 @@ export async function listPublishedTestimonials(
   };
 }
 
-/**
- * Atomically increments the helpful count for a published testimonial.
- *
- * The increment happens in the database so the count remains persistent
- * across page refreshes and different visitors.
- */
 export async function incrementTestimonialHelpfulCount(
   testimonialId: string,
 ): Promise<number | null> {

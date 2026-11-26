@@ -1,38 +1,26 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import {
-  Modal,
-  ModalActions,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-} from "@build-me/ui";
+import { Modal, ModalBody, ModalFooter, ModalHeader } from "@build-me/ui";
 
 import { trackAnalyticsEvent } from "../../analytics";
 import { getApiBaseUrl } from "../../api-url";
 
-type FeedbackType = "score" | "rate" | "complaint" | "suggestion";
+type FeedbackType = "rate" | "score" | "complaint" | "suggestion";
 
 type FeedbackForm = {
   name: string;
   email: string;
-  score: number | null;
+  role: string;
+  company: string;
+  location: string;
+  tags: string;
   rating: number | null;
-  title: string;
+  score: number | null;
   content: string;
+  outcome: string;
 };
 
-type FeedbackField =
-  | "name"
-  | "email"
-  | "score"
-  | "rating"
-  | "title"
-  | "content";
-
-type FeedbackErrors = Partial<Record<FeedbackField, string>>;
-
-type FeedbackResponse = {
+type ApiResponse = {
   data?: {
     referenceId?: string;
   };
@@ -44,45 +32,42 @@ type FeedbackResponse = {
 const initialForm: FeedbackForm = {
   name: "",
   email: "",
-  score: null,
+  role: "",
+  company: "",
+  location: "",
+  tags: "",
   rating: null,
-  title: "",
+  score: null,
   content: "",
+  outcome: "",
 };
 
 const feedbackOptions: Array<{
-  type: FeedbackType;
+  value: FeedbackType;
   title: string;
   description: string;
 }> = [
   {
-    type: "score",
-    title: "Score Us",
-    description: "How likely are you to recommend us?",
+    value: "rate",
+    title: "Rate Me",
+    description: "Share your overall experience with a simple rating.",
   },
   {
-    type: "rate",
-    title: "Rate Us",
-    description: "Tell us how your experience was.",
+    value: "score",
+    title: "Score Me",
+    description: "Give me a score based on your overall experience.",
   },
   {
-    type: "complaint",
-    title: "Report Issues",
-    description: "Let us know about a problem.",
+    value: "complaint",
+    title: "Complaint",
+    description: "Tell me what did not work well or needs improvement.",
   },
   {
-    type: "suggestion",
-    title: "Suggest Something",
-    description: "Share an idea that could make things better.",
+    value: "suggestion",
+    title: "Suggestion",
+    description: "Share an idea that could make the experience better.",
   },
 ];
-
-const feedbackTitles: Record<FeedbackType, string> = {
-  score: "Score Us",
-  rate: "Rate Us",
-  complaint: "Report Issues",
-  suggestion: "Suggest Something",
-};
 
 function validateEmail(email: string): boolean {
   const atIndex = email.indexOf("@");
@@ -97,49 +82,110 @@ function validateEmail(email: string): boolean {
   return dotIndex > 0 && dotIndex < domain.length - 1;
 }
 
-function getContentLabel(type: FeedbackType): string {
-  switch (type) {
-    case "score":
-      return "Additional Comments";
-    case "rate":
-      return "Your Review";
-    case "complaint":
-      return "Issue Details";
-    case "suggestion":
-      return "Suggestion Details";
-  }
+function StarPicker({
+  value,
+  onChange,
+  label,
+}: {
+  readonly value: number | null;
+  readonly onChange: (value: number) => void;
+  readonly label: string;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-sm font-bold text-black">{label}</p>
+
+      <div className="flex gap-1.5">
+        {Array.from({ length: 5 }, (_, index) => {
+          const rating = index + 1;
+          const active = value !== null && rating <= value;
+
+          return (
+            <button
+              key={rating}
+              type="button"
+              onClick={() => onChange(rating)}
+              aria-label={`${rating} star${rating === 1 ? "" : "s"}`}
+              aria-pressed={active}
+              className={[
+                "text-3xl leading-none transition focus:outline-none focus:ring-2 focus:ring-blue-700",
+                active ? "text-blue-700" : "text-black/25 hover:text-blue-700",
+              ].join(" ")}
+            >
+              ★
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
-function getContentPlaceholder(type: FeedbackType): string {
-  switch (type) {
-    case "score":
-      return "Share any additional comments...";
-    case "rate":
-      return "Tell us about your experience...";
-    case "complaint":
-      return "Describe the issue in detail...";
-    case "suggestion":
-      return "Tell us what you would like to see...";
-  }
-}
+function ScorePicker({
+  value,
+  onChange,
+}: {
+  readonly value: number | null;
+  readonly onChange: (value: number) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-sm font-bold text-black">
+        Score / NPS <span className="text-blue-700">*</span>
+      </p>
 
-function getSubmitError(error: unknown): string {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
+      <p className="mb-4 text-sm text-black">
+        How likely are you to recommend working with me?
+      </p>
 
-  return "We could not submit your feedback. Please try again.";
+      <div className="grid grid-cols-6 gap-2 sm:grid-cols-11">
+        {Array.from({ length: 11 }, (_, index) => {
+          const score = index;
+          const selected = value === score;
+
+          return (
+            <button
+              key={score}
+              type="button"
+              onClick={() => onChange(score)}
+              aria-label={`Score ${score} out of 10`}
+              aria-pressed={selected}
+              className={[
+                "flex h-10 items-center justify-center rounded-lg border-2 text-sm font-bold transition",
+                selected
+                  ? "border-blue-700 bg-blue-700 text-white"
+                  : "border-blue-700 bg-white text-black hover:bg-blue-100",
+              ].join(" ")}
+            >
+              {score}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-2 flex justify-between text-xs font-medium text-black">
+        <span>Not likely</span>
+        <span>Very likely</span>
+      </div>
+    </div>
+  );
 }
 
 export default function GiveFeedback() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
   const [feedbackType, setFeedbackType] = useState<FeedbackType | null>(null);
+
   const [form, setForm] = useState<FeedbackForm>(initialForm);
-  const [errors, setErrors] = useState<FeedbackErrors>({});
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const [submitting, setSubmitting] = useState(false);
-  const [referenceId, setReferenceId] = useState<string | null>(null);
+
   const [serverError, setServerError] = useState("");
+
+  const [referenceId, setReferenceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -153,52 +199,47 @@ export default function GiveFeedback() {
     });
   }, [open]);
 
-  const reset = useCallback(() => {
+  const progress = useMemo(() => {
+    if (step === 1) {
+      return 33;
+    }
+
+    if (step === 2) {
+      return 66;
+    }
+
+    return 100;
+  }, [step]);
+
+  const selectedOption = feedbackOptions.find(
+    (option) => option.value === feedbackType,
+  );
+
+  const reset = () => {
     setStep(1);
     setFeedbackType(null);
     setForm(initialForm);
     setErrors({});
-    setSubmitting(false);
-    setReferenceId(null);
     setServerError("");
-  }, []);
+    setReferenceId(null);
+    setSubmitting(false);
+  };
 
-  const handleClose = useCallback(() => {
+  const close = () => {
     if (submitting) {
       return;
     }
 
     setOpen(false);
     reset();
-  }, [reset, submitting]);
-
-  const handleOpen = () => {
-    setOpen(true);
-
-    trackAnalyticsEvent({
-      name: "give.feedback.clicked",
-      eventType: "click",
-      path: window.location.pathname,
-    });
-  };
-
-  const handleTypeSelect = (type: FeedbackType) => {
-    setFeedbackType(type);
-    setErrors({});
-    setServerError("");
-    setStep(2);
-
-    trackAnalyticsEvent({
-      name: "give.feedback.step.one.completed",
-      eventType: "click",
-      path: window.location.pathname,
-    });
   };
 
   const updateForm = <K extends keyof FeedbackForm>(
     field: K,
     value: FeedbackForm[K],
   ) => {
+    const activeElement = document.activeElement;
+
     setForm((current) => ({
       ...current,
       [field]: value,
@@ -211,58 +252,56 @@ export default function GiveFeedback() {
     });
 
     setServerError("");
+
+    if (
+      activeElement instanceof HTMLInputElement ||
+      activeElement instanceof HTMLTextAreaElement
+    ) {
+      window.requestAnimationFrame(() => {
+        if (activeElement.isConnected && !submitting) {
+          activeElement.focus();
+
+          const cursorPosition = activeElement.value.length;
+
+          try {
+            activeElement.setSelectionRange(cursorPosition, cursorPosition);
+          } catch {
+            // Ignore inputs that do not support selection ranges.
+          }
+        }
+      });
+    }
   };
 
   const validate = (): boolean => {
-    if (!feedbackType) {
-      return false;
-    }
+    const nextErrors: Record<string, string> = {};
 
-    const nextErrors: FeedbackErrors = {};
+    if (!feedbackType) {
+      nextErrors.feedbackType = "Please select a feedback type.";
+    }
 
     if (!form.name.trim()) {
       nextErrors.name = "Name is required.";
     }
 
-    const email = form.email.trim();
-
-    if (!email) {
+    if (!form.email.trim()) {
       nextErrors.email = "Email is required.";
-    } else if (!validateEmail(email)) {
+    } else if (!validateEmail(form.email.trim())) {
       nextErrors.email = "Please enter a valid email address.";
     }
 
     if (feedbackType === "score") {
-      if (
-        form.score === null ||
-        form.score < 1 ||
-        form.score > 10 ||
-        !Number.isInteger(form.score)
-      ) {
-        nextErrors.score = "Please select a score from 1 to 10.";
+      if (form.score === null || form.score < 0 || form.score > 10) {
+        nextErrors.score = "Please select a score from 0 to 10.";
       }
-    }
-
-    if (feedbackType === "rate") {
-      if (
-        form.rating === null ||
-        form.rating < 1 ||
-        form.rating > 5 ||
-        !Number.isInteger(form.rating)
-      ) {
-        nextErrors.rating = "Please select a rating.";
+    } else if (feedbackType === "rate") {
+      if (form.rating === null || form.rating < 1 || form.rating > 5) {
+        nextErrors.rating = "Please select your rating.";
       }
-    }
-
-    if (
-      (feedbackType === "complaint" || feedbackType === "suggestion") &&
-      !form.title.trim()
-    ) {
-      nextErrors.title = "Title is required.";
     }
 
     if (!form.content.trim()) {
-      nextErrors.content = `${getContentLabel(feedbackType)} is required.`;
+      nextErrors.content = "Please share your feedback.";
     }
 
     setErrors(nextErrors);
@@ -271,7 +310,7 @@ export default function GiveFeedback() {
   };
 
   const handleSubmit = async () => {
-    if (submitting || !feedbackType || !validate()) {
+    if (submitting || !validate() || !feedbackType) {
       return;
     }
 
@@ -281,27 +320,27 @@ export default function GiveFeedback() {
     try {
       const apiBaseUrl = getApiBaseUrl(import.meta.env.VITE_API_URL);
 
-      const payload: Record<string, unknown> = {
+      const tags = form.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
+      const payload = {
         type: feedbackType,
         name: form.name.trim(),
         email: form.email.trim(),
+        role: form.role.trim() || undefined,
+        company: form.company.trim() || undefined,
+        location: form.location.trim() || undefined,
+        tags,
+        rating: feedbackType === "rate" ? form.rating : undefined,
+        score: feedbackType === "score" ? form.score : undefined,
         content: form.content.trim(),
+        outcome:
+          feedbackType === "rate" || feedbackType === "score"
+            ? form.outcome.trim() || undefined
+            : undefined,
       };
-
-      if (feedbackType === "score" && form.score !== null) {
-        payload.score = form.score;
-      }
-
-      if (feedbackType === "rate" && form.rating !== null) {
-        payload.rating = form.rating;
-      }
-
-      if (
-        (feedbackType === "complaint" || feedbackType === "suggestion") &&
-        form.title.trim()
-      ) {
-        payload.title = form.title.trim();
-      }
 
       const response = await fetch(`${apiBaseUrl}/api/v1/feedback`, {
         method: "POST",
@@ -311,30 +350,28 @@ export default function GiveFeedback() {
         body: JSON.stringify(payload),
       });
 
-      let result: FeedbackResponse = {};
+      let result: ApiResponse = {};
 
       try {
-        result = (await response.json()) as FeedbackResponse;
+        result = (await response.json()) as ApiResponse;
       } catch {
         result = {};
       }
 
       if (!response.ok) {
         throw new Error(
-          result.error?.message ||
+          result.error?.message ??
             "We could not submit your feedback. Please try again.",
         );
       }
 
-      const returnedReferenceId = result.data?.referenceId;
-
-      if (!returnedReferenceId) {
+      if (!result.data?.referenceId) {
         throw new Error(
           "Feedback was submitted, but no reference ID was returned.",
         );
       }
 
-      setReferenceId(returnedReferenceId);
+      setReferenceId(result.data.referenceId);
       setStep(3);
 
       trackAnalyticsEvent({
@@ -349,36 +386,38 @@ export default function GiveFeedback() {
         path: window.location.pathname,
       });
     } catch (error) {
-      setServerError(getSubmitError(error));
+      setServerError(
+        error instanceof Error
+          ? error.message
+          : "We could not submit your feedback. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
-  let progress = 100;
-
-  if (step === 1) {
-    progress = 33;
-  } else if (step === 2) {
-    progress = 66;
-  }
-
-  const stepLabel = `Step ${step} of 3`;
-
   return (
     <>
       <button
         type="button"
-        onClick={handleOpen}
+        onClick={() => {
+          setOpen(true);
+
+          trackAnalyticsEvent({
+            name: "give.feedback.clicked",
+            eventType: "click",
+            path: window.location.pathname,
+          });
+        }}
         aria-label="Give Feedback"
-        className="fixed right-0 top-1/2 z-900 -translate-y-1/2 rounded-l-md bg-blue-700 px-3 py-4 text-sm font-semibold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
+        className="fixed right-0 top-1/2 z-900 -translate-y-1/2 rounded-l-md bg-blue-700 px-3 py-4 text-sm font-bold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
       >
         <span className="block [writing-mode:vertical-rl]">Give Feedback</span>
       </button>
 
       <Modal
         open={open}
-        onClose={handleClose}
+        onClose={close}
         size="lg"
         closeOnBackdrop={!submitting}
         closeOnEscape={!submitting}
@@ -386,10 +425,7 @@ export default function GiveFeedback() {
         className="text-black"
       >
         <div className="flex min-h-0 flex-col">
-          <div
-            className="h-1 w-full bg-blue-100"
-            aria-label={`Feedback progress: ${progress}%`}
-          >
+          <div className="h-1 w-full bg-blue-100">
             <div
               className="h-full bg-blue-700 transition-all duration-300"
               style={{ width: `${progress}%` }}
@@ -397,8 +433,10 @@ export default function GiveFeedback() {
           </div>
 
           <ModalHeader className="border-b-0! pb-2">
-            <div className="pr-6">
-              <p className="text-sm font-semibold text-blue-700">{stepLabel}</p>
+            <div>
+              <p className="text-sm font-bold text-blue-700">
+                Step {step} of 3
+              </p>
 
               <h2 className="mt-1 text-2xl font-bold text-black">
                 Give Feedback
@@ -408,106 +446,122 @@ export default function GiveFeedback() {
 
           <ModalBody className="pt-0!">
             {step === 1 && (
-              <div className="space-y-3 rounded-xl bg-blue-100 p-5">
-                <div className="mb-5">
-                  <h3 className="text-lg font-semibold text-black">
-                    Share Your Feedback
-                  </h3>
+              <div className="rounded-xl bg-blue-100 p-5">
+                <h3 className="text-lg font-bold">
+                  How would you like to give feedback?
+                </h3>
 
-                  <p className="mt-1 text-sm text-black">
-                    What would you like to share with us?
-                  </p>
-                </div>
+                <p className="mt-1 text-sm">
+                  Choose the type of feedback you would like to share.
+                </p>
 
-                <div className="grid gap-3">
-                  {feedbackOptions.map((option) => (
-                    <button
-                      key={option.type}
-                      type="button"
-                      onClick={() => handleTypeSelect(option.type)}
-                      className="group w-full rounded-lg border border-blue-700 bg-white p-4 text-left transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-700"
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <h3 className="text-base font-semibold text-blue-700">
-                            {option.title}
-                          </h3>
+                <div className="mt-5 space-y-3">
+                  {feedbackOptions.map((option) => {
+                    const selected = feedbackType === option.value;
 
-                          <p className="mt-1 text-sm text-black">
-                            {option.description}
-                          </p>
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          setFeedbackType(option.value);
+                          setErrors({});
+                          setServerError("");
+                          setStep(2);
+
+                          trackAnalyticsEvent({
+                            name: "give.feedback.step.one.completed",
+                            eventType: "click",
+                            path: window.location.pathname,
+                          });
+                        }}
+                        className={[
+                          "group w-full rounded-xl border-2 p-4 text-left transition",
+                          selected
+                            ? "border-blue-700 bg-white"
+                            : "border-blue-700 bg-blue-100 hover:bg-white",
+                        ].join(" ")}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="font-bold text-blue-700">
+                              {option.title}
+                            </p>
+
+                            <p className="mt-1 text-sm text-black">
+                              {option.description}
+                            </p>
+                          </div>
+
+                          <span className="text-xl font-bold text-blue-700">
+                            →
+                          </span>
                         </div>
-
-                        <span
-                          aria-hidden="true"
-                          className="text-xl text-blue-700 transition group-hover:translate-x-1"
-                        >
-                          →
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
+
+                {errors.feedbackType && (
+                  <p className="mt-3 text-sm font-bold text-black">
+                    {errors.feedbackType}
+                  </p>
+                )}
               </div>
             )}
 
             {step === 2 && feedbackType && (
-              <div className="space-y-5 rounded-xl bg-blue-100 p-5">
+              <div className="space-y-5">
                 <button
                   type="button"
-                  onClick={() => {
-                    setStep(1);
-                    setErrors({});
-                    setServerError("");
-                  }}
+                  onClick={() => setStep(1)}
                   disabled={submitting}
-                  className="text-sm font-semibold text-blue-700 hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
+                  className="text-sm font-bold text-blue-700 hover:text-black disabled:opacity-50"
                 >
                   ← Back
                 </button>
 
-                <div>
-                  <h3 className="text-xl font-semibold text-black">
-                    {feedbackTitles[feedbackType]}
-                  </h3>
-
-                  <p className="mt-1 text-sm text-black">
-                    Tell us a little about yourself and your feedback.
+                <div className="rounded-xl bg-blue-100 p-5">
+                  <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                    {selectedOption?.title}
                   </p>
+
+                  <h3 className="mt-1 text-xl font-bold">
+                    Share your experience
+                  </h3>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label
                       htmlFor="feedback-name"
-                      className="mb-1.5 block text-sm font-semibold text-blue-700"
+                      className="mb-1.5 block text-sm font-bold"
                     >
-                      Name
+                      Name <span className="text-blue-700">*</span>
                     </label>
 
                     <input
                       id="feedback-name"
-                      type="text"
                       value={form.name}
                       onChange={(event) =>
                         updateForm("name", event.target.value)
                       }
                       disabled={submitting}
-                      className="w-full rounded-md border border-blue-700 bg-white px-3 py-2.5 text-sm text-black outline-none transition placeholder:text-black/60 focus:ring-2 focus:ring-blue-700 disabled:bg-blue-100"
                       placeholder="Your name"
+                      className="w-full rounded-lg border-2 border-blue-700 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-700"
                     />
 
                     {errors.name && (
-                      <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                      <p className="mt-1 text-sm font-bold">{errors.name}</p>
                     )}
                   </div>
 
                   <div>
                     <label
                       htmlFor="feedback-email"
-                      className="mb-1.5 block text-sm font-semibold text-blue-700"
+                      className="mb-1.5 block text-sm font-bold"
                     >
-                      Email
+                      Email <span className="text-blue-700">*</span>
                     </label>
 
                     <input
@@ -518,146 +572,137 @@ export default function GiveFeedback() {
                         updateForm("email", event.target.value)
                       }
                       disabled={submitting}
-                      className="w-full rounded-md border border-blue-700 bg-white px-3 py-2.5 text-sm text-black outline-none transition placeholder:text-black/60 focus:ring-2 focus:ring-blue-700 disabled:bg-blue-100"
                       placeholder="you@example.com"
+                      className="w-full rounded-lg border-2 border-blue-700 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-700"
                     />
 
                     {errors.email && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.email}
-                      </p>
+                      <p className="mt-1 text-sm font-bold">{errors.email}</p>
                     )}
                   </div>
-                </div>
 
-                {feedbackType === "score" && (
-                  <div className="rounded-lg border border-blue-700 bg-blue-100 p-4">
-                    <p className="mb-3 text-sm font-semibold text-blue-700">
-                      How likely are you to recommend us?
-                    </p>
-
-                    <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
-                      {Array.from({ length: 10 }, (_, index) => {
-                        const score = index + 1;
-                        const selected = form.score === score;
-
-                        return (
-                          <button
-                            key={score}
-                            type="button"
-                            onClick={() => updateForm("score", score)}
-                            disabled={submitting}
-                            aria-label={`Score ${score}`}
-                            aria-pressed={selected}
-                            className={[
-                              "flex h-10 items-center justify-center rounded-md border text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-700",
-                              selected
-                                ? "border-blue-700 bg-blue-700 text-white"
-                                : "border-blue-700 bg-white text-blue-700 hover:bg-blue-100",
-                            ].join(" ")}
-                          >
-                            {score}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="mt-2 flex justify-between text-xs font-medium text-blue-700">
-                      <span>More Unlikely</span>
-                      <span>More Likely</span>
-                    </div>
-
-                    {errors.score && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.score}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {feedbackType === "rate" && (
-                  <div className="rounded-lg border border-blue-700 bg-blue-100 p-4">
-                    <p className="mb-2 text-sm font-semibold text-blue-700">
-                      Your Rating
-                    </p>
-
-                    <div className="flex gap-2">
-                      {Array.from({ length: 5 }, (_, index) => {
-                        const rating = index + 1;
-                        const selected =
-                          form.rating !== null && rating <= form.rating;
-                        const starLabel =
-                          rating === 1 ? "1 star" : `${rating} stars`;
-
-                        return (
-                          <button
-                            key={rating}
-                            type="button"
-                            onClick={() => updateForm("rating", rating)}
-                            disabled={submitting}
-                            aria-label={starLabel}
-                            aria-pressed={form.rating === rating}
-                            className={[
-                              "text-3xl leading-none transition focus:outline-none focus:ring-2 focus:ring-blue-700",
-                              selected
-                                ? "text-blue-700"
-                                : "text-white hover:text-blue-700",
-                            ].join(" ")}
-                          >
-                            ★
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {errors.rating && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.rating}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {(feedbackType === "complaint" ||
-                  feedbackType === "suggestion") && (
-                  <div className="rounded-lg border border-blue-700 bg-blue-100 p-4">
+                  <div>
                     <label
-                      htmlFor="feedback-title"
-                      className="mb-1.5 block text-sm font-semibold text-blue-700"
+                      htmlFor="feedback-role"
+                      className="mb-1.5 block text-sm font-bold"
                     >
-                      Title
+                      Role
                     </label>
 
                     <input
-                      id="feedback-title"
-                      type="text"
-                      value={form.title}
+                      id="feedback-role"
+                      value={form.role}
                       onChange={(event) =>
-                        updateForm("title", event.target.value)
+                        updateForm("role", event.target.value)
                       }
                       disabled={submitting}
-                      className="w-full rounded-md border border-blue-700 bg-white px-3 py-2.5 text-sm text-black outline-none transition placeholder:text-black/60 focus:ring-2 focus:ring-blue-700 disabled:bg-blue-100"
-                      placeholder={
-                        feedbackType === "complaint"
-                          ? "Briefly describe the issue"
-                          : "What would you like us to improve?"
+                      placeholder="e.g. Product Manager"
+                      className="w-full rounded-lg border-2 border-blue-700 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="feedback-company"
+                      className="mb-1.5 block text-sm font-bold"
+                    >
+                      Company
+                    </label>
+
+                    <input
+                      id="feedback-company"
+                      value={form.company}
+                      onChange={(event) =>
+                        updateForm("company", event.target.value)
                       }
+                      disabled={submitting}
+                      placeholder="Company or organisation"
+                      className="w-full rounded-lg border-2 border-blue-700 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="feedback-location"
+                      className="mb-1.5 block text-sm font-bold"
+                    >
+                      Location
+                    </label>
+
+                    <input
+                      id="feedback-location"
+                      value={form.location}
+                      onChange={(event) =>
+                        updateForm("location", event.target.value)
+                      }
+                      disabled={submitting}
+                      placeholder="e.g. England (UK)"
+                      className="w-full rounded-lg border-2 border-blue-700 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="feedback-tags"
+                      className="mb-1.5 block text-sm font-bold"
+                    >
+                      Tags
+                    </label>
+
+                    <input
+                      id="feedback-tags"
+                      value={form.tags}
+                      onChange={(event) =>
+                        updateForm("tags", event.target.value)
+                      }
+                      disabled={submitting}
+                      placeholder="Delivery, Mentoring, Engineering"
+                      className="w-full rounded-lg border-2 border-blue-700 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-700"
                     />
 
-                    {errors.title && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.title}
-                      </p>
+                    <p className="mt-1 text-xs">Separate tags with commas.</p>
+                  </div>
+                </div>
+
+                {(feedbackType === "rate" || feedbackType === "score") && (
+                  <div className="rounded-xl border-2 border-blue-700 bg-white p-5">
+                    {feedbackType === "score" ? (
+                      <>
+                        <ScorePicker
+                          value={form.score}
+                          onChange={(value) => updateForm("score", value)}
+                        />
+
+                        {errors.score && (
+                          <p className="mt-2 text-sm font-bold">
+                            {errors.score}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <StarPicker
+                          value={form.rating}
+                          onChange={(value) => updateForm("rating", value)}
+                          label="Rating"
+                        />
+
+                        {errors.rating && (
+                          <p className="mt-2 text-sm font-bold">
+                            {errors.rating}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
 
-                <div className="rounded-lg border border-blue-700 bg-blue-100 p-4">
+                <div>
                   <label
                     htmlFor="feedback-content"
-                    className="mb-1.5 block text-sm font-semibold text-blue-700"
+                    className="mb-1.5 block text-sm font-bold"
                   >
-                    {getContentLabel(feedbackType)}
+                    Your Review <span className="text-blue-700">*</span>
                   </label>
 
                   <textarea
@@ -667,88 +712,101 @@ export default function GiveFeedback() {
                       updateForm("content", event.target.value)
                     }
                     disabled={submitting}
-                    rows={5}
-                    className="w-full resize-y rounded-md border border-blue-700 bg-white px-3 py-2.5 text-sm text-black outline-none transition placeholder:text-black/60 focus:ring-2 focus:ring-blue-700 disabled:bg-blue-100"
-                    placeholder={getContentPlaceholder(feedbackType)}
+                    rows={6}
+                    placeholder="Tell us about your experience..."
+                    className="w-full rounded-lg border-2 border-blue-700 bg-white px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-700"
                   />
 
                   {errors.content && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.content}
-                    </p>
+                    <p className="mt-1 text-sm font-bold">{errors.content}</p>
                   )}
                 </div>
 
+                {(feedbackType === "rate" || feedbackType === "score") && (
+                  <div>
+                    <label
+                      htmlFor="feedback-outcome"
+                      className="mb-1.5 block text-sm font-bold"
+                    >
+                      Outcome / Result
+                    </label>
+
+                    <textarea
+                      id="feedback-outcome"
+                      value={form.outcome}
+                      onChange={(event) =>
+                        updateForm("outcome", event.target.value)
+                      }
+                      disabled={submitting}
+                      rows={3}
+                      placeholder="What result or improvement did you experience? (Optional)"
+                      className="w-full rounded-lg border-2 border-blue-700 bg-white px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-700"
+                    />
+                  </div>
+                )}
+
                 {serverError && (
-                  <div
-                    role="alert"
-                    className="rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
-                  >
+                  <div className="rounded-lg border-2 border-blue-700 bg-blue-100 px-4 py-3 text-sm font-bold">
                     {serverError}
                   </div>
                 )}
               </div>
             )}
 
-            {step === 3 && referenceId && (
-              <div className="flex min-h-80 flex-col items-center justify-center rounded-xl bg-blue-100 px-4 py-8 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl font-bold text-blue-700">
+            {step === 3 && (
+              <div className="rounded-2xl border-2 border-blue-700 bg-blue-100 p-7 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-700 text-2xl font-bold text-white">
                   ✓
                 </div>
 
-                <h3 className="mt-5 text-2xl font-bold text-black">
-                  Thank You!
-                </h3>
+                <h3 className="mt-5 text-2xl font-bold">Thank You</h3>
 
-                <p className="mt-2 max-w-md text-sm text-black">
-                  Your feedback has been received successfully.
+                <p className="mx-auto mt-3 max-w-md text-sm leading-6">
+                  Your feedback has been submitted
                 </p>
 
-                <div className="mt-5 rounded-lg border border-blue-700 bg-white px-5 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-                    Reference Ticket
+                {referenceId && (
+                  <p className="mt-4 text-sm font-bold text-blue-700">
+                    Reference: {referenceId}
                   </p>
-
-                  <p className="mt-1 font-mono text-sm font-semibold text-black">
-                    {referenceId}
-                  </p>
-                </div>
+                )}
               </div>
             )}
           </ModalBody>
 
           {step === 2 && (
             <ModalFooter>
-              <ModalActions align="between">
-                <p className="text-xs text-black">
-                  Your feedback helps us improve.
-                </p>
+              <button
+                type="button"
+                onClick={close}
+                disabled={submitting}
+                className="rounded-lg border-2 border-blue-700 bg-white px-5 py-3 text-sm font-bold text-black hover:bg-blue-100 disabled:opacity-50"
+              >
+                Cancel
+              </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleSubmit();
-                  }}
-                  disabled={submitting}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {submitting ? "Submitting..." : "Preview & Submit"}
-                </button>
-              </ModalActions>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleSubmit();
+                }}
+                disabled={submitting}
+                className="rounded-lg bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-black disabled:opacity-50"
+              >
+                {submitting ? "Submitting..." : "Submit Feedback"}
+              </button>
             </ModalFooter>
           )}
 
           {step === 3 && (
             <ModalFooter>
-              <ModalActions align="end">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-700 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
-                >
-                  Done
-                </button>
-              </ModalActions>
+              <button
+                type="button"
+                onClick={close}
+                className="w-full rounded-lg bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-black"
+              >
+                Close
+              </button>
             </ModalFooter>
           )}
         </div>

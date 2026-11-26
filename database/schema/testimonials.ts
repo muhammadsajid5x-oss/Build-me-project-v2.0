@@ -1,10 +1,12 @@
+import { sql } from "drizzle-orm";
+
 import {
+  boolean,
+  integer,
   pgTable,
   text,
   timestamp,
   uuid,
-  integer,
-  boolean,
 } from "drizzle-orm/pg-core";
 
 import { feedback } from "./feedback.js";
@@ -22,6 +24,15 @@ export const testimonials = pgTable("testimonials", {
 
   company: text("company"),
 
+  location: text("location"),
+
+  source: text("source"),
+
+  tags: text("tags")
+    .array()
+    .notNull()
+    .default(sql`ARRAY[]::text[]`),
+
   avatar: text("avatar"),
 
   category: text("category"),
@@ -29,6 +40,16 @@ export const testimonials = pgTable("testimonials", {
   content: text("content").notNull(),
 
   rating: integer("rating").notNull(),
+
+  communications: integer("communications"),
+
+  timelines: integer("timelines"),
+
+  knowledge: integer("knowledge"),
+
+  value: integer("value"),
+
+  outcome: text("outcome"),
 
   helpfulCount: integer("helpful_count").default(0).notNull(),
 
