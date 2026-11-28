@@ -32,6 +32,12 @@ async function clearTestimonials() {
       .returning({ id: testimonials.id });
 
     console.info(`Deleted ${deleted.length} testimonials.`);
+
+    if (deleted.length !== 12) {
+      console.warn(
+        `Expected to delete 12 existing testimonials, but deleted ${deleted.length}.`,
+      );
+    }
   } finally {
     await connection.end();
   }

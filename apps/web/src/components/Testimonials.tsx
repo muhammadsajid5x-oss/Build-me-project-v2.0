@@ -5,8 +5,6 @@ import { ANALYTICS_EVENTS, trackAnalyticsEvent } from "../analytics";
 import { getApiBaseUrl } from "../api-url";
 import bundledStarterContent from "../content/testimonials.json";
 
-type CategoryKey = "communications" | "timelines" | "knowledge" | "value";
-
 type KeyResult = {
   stat: string;
   label: string;
@@ -103,34 +101,53 @@ const starterContent = bundledStarterContent as TestimonialsContent;
 const REVIEWS_PER_PAGE = 4;
 const CASE_STUDIES_PER_PAGE = 4;
 
-const categoryLabels: Array<{
-  key: CategoryKey;
-  label: string;
-}> = [
-  {
-    key: "communications",
-    label: "Communications",
-  },
-  {
-    key: "timelines",
-    label: "Timelines",
-  },
-  {
-    key: "knowledge",
-    label: "Knowledge",
-  },
-  {
-    key: "value",
-    label: "Value",
-  },
+const DEFAULT_REVIEW_LABELS = [
+  "Service Experience",
+  "Clear Communication",
+  "Outcome Focus",
 ];
+
+const DEFAULT_CASE_STUDY_LABELS = [
+  "Problem Solving",
+  "Service Delivery",
+  "Outcome Focus",
+];
+
+/*
+ * These are the three approved quantified results for each service.
+ *
+ * They match GiveFeedback.tsx exactly.
+ *
+ * Do not replace these with generic outcomes or the first API key result.
+ */
+const SERVICE_RESULTS: Record<string, KeyResult[]> = {
+  "Deliver My Project": [
+    {
+      stat: "30%",
+      label: "Faster Delivery Planning",
+    },
+  ],
+
+  "Mentor Me": [
+    {
+      stat: "25%",
+      label: "Faster Problem Resolution",
+    },
+  ],
+  "Coffee With Me": [
+    {
+      stat: "2–3",
+      label: "Decisions Clarified",
+    },
+  ],
+};
 
 function clampRating(value: number | null | undefined): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    return 5;
+    return 0;
   }
 
-  return Math.min(5, Math.max(1, value));
+  return Math.min(5, Math.max(0, value));
 }
 
 function stars(rating: number): string {
@@ -155,38 +172,120 @@ function getInitials(value: string): string {
   return `${words[0][0]}${words[1][0]}`.toUpperCase();
 }
 
-function formatSource(value: string | null): string {
-  switch (value) {
-    case "client-work":
-      return "Client Work";
+function getCompanyShortName(value: string): string {
+  const words = value.replaceAll("&", " ").trim().split(/\s+/).filter(Boolean);
 
-    case "mentorship":
-      return "Mentorship";
+  if (words.length === 0) {
+    return "CC";
+  }
+
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+
+  return words
+    .slice(0, 3)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
+function getServiceLabel(
+  source: string | null,
+  category: string | null,
+): string {
+  switch (source) {
+    case "client-work":
+      return "Deliver My Project";
 
     case "coffee-chat":
       return "Coffee With Me";
 
+    case "mentorship":
+      return "Mentor Me";
+
     default:
-      return value ?? "Customer Review";
+      if (
+        category === "Deliver My Project" ||
+        category === "Coffee With Me" ||
+        category === "Mentor Me"
+      ) {
+        return category;
+      }
+
+      return category ?? "Cup&Commit Service";
   }
 }
 
-function average(values: number[]): number {
-  if (values.length === 0) {
-    return 0;
-  }
+function getJourneyPath(
+  source: string | null,
+  category: string | null,
+): string {
+  switch (getServiceLabel(source, category)) {
+    case "Deliver My Project":
+      return "/deliver-my-project";
 
-  return values.reduce((total, value) => total + value, 0) / values.length;
+    case "Mentor Me":
+      return "/mentor-me";
+
+    case "Coffee With Me":
+      return "/coffee-with-me";
+
+    default:
+      return "/coffee-with-me";
+  }
 }
 
-function getCategoryRating(review: Review, key: CategoryKey): number {
-  const value = review[key];
+function uniqueLabels(values: string[]): string[] {
+  return values
+    .map((value) => value?.trim())
+    .filter(Boolean)
+    .filter((value, index, array) => array.indexOf(value) === index)
+    .slice(0, 3);
+}
 
-  if (typeof value === "number") {
-    return clampRating(value);
+function getExactlyThreeLabels(
+  tags: string[],
+  defaults: string[] = DEFAULT_REVIEW_LABELS,
+): string[] {
+  const labels = uniqueLabels(tags);
+
+  return Array.from({ length: 3 }, (_, index) => {
+    return labels[index] ?? defaults[index];
+  });
+}
+
+function truncateText(value: string, maxLength: number): string {
+  const normalized = value.trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
   }
 
-  return clampRating(review.rating);
+  return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+/*
+ * Resolve the service-specific result set.
+ *
+ * The UI always displays the three approved results for the service.
+ * Existing API keyResults are only used when they already contain all
+ * three valid results. Otherwise the approved service result set is used.
+ */
+function getCaseStudyResults(caseStudy: CaseStudy): KeyResult[] {
+  const service = getServiceLabel(null, caseStudy.category);
+
+  const configuredResults = caseStudy.keyResults
+    .filter((result) => result.stat?.trim() && result.label?.trim())
+    .slice(0, 3);
+
+  const approvedResults = SERVICE_RESULTS[service];
+
+  if (configuredResults.length === 3) {
+    return configuredResults;
+  }
+
+  return approvedResults ?? configuredResults;
 }
 
 function dedupeById<T extends { id: string }>(items: T[]): T[] {
@@ -202,14 +301,6 @@ function dedupeById<T extends { id: string }>(items: T[]): T[] {
   });
 }
 
-function getStoryUrl(caseStudy: CaseStudy): string {
-  if (caseStudy.storyUrl) {
-    return new URL(caseStudy.storyUrl, window.location.origin).toString();
-  }
-
-  return window.location.href;
-}
-
 function PaginationDots({
   page,
   totalPages,
@@ -222,14 +313,7 @@ function PaginationDots({
   readonly label: string;
 }) {
   if (totalPages <= 1) {
-    return (
-      <div className="mt-7 flex justify-center" aria-label={label}>
-        <span
-          className="h-2.5 w-2.5 rounded-full bg-blue-700"
-          aria-hidden="true"
-        />
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -258,6 +342,27 @@ function PaginationDots({
   );
 }
 
+function ResultList({ results }: { readonly results: KeyResult[] }) {
+  return (
+    <div className="mt-4 grid gap-3">
+      {results.map((result) => (
+        <div
+          key={`${result.stat}-${result.label}`}
+          className="rounded-xl bg-blue-100 p-4"
+        >
+          <p className="text-2xl font-bold leading-7 text-black">
+            {result.stat}
+          </p>
+
+          <p className="mt-1 text-xs font-bold uppercase tracking-wide text-blue-700">
+            {result.label}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Testimonials({
   content = starterContent,
 }: {
@@ -273,11 +378,10 @@ export default function Testimonials({
   const [remoteReviews, setRemoteReviews] = useState<Review[]>([]);
   const [remoteCaseStudies, setRemoteCaseStudies] = useState<CaseStudy[]>([]);
 
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(
     null,
   );
-
-  const [copied, setCopied] = useState(false);
 
   const sectionRef = useRef<HTMLElement | null>(null);
   const viewedRef = useRef(false);
@@ -390,7 +494,7 @@ export default function Testimonials({
         setRemoteReviews(liveReviews);
         setRemoteCaseStudies(liveCaseStudies);
       } catch {
-        // Starter content remains visible when the API is unavailable.
+        // Keep the component usable when the API is unavailable.
       }
     }
 
@@ -406,28 +510,32 @@ export default function Testimonials({
       return remoteReviews;
     }
 
-    return content.reviews;
+    return content.reviews.slice(0, 1).map((review) => ({
+      ...review,
+      starterContent: true,
+    }));
   }, [content.reviews, remoteReviews]);
 
   const caseStudies = useMemo(() => {
     return dedupeById([...remoteCaseStudies, ...content.caseStudies]);
   }, [content.caseStudies, remoteCaseStudies]);
 
-  const summary = useMemo(() => {
-    const overallRating = average(
-      reviews.map((review) => clampRating(review.rating)),
+  const reviewSummary = useMemo(() => {
+    if (reviews.length === 0) {
+      return {
+        averageRating: 0,
+        reviewCount: 0,
+      };
+    }
+
+    const totalRating = reviews.reduce(
+      (total, review) => total + clampRating(review.rating),
+      0,
     );
 
-    const categoryRatings = categoryLabels.map(({ key, label }) => ({
-      key,
-      label,
-      rating: average(reviews.map((review) => getCategoryRating(review, key))),
-    }));
-
     return {
-      overallRating,
+      averageRating: totalRating / reviews.length,
       reviewCount: reviews.length,
-      categoryRatings,
     };
   }, [reviews]);
 
@@ -486,20 +594,34 @@ export default function Testimonials({
 
     if (nextMode === "testimonials") {
       setReviewPage(1);
-    } else {
-      setCaseStudyPage(1);
-
-      trackAnalyticsEvent({
-        name: ANALYTICS_EVENTS.CASE_STUDIES_VIEWED,
-        eventType: "view",
-        path: window.location.pathname,
-      });
+      return;
     }
+
+    setCaseStudyPage(1);
+
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.CASE_STUDIES_VIEWED,
+      eventType: "view",
+      path: window.location.pathname,
+    });
+  };
+
+  const openReview = (review: Review) => {
+    setSelectedReview(review);
+
+    trackAnalyticsEvent({
+      name: ANALYTICS_EVENTS.TESTIMONIAL_STORY_CLICKED,
+      eventType: "click",
+      path: window.location.pathname,
+    });
+  };
+
+  const closeReview = () => {
+    setSelectedReview(null);
   };
 
   const openCaseStudy = (caseStudy: CaseStudy) => {
     setSelectedCaseStudy(caseStudy);
-    setCopied(false);
 
     trackAnalyticsEvent({
       name: ANALYTICS_EVENTS.CASE_STUDY_DETAILS_CLICKED,
@@ -508,75 +630,24 @@ export default function Testimonials({
     });
   };
 
-  const copyStoryLink = async () => {
-    if (!selectedCaseStudy) {
-      return;
-    }
-
-    const url = getStoryUrl(selectedCaseStudy);
-
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  };
-
   return (
     <>
       <section
         ref={sectionRef}
         aria-labelledby="testimonials-heading"
-        className="w-full bg-white px-4 py-4 -mt-23 sm:px-6 lg:px-8 border-t-0 lg:border-t-2 border-blue-700 pt-12"
+        className="w-full border-t-0 border-blue-700 bg-white px-4 -mt-23 pt-12 sm:px-6 lg:border-t-2 lg:px-8"
       >
         <div className="mx-auto w-full max-w-7xl">
           <div className="mx-auto max-w-4xl text-center">
-            <span className="inline-flex items-center gap-1 rounded-full border-2 border-blue-700 bg-blue-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-black">
-              {/* Open book icon */}
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                className="h-4 w-4 shrink-0"
-                aria-hidden="true"
-              >
-                <path d="M3 5.5A2.5 2.5 0 0 1 5.5 3H11v17H5.5A2.5 2.5 0 0 0 3 22V5.5Z" />
-                <path d="M21 5.5A2.5 2.5 0 0 0 18.5 3H13v17h5.5A2.5 2.5 0 0 1 21 22V5.5Z" />
-              </svg>
+            <div className="flex flex-wrap justify-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full border-2 border-blue-700 bg-blue-100 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-black">
+                Success Stories
+              </span>
 
-              {content.badge}
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full border-2 border-blue-700 bg-blue-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-black">
-              {/* Blank star icon */}
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                className="h-4 w-4 shrink-0"
-                aria-hidden="true"
-              >
-                <path d="m12 3 2.78 5.63 6.22.9-4.5 4.38 1.06 6.19L12 17.18l-5.56 2.92 1.06-6.19L3 9.53l6.22-.9L12 3Z" />
-              </svg>
-              Customer Reviews
-            </span>
-
-            <span className="inline-flex items-center gap-2 rounded-full border-2 border-blue-700 bg-blue-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-black">
-              {/* Blank chat icon */}
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                className="h-4 w-4 shrink-0"
-                aria-hidden="true"
-              >
-                <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-4 2v-5.02A7.5 7.5 0 1 1 20 11.5Z" />
-              </svg>
-              What Others Are Saying
-            </span>
+              <span className="inline-flex items-center gap-2 rounded-full border-2 border-blue-700 bg-blue-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-black">
+                Open Feedback
+              </span>
+            </div>
 
             <h2
               id="testimonials-heading"
@@ -585,72 +656,34 @@ export default function Testimonials({
               {content.heading}
             </h2>
 
-            <p className="mx-auto mt-4 max-w-3xl text-sm leading-7 text-black sm:text-base">
+            <p className="mx-auto mt-4 max-w-3xl text-sm font-bold leading-7 text-black sm:text-base">
               {content.subtitle}
             </p>
           </div>
 
-          <div className="mx-auto mt-10 max-w-6xl rounded-3xl border-2 border-blue-700 bg-blue-100 p-5 sm:p-7">
-            <div className="grid gap-8 md:grid-cols-[240px_1fr] md:items-center">
-              <div className="text-center md:border-r-2 md:border-blue-700 md:pr-8">
-                <p className="text-6xl font-bold leading-none text-black sm:text-7xl">
-                  {summary.overallRating.toFixed(1)}
-                </p>
+          <div className="mx-auto mt-10 max-w-6xl rounded-3xl border-2 border-blue-700 bg-blue-100 p-6 sm:p-8">
+            <div className="text-center">
+              <p className="text-6xl font-bold leading-none text-black sm:text-7xl">
+                {reviewSummary.averageRating.toFixed(1)}
+              </p>
 
-                <p
-                  className="mt-3 text-2xl tracking-[0.15em] text-blue-700"
-                  aria-label={`${summary.overallRating.toFixed(
-                    1,
-                  )} out of 5 stars`}
-                >
-                  {stars(summary.overallRating)}
-                </p>
+              <p
+                className="mt-3 text-2xl tracking-[0.15em] text-blue-700"
+                aria-label={`${reviewSummary.averageRating.toFixed(
+                  1,
+                )} out of 5 stars`}
+              >
+                {stars(reviewSummary.averageRating)}
+              </p>
 
-                <p className="mt-3 text-sm font-bold uppercase tracking-wide text-black">
-                  Overall Experience
-                </p>
+              <p className="mt-3 text-sm font-bold uppercase tracking-wide text-black">
+                Ownership & Trust Rating
+              </p>
 
-                <p className="mt-2 text-sm font-semibold text-black">
-                  {summary.reviewCount} Review
-                  {summary.reviewCount === 1 ? "" : "s"}
-                </p>
-
-                <p className="mt-1 text-sm font-semibold text-black">
-                  {content.customerCount}
-                </p>
-              </div>
-
-              <div className="space-y-5">
-                {summary.categoryRatings.map((metric) => (
-                  <div
-                    key={metric.key}
-                    className="grid grid-cols-[105px_1fr_42px] items-center gap-3 sm:grid-cols-[140px_1fr_48px]"
-                  >
-                    <span className="text-xs font-bold text-black sm:text-sm">
-                      {metric.label}
-                    </span>
-
-                    <div
-                      className="h-2.5 overflow-hidden rounded-full bg-white"
-                      aria-hidden="true"
-                    >
-                      <div
-                        className="h-full rounded-full bg-blue-700"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            Math.max(0, (metric.rating / 5) * 100),
-                          )}%`,
-                        }}
-                      />
-                    </div>
-
-                    <span className="text-right text-xs font-bold text-black sm:text-sm">
-                      {metric.rating.toFixed(1)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <p className="mt-2 text-sm font-semibold text-black">
+                {reviewSummary.reviewCount} Review
+                {reviewSummary.reviewCount === 1 ? "" : "s"}
+              </p>
             </div>
           </div>
 
@@ -698,20 +731,30 @@ export default function Testimonials({
                 <>
                   <div className="grid grid-cols-1 gap-5 lg:grid-cols-4">
                     {paginatedReviews.map((review) => {
-                      const tags = [
-                        ...(review.category ? [review.category] : []),
-                        formatSource(review.source),
-                        ...review.tags,
-                      ].filter(
-                        (value, index, array) =>
-                          value && array.indexOf(value) === index,
-                      );
+                      const labels = getExactlyThreeLabels(review.tags);
+
+                      const normalizedReview = review.content.trim();
+                      const hasLongReview = normalizedReview.length > 100;
+                      const cardReview = truncateText(normalizedReview, 100);
 
                       return (
                         <article
                           key={review.id}
-                          className="flex h-full min-h-80 flex-col rounded-2xl border-2 border-blue-700 bg-white p-5 shadow-sm"
+                          className="flex h-full min-h-107.5 flex-col rounded-2xl border-2 border-blue-700 bg-white p-5 shadow-sm"
                         >
+                          {review.starterContent && (
+                            <div className="mb-4 rounded-lg border border-dashed border-blue-700 bg-blue-50 px-3 py-2">
+                              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">
+                                Demo Sample
+                              </p>
+
+                              <p className="mt-1 text-xs leading-5 text-black">
+                                Sample content for layout demonstration — not
+                                verified customer evidence.
+                              </p>
+                            </div>
+                          )}
+
                           <div className="flex items-start gap-3">
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-black text-sm font-bold text-white">
                               {getInitials(review.name)}
@@ -722,11 +765,19 @@ export default function Testimonials({
                                 {review.name}
                               </h3>
 
-                              <p className="mt-1 text-xs font-medium text-black">
-                                {[review.role, review.location]
-                                  .filter(Boolean)
-                                  .join(" · ") || "Customer"}
-                              </p>
+                              {(review.role ||
+                                review.company ||
+                                review.location) && (
+                                <p className="mt-1 text-xs leading-5 text-black">
+                                  {[
+                                    review.role,
+                                    review.company,
+                                    review.location,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </p>
+                              )}
                             </div>
 
                             {review.verified && (
@@ -736,13 +787,13 @@ export default function Testimonials({
                             )}
                           </div>
 
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {tags.slice(0, 3).map((tag) => (
+                          <div className="mt-3 flex min-h-7 flex-wrap gap-2">
+                            {labels.map((label) => (
                               <span
-                                key={tag}
+                                key={label}
                                 className="rounded-full bg-blue-100 px-3 py-1 text-[10px] font-bold text-blue-700"
                               >
-                                {tag}
+                                {label}
                               </span>
                             ))}
                           </div>
@@ -754,10 +805,22 @@ export default function Testimonials({
                             >
                               {stars(review.rating)}
                             </p>
+                          </div>
 
-                            <blockquote className="mt-4 text-sm leading-7 text-black">
-                              “{review.content}”
+                          <div className="mt-4">
+                            <blockquote className="min-h-21 overflow-hidden text-sm leading-7 text-black">
+                              “{cardReview}”
                             </blockquote>
+
+                            {hasLongReview && (
+                              <button
+                                type="button"
+                                onClick={() => openReview(review)}
+                                className="mt-2 text-sm font-bold text-blue-700 underline underline-offset-4 hover:text-black"
+                              >
+                                Read Full Review
+                              </button>
+                            )}
                           </div>
 
                           <div className="mt-auto pt-5">
@@ -766,9 +829,8 @@ export default function Testimonials({
                                 Result
                               </p>
 
-                              <p className="mt-2 text-sm font-semibold leading-6 text-black">
-                                {review.outcome ??
-                                  "Positive experience shared."}
+                              <p className="mt-2 text-sm font-bold leading-7 text-black">
+                                {review.outcome?.trim() || "Result pending"}
                               </p>
                             </div>
                           </div>
@@ -789,6 +851,10 @@ export default function Testimonials({
                   <p className="text-sm font-bold text-black">
                     No approved testimonials yet.
                   </p>
+
+                  <p className="mt-2 text-sm text-black">
+                    Approved reviews will appear here after they are published.
+                  </p>
                 </div>
               )}
             </div>
@@ -799,72 +865,78 @@ export default function Testimonials({
               {paginatedCaseStudies.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 gap-5 lg:grid-cols-4">
-                    {paginatedCaseStudies.map((caseStudy) => (
-                      <article
-                        key={caseStudy.id}
-                        className="flex h-full min-h-97.5 flex-col rounded-2xl border-2 border-blue-700 bg-white p-5"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-black text-sm font-bold text-white">
-                            {getInitials(caseStudy.company)}
-                          </div>
+                    {paginatedCaseStudies.map((caseStudy) => {
+                      const labels = getExactlyThreeLabels(
+                        caseStudy.tags,
+                        DEFAULT_CASE_STUDY_LABELS,
+                      );
+                      const results = getCaseStudyResults(caseStudy);
+                      const subtitle = truncateText(caseStudy.summary, 50);
+                      const companyShortName = getCompanyShortName(
+                        caseStudy.company,
+                      );
 
-                          <div className="min-w-0">
-                            <p className="text-base font-bold text-black">
+                      return (
+                        <article
+                          key={caseStudy.id}
+                          className="flex h-full min-h-107.5 flex-col rounded-2xl border-2 border-blue-700 bg-white p-5"
+                        >
+                          {/* EXACT company + short-name treatment */}
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-black text-sm font-bold text-white"
+                              title={`${caseStudy.company} short name`}
+                              aria-label={`${caseStudy.company} short name ${companyShortName}`}
+                            >
+                              {companyShortName}
+                            </div>
+
+                            <p className="min-w-0 truncate text-base font-bold text-black">
                               {caseStudy.company}
                             </p>
-
-                            <p className="mt-1 text-xs font-medium text-black">
-                              {caseStudy.location ?? "Remote"}
-                            </p>
                           </div>
-                        </div>
 
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {[caseStudy.category, ...caseStudy.tags]
-                            .filter(Boolean)
-                            .filter(
-                              (value, index, array) =>
-                                array.indexOf(value) === index,
-                            )
-                            .slice(0, 3)
-                            .map((tag) => (
+                          <div className="mt-4 flex min-h-7 flex-wrap gap-2">
+                            {labels.map((label) => (
                               <span
-                                key={tag}
+                                key={label}
                                 className="rounded-full bg-blue-100 px-3 py-1 text-[10px] font-bold text-blue-700"
                               >
-                                {tag}
+                                {label}
                               </span>
                             ))}
-                        </div>
+                          </div>
 
-                        <h3 className="mt-5 text-xl font-bold leading-tight text-black">
-                          {caseStudy.title}
-                        </h3>
+                          <h3 className="mt-5 line-clamp-1 text-xl font-bold leading-tight text-black">
+                            {caseStudy.title}
+                          </h3>
 
-                        <p className="mt-3 text-sm leading-6 text-black">
-                          {caseStudy.summary}
-                        </p>
-
-                        <div className="mt-5 rounded-xl bg-blue-100 p-4">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">
-                            Outcome
+                          <p
+                            className="mt-3 line-clamp-2 min-h-12 text-sm leading-6 text-black"
+                            title={caseStudy.summary}
+                          >
+                            {subtitle}
                           </p>
 
-                          <p className="mt-2 text-sm font-bold leading-6 text-black">
-                            {caseStudy.outcome}
-                          </p>
-                        </div>
+                          {/* ALL THREE required quantified results */}
+                          <div className="mt-auto pt-5">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">
+                              Results
+                            </p>
 
-                        <button
-                          type="button"
-                          onClick={() => openCaseStudy(caseStudy)}
-                          className="mt-auto w-full rounded-lg bg-blue-700 px-4 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-black"
-                        >
-                          Read Full Story
-                        </button>
-                      </article>
-                    ))}
+                            <ResultList results={results} />
+
+                            <button
+                              type="button"
+                              onClick={() => openCaseStudy(caseStudy)}
+                              className="mt-4 w-full rounded-lg bg-blue-700 px-4 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-black"
+                            >
+                              Read Full Story
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
 
                   <PaginationDots
@@ -883,15 +955,119 @@ export default function Testimonials({
               )}
             </div>
           )}
-
-          {content.starterContent && remoteReviews.length === 0 && (
-            <p className="mt-7 text-center text-xs font-medium text-black">
-              Starter content is shown until verified customer reviews replace
-              the preview entries.
-            </p>
-          )}
         </div>
       </section>
+
+      {selectedReview && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/80"
+            aria-hidden="true"
+            onClick={closeReview}
+          />
+
+          <dialog
+            open
+            aria-modal="true"
+            aria-labelledby="review-dialog-heading"
+            className="fixed inset-0 z-50 m-auto max-h-[92vh] w-[94vw] max-w-2xl overflow-y-auto rounded-2xl border-2 border-blue-700 bg-white p-0 text-black shadow-2xl"
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b-2 border-blue-700 bg-white px-5 py-4 sm:px-7">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
+                  Full Review
+                </p>
+
+                <h2
+                  id="review-dialog-heading"
+                  className="mt-1 text-xl font-bold sm:text-2xl"
+                >
+                  {selectedReview.name}
+                </h2>
+
+                {(selectedReview.role ||
+                  selectedReview.company ||
+                  selectedReview.location) && (
+                  <p className="mt-1 text-xs text-black">
+                    {[
+                      selectedReview.role,
+                      selectedReview.company,
+                      selectedReview.location,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={closeReview}
+                aria-label="Close full review"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-2xl font-bold text-blue-700 hover:bg-blue-100"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-7">
+              {selectedReview.starterContent && (
+                <div className="mb-5 rounded-lg border border-dashed border-blue-700 bg-blue-50 px-3 py-2">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">
+                    Demo Sample
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-black">
+                    Sample content for layout demonstration — not verified
+                    customer evidence.
+                  </p>
+                </div>
+              )}
+
+              <span className="inline-flex rounded-full border-2 border-blue-700 bg-blue-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                {getServiceLabel(
+                  selectedReview.source,
+                  selectedReview.category,
+                )}
+              </span>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {getExactlyThreeLabels(selectedReview.tags).map((label) => (
+                  <span
+                    key={label}
+                    className="rounded-full bg-blue-100 px-3 py-1 text-[10px] font-bold text-blue-700"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+
+              <p
+                className="mt-5 text-2xl tracking-[0.14em] text-blue-700"
+                aria-label={`${selectedReview.rating} out of 5 stars`}
+              >
+                {stars(selectedReview.rating)}
+              </p>
+
+              <blockquote className="mt-5 text-base leading-8 text-black">
+                “{selectedReview.content}”
+              </blockquote>
+
+              {selectedReview.outcome && (
+                <div className="mt-7 rounded-xl bg-blue-100 p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">
+                    Result
+                  </p>
+
+                  <p className="mt-2 text-2xl font-bold leading-7 text-black">
+                    {selectedReview.outcome}
+                  </p>
+                </div>
+              )}
+            </div>
+          </dialog>
+        </>
+      )}
 
       {selectedCaseStudy && (
         <>
@@ -910,7 +1086,7 @@ export default function Testimonials({
             <div className="sticky top-0 z-10 flex items-center justify-between border-b-2 border-blue-700 bg-white px-5 py-4 sm:px-7">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
-                  Customer Case Study
+                  Customer Story
                 </p>
 
                 <h2
@@ -932,39 +1108,58 @@ export default function Testimonials({
             </div>
 
             <div className="p-5 sm:p-7">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-black text-sm font-bold text-white">
-                  {getInitials(selectedCaseStudy.company)}
+              {/* EXACT same company + short-name design as card */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-2 border-blue-700 bg-blue-100 text-xs font-black text-blue-700">
+                    {getCompanyShortName(selectedCaseStudy.company)}
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-bold text-black">
+                      {selectedCaseStudy.company}
+                    </p>
+
+                    {selectedCaseStudy.location && (
+                      <p className="mt-1 truncate text-xs text-black">
+                        {selectedCaseStudy.location}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                <div>
-                  <p className="font-bold">{selectedCaseStudy.company}</p>
-
-                  <p className="text-sm">
-                    {selectedCaseStudy.location ?? "Remote"}
-                  </p>
-                </div>
+                <span className="inline-flex shrink-0 rounded-full border-2 border-blue-700 bg-blue-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                  {getServiceLabel(null, selectedCaseStudy.category)}
+                </span>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                {[selectedCaseStudy.category, ...selectedCaseStudy.tags]
-                  .filter(Boolean)
-                  .filter(
-                    (value, index, array) => array.indexOf(value) === index,
-                  )
-                  .map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                {getExactlyThreeLabels(
+                  selectedCaseStudy.tags,
+                  DEFAULT_CASE_STUDY_LABELS,
+                ).map((label) => (
+                  <span
+                    key={label}
+                    className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700"
+                  >
+                    {label}
+                  </span>
+                ))}
               </div>
 
-              <div className="mt-8 grid gap-6 md:grid-cols-2">
+              <h3 className="mt-7 text-2xl font-bold">
+                {selectedCaseStudy.title}
+              </h3>
+
+              <div className="mt-8 space-y-8">
                 <section>
-                  <h3 className="text-lg font-bold">The Challenge</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
+                    The Problem
+                  </p>
+
+                  <h3 className="mt-2 text-lg font-bold">
+                    What the target audience was facing
+                  </h3>
 
                   <p className="mt-3 text-sm leading-7">
                     {selectedCaseStudy.challenge ?? selectedCaseStudy.summary}
@@ -972,134 +1167,56 @@ export default function Testimonials({
                 </section>
 
                 <section>
-                  <h3 className="text-lg font-bold">Our Solution</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
+                    The Service
+                  </p>
+
+                  <h3 className="mt-2 text-lg font-bold">
+                    How Cup&Commit provided the service
+                  </h3>
 
                   <p className="mt-3 text-sm leading-7">
-                    {selectedCaseStudy.solution ?? selectedCaseStudy.content}
+                    {selectedCaseStudy.solution ??
+                      selectedCaseStudy.content ??
+                      selectedCaseStudy.summary}
+                  </p>
+                </section>
+
+                <section>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
+                    How It Was Resolved
+                  </p>
+
+                  <h3 className="mt-2 text-lg font-bold">
+                    How the issue was addressed
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-7">
+                    {selectedCaseStudy.businessValue ??
+                      selectedCaseStudy.outcome}
                   </p>
                 </section>
               </div>
 
+              {/* ALL THREE REQUIRED RESULTS IN MODAL */}
               <section className="mt-8">
-                <h3 className="text-lg font-bold">Key Results</h3>
-
-                <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                  {(selectedCaseStudy.keyResults.length > 0
-                    ? selectedCaseStudy.keyResults
-                    : [
-                        {
-                          stat: "1",
-                          label: "Structured delivery path",
-                        },
-                        {
-                          stat: "1",
-                          label: "Clear business outcome",
-                        },
-                        {
-                          stat: "1",
-                          label: "Defined next step",
-                        },
-                      ]
-                  )
-                    .slice(0, 3)
-                    .map((result) => (
-                      <div
-                        key={`${result.stat}-${result.label}`}
-                        className="rounded-xl border-2 border-blue-700 bg-blue-100 p-5"
-                      >
-                        <p className="text-3xl font-bold text-black">
-                          {result.stat}
-                        </p>
-
-                        <p className="mt-2 text-sm font-bold leading-5">
-                          {result.label}
-                        </p>
-                      </div>
-                    ))}
-                </div>
-              </section>
-
-              <section className="mt-8">
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">
-                  Share This Story
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
+                  Results
                 </p>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <a
-                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-                      getStoryUrl(selectedCaseStudy),
-                    )}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border-2 border-blue-700 bg-white px-3 text-sm font-bold text-black hover:bg-blue-100"
-                  >
-                    in
-                  </a>
-
-                  <a
-                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                      getStoryUrl(selectedCaseStudy),
-                    )}&text=${encodeURIComponent(selectedCaseStudy.title)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border-2 border-blue-700 bg-white px-3 text-sm font-bold text-black hover:bg-blue-100"
-                  >
-                    X
-                  </a>
-
-                  <a
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                      getStoryUrl(selectedCaseStudy),
-                    )}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-10 min-w-10 items-center justify-center rounded-lg border-2 border-blue-700 bg-white px-3 text-sm font-bold text-black hover:bg-blue-100"
-                  >
-                    f
-                  </a>
-
-                  <a
-                    href={`https://wa.me/?text=${encodeURIComponent(
-                      `${selectedCaseStudy.title} ${getStoryUrl(
-                        selectedCaseStudy,
-                      )}`,
-                    )}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-10 items-center justify-center rounded-lg border-2 border-blue-700 bg-white px-3 text-sm font-bold text-black hover:bg-blue-100"
-                  >
-                    WA
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void copyStoryLink();
-                    }}
-                    className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-700 px-4 text-sm font-bold text-white hover:bg-black"
-                  >
-                    {copied ? "Copied" : "Copy Link"}
-                  </button>
-                </div>
+                <ResultList results={getCaseStudyResults(selectedCaseStudy)} />
               </section>
             </div>
 
-            <div className="flex flex-col gap-3 border-t-2 border-blue-700 bg-blue-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-7">
+            {/* Only Start Your Journey */}
+            <div className="border-t-2 border-blue-700 bg-blue-100 px-5 py-4 sm:px-7">
               <Link
-                to="/coffee-with-me"
+                to={getJourneyPath(null, selectedCaseStudy.category)}
                 onClick={() => setSelectedCaseStudy(null)}
-                className="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-black"
+                className="inline-flex w-full items-center justify-center rounded-lg bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-black"
               >
                 Start Your Journey →
               </Link>
-
-              <button
-                type="button"
-                onClick={() => setSelectedCaseStudy(null)}
-                className="inline-flex items-center justify-center rounded-lg border-2 border-blue-700 bg-white px-5 py-3 text-sm font-bold text-black hover:bg-blue-100"
-              >
-                Close
-              </button>
             </div>
           </dialog>
         </>
